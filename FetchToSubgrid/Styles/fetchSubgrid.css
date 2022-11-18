@@ -1,0 +1,23 @@
+.fetchSubgridControl{
+  overflow: auto;
+  width: 100%;
+}
+
+.fetchSubgridControl .fetchLoading{
+  width: 100%;
+  justify-content: center;
+}
+
+.fetchSubgridControl .fetchLoading .loadingText{
+  width: 100%;
+  margin-top: 5px;
+  text-align: center;
+}
+
+.fetchSubgridControl .infoMessage{
+  width: 100%;
+}
+
+.fetchSubgridControl .infoMessage .infoMessageText{
+  text-align: center;
+}
