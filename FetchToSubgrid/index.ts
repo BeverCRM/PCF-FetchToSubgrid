@@ -1,7 +1,7 @@
 import { IInputs, IOutputs } from './generated/ManifestTypes';
-import { FetchSubgrid, IFetchShbgridProps } from './Components/FetchSubgrid';
+import { FetchSubgrid, IFetchSubgridProps } from './Components/FetchSubgrid';
 import * as React from 'react';
-import FetchService from './Services/FetchService';
+import FetchService from './Services/CrmService';
 
 export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, IOutputs> {
     private theComponent: ComponentFramework.ReactControl<IInputs, IOutputs>;
@@ -15,12 +15,13 @@ export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, 
       notifyOutputChanged: () => void,
     ): void {
       this.notifyOutputChanged = notifyOutputChanged;
+      FetchService.setContext(context);
     }
 
     public updateView(context: ComponentFramework.Context<IInputs>): React.ReactElement {
-      FetchService.setContext(context);
+      const props: IFetchSubgridProps = {
+        defaultFetchXml: context.parameters.defaultFetchXmlProperty.raw };
 
-      const props: IFetchShbgridProps = { inputValue: context.parameters.sampleProperty.raw };
       return React.createElement(
         FetchSubgrid, props,
       );

@@ -1,33 +1,43 @@
 import * as React from 'react';
 import { DetailsList, DetailsListLayoutMode,
   Spinner, SpinnerSize } from '@fluentui/react';
-import FetchService from '../Services/FetchService';
-import { useState, useEffect, useRef } from 'react';
+import FetchService from '../Services/CrmService';
+import { useState, useEffect } from 'react';
 
-export interface IFetchShbgridProps {
-  inputValue: string | null;
+export interface IFetchSubgridProps {
+  defaultFetchXml: string | null;
 }
 
-export const FetchSubgrid: React.FunctionComponent<IFetchShbgridProps> = props => {
+export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props => {
   const [ isLoading, setIsLoading ] = useState<boolean>(true);
-  const hasData = useRef<boolean>(false);
-  const entities = useRef([]);
+  const { defaultFetchXml } = props;
+  const [items, setItems] = useState([]);
+  const [columns, setColumns] = useState([]);
 
   useEffect(() => {
     setIsLoading(true);
-    FetchService.getFetchData().then(
-      (records: any) => {
-        entities.current = records;
-        hasData.current = true;
+
+    FetchService.getColumns(defaultFetchXml).then(
+      (columns: any) => {
+        setColumns(columns);
+      },
+      (error: any) => {
+        setColumns([]);
+        console.error(error);
+      });
+
+    FetchService.getItems(defaultFetchXml).then(
+      (items: any) => {
+        setItems(items);
         setIsLoading(false);
       },
       (error: any) => {
-        entities.current = [];
-        hasData.current = false;
-        console.error(error);
+        setItems([]);
         setIsLoading(false);
+        console.error(error);
       });
-  }, [props.inputValue]);
+
+  }, [props]);
 
   if (isLoading) {
     return (
@@ -39,7 +49,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchShbgridProps> = props =
       </div>);
   }
 
-  if (!hasData.current) {
+  if (columns.length === 0) {
     return <div className='fetchSubgridControl'>
       <div className='infoMessage'>
         <h1 className='infoMessageText'>No data available</h1>
@@ -50,7 +60,8 @@ export const FetchSubgrid: React.FunctionComponent<IFetchShbgridProps> = props =
   return (
     <div className='fetchSubgridControl'>
       <DetailsList
-        items={entities.current}
+        columns={columns}
+        items={items}
         layoutMode={DetailsListLayoutMode.fixedColumns}
         styles={{ contentWrapper: { maxHeight: 200 } }}
       >

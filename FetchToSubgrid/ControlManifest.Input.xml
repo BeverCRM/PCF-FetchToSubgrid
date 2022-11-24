@@ -3,11 +3,10 @@
   <control namespace="BeverControls" constructor="FetchToSubgrid" version="0.0.1" display-name-key="FetchToSubgrid" description-key="FetchToSubgrid description" control-type="virtual" >
 
     <external-service-usage enabled="false">
-
     </external-service-usage>
-    <!-- property node identifies a specific, configurable piece of data that the control expects from CDS -->
-    <property name="sampleProperty" display-name-key="Property_Display_Key" description-key="Property_Desc_Key" of-type="Multiple" usage="bound" required="true" />
 
+    <property name="fetchXmlProperty" display-name-key="Property_Display_Key" description-key="Property_Desc_Key" of-type="Multiple" usage="bound" required="true" />
+    <property name='defaultFetchXmlProperty' display-name-key='Default FetchXml' description-key='If field is blank, use default FetchXml propery' of-type='Multiple' usage='input'/>
     <resources>
       <code path="index.ts" order="1"/>
       <platform-library name="React" version="16.8.6" />
@@ -20,8 +19,8 @@
       <uses-feature name="Device.captureVideo" required="true" />
       <uses-feature name="Device.getBarcodeValue" required="true" />
       <uses-feature name="Device.getCurrentPosition" required="true" />
-      <uses-feature name="Device.pickFile" required="true" />
-      <uses-feature name="Utility" required="true" /> -->
+      <uses-feature name="Device.pickFile" required="true" /> -->
+      <uses-feature name="Utility" required="true" /> 
       <uses-feature name="WebAPI" required="true" />
     </feature-usage>
   </control>

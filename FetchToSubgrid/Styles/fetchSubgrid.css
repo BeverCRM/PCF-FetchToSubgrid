@@ -21,3 +21,7 @@
 .fetchSubgridControl .infoMessage .infoMessageText{
   text-align: center;
 }
+
+.fetchSubgridControl .ms-DetailsList{
+  overflow: inherit;
+}
