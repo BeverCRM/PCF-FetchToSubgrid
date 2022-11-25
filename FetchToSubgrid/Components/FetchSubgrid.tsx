@@ -3,21 +3,22 @@ import { DetailsList, DetailsListLayoutMode,
   Spinner, SpinnerSize } from '@fluentui/react';
 import FetchService from '../Services/CrmService';
 import { useState, useEffect } from 'react';
+import LinkableItems from './LinkableItems';
 
 export interface IFetchSubgridProps {
-  defaultFetchXml: string | null;
+  fetchXml: string | null;
 }
 
 export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props => {
-  const [ isLoading, setIsLoading ] = useState<boolean>(true);
-  const { defaultFetchXml } = props;
+  const [ isLoading, setIsLoading ] = useState(true);
+  const { fetchXml } = props;
   const [items, setItems] = useState([]);
   const [columns, setColumns] = useState([]);
 
   useEffect(() => {
     setIsLoading(true);
 
-    FetchService.getColumns(defaultFetchXml).then(
+    FetchService.getColumns(fetchXml).then(
       (columns: any) => {
         setColumns(columns);
       },
@@ -26,13 +27,13 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
         console.error(error);
       });
 
-    FetchService.getItems(defaultFetchXml).then(
+    LinkableItems.getLinkableItems(fetchXml).then(
       (items: any) => {
         setItems(items);
         setIsLoading(false);
       },
       (error: any) => {
-        setItems([]);
+        setColumns([]);
         setIsLoading(false);
         console.error(error);
       });

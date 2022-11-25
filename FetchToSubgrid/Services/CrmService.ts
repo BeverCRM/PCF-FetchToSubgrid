@@ -1,42 +1,28 @@
 import { IInputs } from '../generated/ManifestTypes';
+import utilities from '../utilities';
 
 let _context: ComponentFramework.Context<IInputs>;
-let entityName: string;
 
 export default {
   setContext(context: ComponentFramework.Context<IInputs>) {
     _context = context;
   },
 
-  getAttributesFieldNames(fetchXml: string) {
-    const parser = new DOMParser();
-    const xmlDoc: any = parser.parseFromString(fetchXml, 'text/xml');
-    const attributesFieldNames: string[] = [];
-    entityName = xmlDoc.all[0].childNodes[1].attributes['name'].nodeValue;
-
-    for (let i = 0; i < xmlDoc.all.length; i++) {
-      if (xmlDoc.all[i].tagName === 'attribute') {
-        attributesFieldNames.push(xmlDoc.all[i].attributes[0].value);
-      }
-    }
-    return attributesFieldNames;
+  async getEntityMetadata(entityName: string, attributesFieldNames: string[]):
+  Promise<ComponentFramework.PropertyHelper.EntityMetadata> {
+    const entityMetadata = await _context.utils.getEntityMetadata(entityName, attributesFieldNames);
+    return entityMetadata;
   },
 
-  async getColumns(defaultFetchXml: string | null) {
-    let fetchXml: string;
+  async getColumns(fetchXml: string | null):
+   Promise<ComponentFramework.PropertyHelper.EntityMetadata> {
 
-    if (_context.parameters.fetchXmlProperty.raw) {
-      fetchXml = `${_context.parameters.fetchXmlProperty.raw}`;
-    }
-    else {
-      fetchXml = `${defaultFetchXml}`;
-    }
+    const attributesFieldNames: string[] = utilities.getAttributesFieldNames(fetchXml ?? '');
+    const entityName: string = utilities.getEntityName(fetchXml ?? '');
 
-    const attributesFieldNames: string[] = this.getAttributesFieldNames(fetchXml);
-    const entityMetadata = await _context.utils.getEntityMetadata(entityName, attributesFieldNames);
-
+    const entityMetadata = await this.getEntityMetadata(entityName, attributesFieldNames);
     const displayNameCollection = entityMetadata.Attributes._collection;
-    const columns: any = [];
+    const columns: Array<object> = [];
 
     attributesFieldNames.forEach((name: string, index: number) => {
       columns.push({
@@ -49,40 +35,28 @@ export default {
     return columns;
   },
 
-  async getItems(defaultFetchXml: string | null) {
-    let fetchXml: string | null;
+  openLookupForm(entity: any, fieldName: string): void {
+    _context.navigation.openForm(
+      {
+        entityName: entity[`_${fieldName}_value@Microsoft.Dynamics.CRM.lookuplogicalname`],
+        entityId: entity[`_${fieldName}_value`],
+      },
+    );
+  },
 
-    if (_context.parameters.fetchXmlProperty.raw) {
-      fetchXml = `${_context.parameters.fetchXmlProperty.raw}`;
-    }
-    else {
-      fetchXml = `${defaultFetchXml}`;
-    }
+  openPrimaryEntityForm(entity: any, entityName:string): void {
+    _context.navigation.openForm(
+      {
+        entityName,
+        entityId: entity[`${entityName}id`],
+      },
+    );
+  },
 
-    const attributesFieldNames: string[] = this.getAttributesFieldNames(fetchXml);
+  async getRecord(fetchXml: string | null, entityName: string):
+  Promise<ComponentFramework.WebApi.RetrieveMultipleResponse> {
+    const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
 
-    fetchXml = `?fetchXml=${encodeURIComponent(fetchXml)}`;
-
-    const recors = await _context.webAPI.retrieveMultipleRecords(`${entityName}`, fetchXml);
-    const items: any = [];
-
-    recors.entities.forEach(entity => {
-      const item: any = {};
-
-      attributesFieldNames.forEach(fieldName => {
-        if (fieldName in entity) {
-          item[fieldName] = entity[fieldName];
-        }
-
-        if (`_${fieldName}_value` in entity) {
-          item[fieldName] = entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`];
-        }
-
-      });
-
-      items.push(item);
-    });
-
-    return items;
+    return await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
   },
 };

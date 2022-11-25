@@ -4,7 +4,7 @@ import * as React from 'react';
 import FetchService from './Services/CrmService';
 
 export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, IOutputs> {
-    private theComponent: ComponentFramework.ReactControl<IInputs, IOutputs>;
+    private Component: ComponentFramework.ReactControl<IInputs, IOutputs>;
     private notifyOutputChanged: () => void;
     private context: ComponentFramework.Context<IInputs>;
 
@@ -19,8 +19,10 @@ export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, 
     }
 
     public updateView(context: ComponentFramework.Context<IInputs>): React.ReactElement {
+      FetchService.setContext(context);
       const props: IFetchSubgridProps = {
-        defaultFetchXml: context.parameters.defaultFetchXmlProperty.raw };
+        fetchXml: context.parameters.fetchXmlProperty.raw ??
+           context.parameters.defaultFetchXmlProperty.raw };
 
       return React.createElement(
         FetchSubgrid, props,
