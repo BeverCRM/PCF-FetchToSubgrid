@@ -1,4 +1,14 @@
 export default {
+  addPagingToFetchXml(fetchXml: string, pageSize: number, currentPage: number) {
+    const parser: DOMParser = new DOMParser();
+    const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+    const fetch = xmlDoc.getElementsByTagName('fetch');
+
+    fetch[0].setAttribute('page', `${currentPage}`);
+    fetch[0].setAttribute('count', `${pageSize}`);
+
+    return new XMLSerializer().serializeToString(xmlDoc);
+  },
 
   getEntityName(fetchXml: string): string {
     const parser: DOMParser = new DOMParser();

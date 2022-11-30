@@ -1,19 +1,55 @@
 import * as React from 'react';
-import { DetailsList, DetailsListLayoutMode,
-  Spinner, SpinnerSize } from '@fluentui/react';
+import { DetailsList, DetailsListLayoutMode, IDetailsFooterProps,
+  IDetailsListProps, Spinner, SpinnerSize } from '@fluentui/react';
 import FetchService from '../Services/CrmService';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import LinkableItems from './LinkableItems';
+import CrmService from '../Services/CrmService';
+import { GridFooter } from './Footer';
 
 export interface IFetchSubgridProps {
   fetchXml: string | null;
+  numberOfRows: number | null;
 }
 
 export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props => {
-  const [ isLoading, setIsLoading ] = useState(true);
-  const { fetchXml } = props;
-  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { numberOfRows, fetchXml } = props;
+  const [items, setItems] = useState<any>([]);
   const [columns, setColumns] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const nextButtonDisable = React.useRef(false);
+  const isMovePrevious = React.useRef(true);
+
+  const recordsPerPage: number = CrmService.getRecordsPerPage();
+  const pageSize = React.useRef(recordsPerPage);
+
+  pageSize.current = numberOfRows ?? pageSize.current;
+
+  CrmService.getRecordsCount(fetchXml ?? '').then(
+    (count: any) => {
+      if (Math.ceil(count / pageSize.current) === currentPage) {
+        nextButtonDisable.current = true;
+      }
+      else {
+        nextButtonDisable.current = false;
+      }
+    });
+
+  const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] =
+    (props: IDetailsFooterProps | undefined) => {
+      currentPage > 1 ? isMovePrevious.current = false : isMovePrevious.current = true;
+
+      if (props) {
+        return <GridFooter
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          nextButtonDisable={nextButtonDisable.current}
+          isMovePrevious={isMovePrevious.current}
+        ></GridFooter>;
+      }
+      return null;
+    };
 
   useEffect(() => {
     setIsLoading(true);
@@ -27,7 +63,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
         console.error(error);
       });
 
-    LinkableItems.getLinkableItems(fetchXml).then(
+    LinkableItems.getLinkableItems(fetchXml, pageSize.current, currentPage).then(
       (items: any) => {
         setItems(items);
         setIsLoading(false);
@@ -38,7 +74,15 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
         console.error(error);
       });
 
-  }, [props]);
+  }, [props, currentPage]);
+
+  const onItemInvoked = useCallback((item : any) : void => {
+    for (let i = 0; i < items.length; i++) {
+      if (item.key === items[i].key) {
+        CrmService.openRecord(item.entityName, item.key);
+      }
+    }
+  }, [items]);
 
   if (isLoading) {
     return (
@@ -64,7 +108,8 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
         columns={columns}
         items={items}
         layoutMode={DetailsListLayoutMode.fixedColumns}
-        styles={{ contentWrapper: { maxHeight: 200 } }}
+        onItemInvoked= {onItemInvoked}
+        onRenderDetailsFooter={onRenderDetailsFooter}
       >
       </DetailsList>
     </div>

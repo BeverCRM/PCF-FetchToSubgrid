@@ -5,17 +5,27 @@ import utilities from '../utilities';
 
 export default {
 
-  async getLinkableItems(fetchXml: string | null): Promise<ComponentFramework.WebApi.Entity[]> {
-    const attributesFieldNames: string[] = utilities.getAttributesFieldNames(fetchXml ?? '');
+  async getLinkableItems(fetchXml: string | null,
+    pageSize: number,
+    currentPage: number,
+  ): Promise<ComponentFramework.WebApi.Entity[]> {
+
+    const pagingFetchData: string = fetchXml
+      ? utilities.addPagingToFetchXml(fetchXml, pageSize, currentPage) : '';
+
+    const attributesFieldNames: string[] = utilities.getAttributesFieldNames(pagingFetchData);
     const entityName: string = utilities.getEntityName(fetchXml ?? '');
 
-    const record = await CrmService.getRecord(fetchXml, entityName);
+    const record = await CrmService.getRecord(pagingFetchData, entityName);
     const entityMetadata = await CrmService.getEntityMetadata(entityName, attributesFieldNames);
 
     const items: Array<ComponentFramework.WebApi.Entity> = [];
 
     record.entities.forEach(entity => {
-      const item: ComponentFramework.WebApi.Entity = {};
+      const item: ComponentFramework.WebApi.Entity = {
+        key: entity[`${entityName}id`],
+        entityName,
+      };
 
       attributesFieldNames.forEach(fieldName => {
         if (fieldName in entity) {

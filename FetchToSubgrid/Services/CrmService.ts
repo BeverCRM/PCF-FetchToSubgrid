@@ -8,6 +8,23 @@ export default {
     _context = context;
   },
 
+  getRecordsPerPage(): number {
+    // @ts-ignore
+    return _context.userSettings.pagingLimit;
+  },
+
+  async getRecordsCount(fetchXml: string): Promise<number> {
+    // @ts-ignore
+    const contextPage = _context.page;
+    const clientUrl = contextPage.getClientUrl();
+    const entityName = utilities.getEntityName(fetchXml);
+
+    const result = await fetch(`${clientUrl}/api/data/v9.0/${entityName}s/?$count=true`);
+    const records = await result.json();
+
+    return records['@odata.count'];
+  },
+
   async getEntityMetadata(entityName: string, attributesFieldNames: string[]):
   Promise<ComponentFramework.PropertyHelper.EntityMetadata> {
     const entityMetadata = await _context.utils.getEntityMetadata(entityName, attributesFieldNames);
@@ -49,6 +66,15 @@ export default {
       {
         entityName,
         entityId: entity[`${entityName}id`],
+      },
+    );
+  },
+
+  openRecord(entityName: string, entityId: string) {
+    _context.navigation.openForm(
+      {
+        entityName,
+        entityId,
       },
     );
   },

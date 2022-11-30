@@ -1,0 +1,42 @@
+import * as React from 'react';
+import { IconButton } from '@fluentui/react/lib/Button';
+import { BackIcon, footerButtonStyles, footerStyles,
+  ForwardIcon, PreviousIcon } from '../Styles/FooterStyles';
+
+export interface IGridFooterProps {
+  currentPage: number;
+  setCurrentPage: any;
+  nextButtonDisable: boolean;
+  isMovePrevious: boolean;
+}
+
+export const GridFooter = ({ currentPage, setCurrentPage, nextButtonDisable, isMovePrevious }:
+   IGridFooterProps) => {
+
+  function moveToFirst() {
+    setCurrentPage(1);
+  }
+
+  function movePrevious() {
+    setCurrentPage(currentPage - 1);
+  }
+
+  function moveNext() {
+    setCurrentPage(currentPage + 1);
+  }
+
+  return <div className={footerStyles.content}>
+    <div className='buttons'>
+      <IconButton styles={footerButtonStyles} iconProps={PreviousIcon}
+        onClick={ moveToFirst} disabled = {isMovePrevious}
+      />
+      <IconButton styles={footerButtonStyles} iconProps={BackIcon}
+        onClick={movePrevious} disabled={isMovePrevious}
+      />
+      <span> {currentPage} </span>
+      <IconButton styles={footerButtonStyles} iconProps={ForwardIcon}
+        onClick={moveNext} disabled={nextButtonDisable}
+      />
+    </div>
+  </div>;
+};
