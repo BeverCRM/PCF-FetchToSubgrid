@@ -19,10 +19,10 @@ export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, 
     }
 
     public updateView(context: ComponentFramework.Context<IInputs>): React.ReactElement {
-      FetchService.setContext(context);
       const props: IFetchSubgridProps = {
         fetchXml: context.parameters.fetchXmlProperty.raw ??
-           context.parameters.defaultFetchXmlProperty.raw };
+          context.parameters.defaultFetchXmlProperty.raw,
+      };
 
       return React.createElement(
         FetchSubgrid, props,

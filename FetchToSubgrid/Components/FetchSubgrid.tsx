@@ -16,28 +16,23 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   const [columns, setColumns] = useState([]);
 
   useEffect(() => {
-    setIsLoading(true);
+    (async () => {
+      setIsLoading(true);
 
-    FetchService.getColumns(fetchXml).then(
-      (columns: any) => {
+      try {
+        const columns: any = await FetchService.getColumns(fetchXml);
         setColumns(columns);
-      },
-      (error: any) => {
-        setColumns([]);
-        console.error(error);
-      });
 
-    LinkableItems.getLinkableItems(fetchXml).then(
-      (items: any) => {
+        const items: any = await LinkableItems.getLinkableItems(fetchXml);
         setItems(items);
-        setIsLoading(false);
-      },
-      (error: any) => {
+      }
+      catch (err) {
         setColumns([]);
-        setIsLoading(false);
-        console.error(error);
-      });
+        setItems([]);
+      }
 
+      setIsLoading(false);
+    })();
   }, [props]);
 
   if (isLoading) {

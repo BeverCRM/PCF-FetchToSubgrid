@@ -23,18 +23,17 @@ export default {
         }
 
         if (`_${fieldName}_value` in entity) {
-          item[fieldName] = <Link onClick={() => CrmService.openLookupForm(entity, fieldName) }>
-            {entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`]}
-          </Link>;
+          item[fieldName] =
+            <Link onClick={() => CrmService.openLookupForm(entity, fieldName) }>
+              {entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`]}
+            </Link>;
         }
 
         if (fieldName === entityMetadata._primaryNameAttribute) {
-          item[fieldName] = <Link onClick={() => {
-            CrmService.openPrimaryEntityForm(entity, entityName);
-
-          }}>
-            {entity[fieldName]}
-          </Link>;
+          item[fieldName] =
+            <Link onClick={() => CrmService.openPrimaryEntityForm(entity, entityName) }>
+              {entity[fieldName]}
+            </Link>;
         }
       });
 
