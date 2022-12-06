@@ -28,7 +28,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
 
   CrmService.getRecordsCount(fetchXml ?? '').then(
     (count: any) => {
-      if (Math.ceil(count / pageSize.current) === currentPage) {
+      if (Math.ceil(count / pageSize.current) <= currentPage) {
         nextButtonDisable.current = true;
       }
       else {
