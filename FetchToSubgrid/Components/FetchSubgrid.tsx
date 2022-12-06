@@ -52,37 +52,24 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     };
 
   useEffect(() => {
-    setIsLoading(true);
-
-    FetchService.getColumns(fetchXml).then(
-      (columns: any) => {
+    (async () => {
+      setIsLoading(true);
+      try {
+        const columns: any = await FetchService.getColumns(fetchXml);
         setColumns(columns);
-      },
-      (error: any) => {
-        setColumns([]);
-        console.error(error);
-      });
 
-    LinkableItems.getLinkableItems(fetchXml, pageSize.current, currentPage).then(
-      (items: any) => {
+        const items: any =
+        await LinkableItems.getLinkableItems(fetchXml, pageSize.current, currentPage);
         setItems(items);
-        setIsLoading(false);
-      },
-      (error: any) => {
+      }
+      catch (err) {
         setColumns([]);
-        setIsLoading(false);
-        console.error(error);
-      });
-
+        setItems([]);
+      }
+      setIsLoading(false);
+    })();
   }, [props, currentPage]);
 
-  const onItemInvoked = useCallback((item : any) : void => {
-    for (let i = 0; i < items.length; i++) {
-      if (item.key === items[i].key) {
-        CrmService.openRecord(item.entityName, item.key);
-      }
-    }
-  }, [items]);
 
   if (isLoading) {
     return (

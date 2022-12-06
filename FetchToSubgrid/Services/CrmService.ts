@@ -120,6 +120,6 @@ export default {
   Promise<ComponentFramework.WebApi.RetrieveMultipleResponse> {
     const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
 
-    return await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
+    return await _context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
   },
 };
