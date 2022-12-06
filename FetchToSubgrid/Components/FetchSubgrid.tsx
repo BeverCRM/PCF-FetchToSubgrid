@@ -51,6 +51,14 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
       return null;
     };
 
+  const onItemInvoked = useCallback((item : any) : void => {
+    for (let i = 0; i < items.length; i++) {
+      if (item.key === items[i].key) {
+        CrmService.openRecord(item.entityName, item.key);
+      }
+    }
+  }, [items]);
+
   useEffect(() => {
     (async () => {
       setIsLoading(true);
@@ -69,7 +77,6 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
       setIsLoading(false);
     })();
   }, [props, currentPage]);
-
 
   if (isLoading) {
     return (
