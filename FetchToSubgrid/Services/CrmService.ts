@@ -1,3 +1,4 @@
+import { IColumn } from '@fluentui/react';
 import { IInputs } from '../generated/ManifestTypes';
 import utilities from '../utilities';
 
@@ -27,7 +28,7 @@ export default {
   },
 
   async getColumns(fetchXml: string | null):
-   Promise<ComponentFramework.PropertyHelper.EntityMetadata> {
+   Promise<IColumn[]> {
 
     const attributesFieldNames: string[] = utilities.getAttributesFieldNames(fetchXml ?? '');
     const entityName: string = utilities.getEntityName(fetchXml ?? '');
@@ -36,7 +37,7 @@ export default {
     const displayNameCollection = entityMetadata.Attributes._collection;
 
     const linkEntityNameAndAttributes = utilities.getLinkEntitiesNames(fetchXml ?? '');
-    const columns: Array<object> = [];
+    const columns: IColumn[] = [];
 
     const entityNames = Object.keys(linkEntityNameAndAttributes);
     const entityFieldNames: any = Object.values(linkEntityNameAndAttributes);
@@ -65,14 +66,18 @@ export default {
         columns.push({
           name: `${display} (${alias})`,
           fieldName: `${alias}.${attributeName}`,
+          key: `col-el-${i}`,
+          minWidth: 100,
         });
       }
     });
 
-    attributesFieldNames.forEach((name: string) => {
+    attributesFieldNames.forEach((name, index) => {
       columns.push({
         name: displayNameCollection[name].DisplayName,
         fieldName: name,
+        key: `col-${index}`,
+        minWidth: 100,
       });
     });
 
