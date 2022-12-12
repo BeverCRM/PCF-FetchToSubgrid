@@ -67,7 +67,9 @@ export default {
           name: `${display} (${alias})`,
           fieldName: `${alias}.${attributeName}`,
           key: `col-el-${i}`,
-          minWidth: 100,
+          minWidth: 10,
+          isResizable: true,
+          isMultiline: false,
         });
       }
     });
@@ -77,7 +79,10 @@ export default {
         name: displayNameCollection[name].DisplayName,
         fieldName: name,
         key: `col-${index}`,
-        minWidth: 100,
+        minWidth: 10,
+        isResizable: true,
+        isMultiline: false,
+
       });
     });
 

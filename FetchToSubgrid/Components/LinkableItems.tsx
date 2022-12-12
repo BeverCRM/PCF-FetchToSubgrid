@@ -32,13 +32,20 @@ export default {
       };
 
       attributesFieldNames.forEach(fieldName => {
-        const type = entityMetadata.Attributes._collection[fieldName].AttributeTypeName;
+        const attributeType = entityMetadata.Attributes._collection[fieldName].AttributeType;
 
         if (fieldName in entity) {
           item[fieldName] = entity[fieldName];
         }
+        // money-8, picklist-11, datatime-2 multiselectpicklist-17
+        if (attributeType === 8 || attributeType === 11 ||
+          attributeType === 2 || attributeType === 17) {
 
-        if (type === 'lookup' || type === 'owner') {
+          item[fieldName] =
+            entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
+        }
+        // lookup-6 owner-9
+        if (attributeType === 6 || attributeType === 9) {
           item[fieldName] = <Link onClick={() => {
             CrmService.openLookupForm(entity, fieldName);
           }}>
@@ -62,18 +69,25 @@ export default {
         for (let j = 1; j < linkEntityAttributes[i].length; j++) {
           const fieldName: string = linkEntityAttributes[i][j];
           const alias: string = linkEntityAttributes[i][0];
-          const type = linkentityMeddata.Attributes._collection[fieldName].AttributeTypeName;
+          const attributeType = linkentityMeddata.Attributes._collection[fieldName].AttributeType;
 
-          if (type === 'owner' || type === 'lookup') {
+          if (`${alias}.${fieldName}` in entity) {
+            item[`${alias}.${fieldName}`] = entity[`${alias}.${fieldName}`];
+          }
+          // lookup-6 owner-9
+          if (attributeType === 6 || attributeType === 9) {
             item[`${alias}.${fieldName}`] = <Link onClick={() => {
               CrmService.openLinkEntityRecord(entity, `${alias}.${fieldName}`);
             }}>
               { entity[`${alias}.${fieldName}@OData.Community.Display.V1.FormattedValue`]}
             </Link>;
           }
+          // money-8, picklist-11, datatime-2 multiselectpicklist-17
+          if (attributeType === 8 || attributeType === 11 ||
+          attributeType === 2 || attributeType === 17) {
 
-          else {
-            item[`${alias}.${fieldName}`] = entity[`${alias}.${fieldName}`];
+            item[`${alias}.${fieldName}`] =
+             entity[`${alias}.${fieldName}@OData.Community.Display.V1.FormattedValue`];
           }
         }
       }

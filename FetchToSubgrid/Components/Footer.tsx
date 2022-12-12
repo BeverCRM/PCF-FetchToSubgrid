@@ -33,7 +33,7 @@ export const GridFooter = ({ currentPage, setCurrentPage, nextButtonDisable, isM
       <IconButton styles={footerButtonStyles} iconProps={BackIcon}
         onClick={movePrevious} disabled={isMovePrevious}
       />
-      <span> {currentPage} </span>
+      <span color='black'> Page {currentPage} </span>
       <IconButton styles={footerButtonStyles} iconProps={ForwardIcon}
         onClick={moveNext} disabled={nextButtonDisable}
       />
