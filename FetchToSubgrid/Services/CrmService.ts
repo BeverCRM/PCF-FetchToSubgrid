@@ -27,9 +27,7 @@ export default {
     return entityMetadata;
   },
 
-  async getColumns(fetchXml: string | null):
-   Promise<IColumn[]> {
-
+  async getColumns(fetchXml: string | null): Promise<IColumn[]> {
     const attributesFieldNames: string[] = utilities.getAttributesFieldNames(fetchXml ?? '');
     const entityName: string = utilities.getEntityName(fetchXml ?? '');
 
@@ -49,7 +47,7 @@ export default {
       for (let j = 1; j < entityFieldNames[i].length; j++) {
         onlyArrtibuteNames.push(entityFieldNames[i][j]);
       }
-      // @ts-ignore
+
       const medData = await this.getEntityMetadata(entityNames[i], onlyArrtibuteNames);
       const DisplayNameCollection = medData.Attributes._collection;
 
@@ -126,10 +124,10 @@ export default {
     );
   },
 
-  async getRecords(fetchXml: string | null, entityName: string):
-  Promise<ComponentFramework.WebApi.RetrieveMultipleResponse> {
+  async getRecords(
+    fetchXml: string | null,
+    entityName: string): Promise<ComponentFramework.WebApi.RetrieveMultipleResponse> {
     const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
-
     return await _context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
   },
 };

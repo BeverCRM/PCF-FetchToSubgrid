@@ -6,8 +6,8 @@
     </external-service-usage>
 
     <property name="fetchXmlProperty" display-name-key="Property_Display_Key" description-key="Property_Desc_Key" of-type="Multiple" usage="bound" required="true" />
-    <property name="defaultFetchXmlProperty" display-name-key='Default fetchXml' description-key='If field is blank, use Default fetchXml property' of-type='Multiple' usage='input'/>
-    <property name="defaultNumberOfRows" display-name-key='Default number of rows' description-key='If you want to change the number of rows in the control, use Default number of rows property' of-type='Whole.None' usage='input'/>
+    <property name="defaultFetchXmlProperty" display-name-key="Default fetchXml" description-key="If the field is blank, the default value from the user's personalization settings is used." of-type="Multiple" usage="input"/>
+    <property name="defaultNumberOfRows" display-name-key="Default number of rows" description-key="If you want to change the number of rows in the control, use Default number of rows property" of-type="Whole.None" usage="input"/>
     <resources>
       <code path="index.ts" order="1"/>
       <platform-library name="React" version="16.8.6" />

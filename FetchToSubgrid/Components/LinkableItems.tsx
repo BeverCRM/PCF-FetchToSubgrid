@@ -4,14 +4,13 @@ import CrmService from '../Services/CrmService';
 import utilities from '../utilities';
 
 export default {
-
-  async getLinkableItems(fetchXml: string | null,
+  async getLinkableItems(
+    fetchXml: string | null,
     pageSize: number,
-    currentPage: number,
-  ): Promise<ComponentFramework.WebApi.Entity[]> {
-
+    currentPage: number): Promise<ComponentFramework.WebApi.Entity[]> {
     const pagingFetchData: string = fetchXml
-      ? utilities.addPagingToFetchXml(fetchXml, pageSize, currentPage) : '';
+      ? utilities.addPagingToFetchXml(fetchXml, pageSize, currentPage)
+      : '';
 
     const attributesFieldNames: string[] = utilities.getAttributesFieldNames(pagingFetchData);
     const entityName: string = utilities.getEntityName(fetchXml ?? '');

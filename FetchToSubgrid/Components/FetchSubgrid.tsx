@@ -26,15 +26,14 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
 
   pageSize.current = numberOfRows ?? pageSize.current;
 
-  CrmService.getRecordsCount(fetchXml ?? '').then(
-    (count: any) => {
-      if (Math.ceil(count / pageSize.current) <= currentPage) {
-        nextButtonDisable.current = true;
-      }
-      else {
-        nextButtonDisable.current = false;
-      }
-    });
+  CrmService.getRecordsCount(fetchXml ?? '').then(count => {
+    if (Math.ceil(count / pageSize.current) <= currentPage) {
+      nextButtonDisable.current = true;
+    }
+    else {
+      nextButtonDisable.current = false;
+    }
+  });
 
   const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] =
     (props: IDetailsFooterProps | undefined) => {
@@ -67,7 +66,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
         setColumns(columns);
 
         const items: any =
-        await LinkableItems.getLinkableItems(fetchXml, pageSize.current, currentPage);
+          await LinkableItems.getLinkableItems(fetchXml, pageSize.current, currentPage);
         setItems(items);
       }
       catch (err) {

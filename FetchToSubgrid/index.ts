@@ -25,9 +25,7 @@ export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, 
           context.parameters.defaultFetchXmlProperty.raw,
       };
 
-      return React.createElement(
-        FetchSubgrid, props,
-      );
+      return React.createElement(FetchSubgrid, props);
     }
 
     public getOutputs(): IOutputs {
