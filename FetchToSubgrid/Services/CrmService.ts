@@ -9,7 +9,7 @@ export default {
     _context = context;
   },
 
-  getRecordsPerPage(): number {
+  getPagingLimit(): number {
     // @ts-ignore
     return _context.userSettings.pagingLimit;
   },
@@ -125,8 +125,8 @@ export default {
   },
 
   async getRecords(
-    fetchXml: string | null,
-    entityName: string): Promise<ComponentFramework.WebApi.RetrieveMultipleResponse> {
+    fetchXml: string | null): Promise<ComponentFramework.WebApi.RetrieveMultipleResponse> {
+    const entityName: string = utilities.getEntityName(fetchXml ?? '');
     const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
     return await _context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
   },

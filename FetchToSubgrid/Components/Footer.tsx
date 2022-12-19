@@ -10,8 +10,8 @@ export interface IGridFooterProps {
   isMovePrevious: boolean;
 }
 
-export const GridFooter = ({ currentPage, setCurrentPage, nextButtonDisable, isMovePrevious }:
-   IGridFooterProps) => {
+export const GridFooter: React.FunctionComponent<IGridFooterProps> = props => {
+  const { currentPage, setCurrentPage, nextButtonDisable, isMovePrevious } = props;
 
   function moveToFirst() {
     setCurrentPage(1);

@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import LinkableItems from './LinkableItems';
 import CrmService from '../Services/CrmService';
 import { GridFooter } from './Footer';
+import utilities from '../utilities';
 
 export interface IFetchSubgridProps {
   fetchXml: string | null;
@@ -18,33 +19,35 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   const [items, setItems] = useState<any>([]);
   const [columns, setColumns] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const nextButtonDisable = React.useRef(false);
-  const isMovePrevious = React.useRef(true);
+  let nextButtonDisable = true;
+  let recordsPerPage: number = CrmService.getPagingLimit();
 
-  const recordsPerPage: number = CrmService.getRecordsPerPage();
-  const pageSize = React.useRef(recordsPerPage);
+  if (numberOfRows) {
+    recordsPerPage = numberOfRows;
+  }
 
-  pageSize.current = numberOfRows ?? pageSize.current;
-
-  CrmService.getRecordsCount(fetchXml ?? '').then(count => {
-    if (Math.ceil(count / pageSize.current) <= currentPage) {
-      nextButtonDisable.current = true;
-    }
-    else {
-      nextButtonDisable.current = false;
-    }
-  });
+  React.useEffect(() => {
+    (async () => {
+      const recordsCount = await CrmService.getRecordsCount(fetchXml ?? '');
+      if (Math.ceil(recordsCount / recordsPerPage) <= currentPage) {
+        nextButtonDisable = true;
+      }
+      else {
+        nextButtonDisable = false;
+      }
+    })();
+  }, [fetchXml]);
 
   const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] =
     (props: IDetailsFooterProps | undefined) => {
-      currentPage > 1 ? isMovePrevious.current = false : isMovePrevious.current = true;
+      const isMovePrevious = !(currentPage > 1);
 
       if (props) {
         return <GridFooter
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
-          nextButtonDisable={nextButtonDisable.current}
-          isMovePrevious={isMovePrevious.current}
+          nextButtonDisable={nextButtonDisable}
+          isMovePrevious={isMovePrevious}
         ></GridFooter>;
       }
       return null;
@@ -64,9 +67,15 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
       try {
         const columns: any = await FetchService.getColumns(fetchXml);
         setColumns(columns);
+        const items: any = await utilities.getItems(fetchXml, recordsPerPage, currentPage);
 
-        const items: any =
-          await LinkableItems.getLinkableItems(fetchXml, pageSize.current, currentPage);
+        items.forEach((item: any) => {
+          Object.keys(item).forEach(key => {
+            const value = item[key];
+            item[key] = value.linkable ? LinkableItems.makeItemsLinkable(value) : value.displayName;
+          });
+        });
+
         setItems(items);
       }
       catch (err) {
