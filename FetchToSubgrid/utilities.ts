@@ -1,9 +1,7 @@
-import CrmService from './Services/CrmService';
-// import { LinkableItems } from './Components/LinkableItems';
-// import { Link } from '@fluentui/react';
-// import React = require('react');
-
 /* global HTMLCollectionOf, NodeListOf */
+
+import CrmService from './Services/CrmService';
+
 enum AttributeType {
   DATE_TIME = 2,
   LOOKUP = 6,
