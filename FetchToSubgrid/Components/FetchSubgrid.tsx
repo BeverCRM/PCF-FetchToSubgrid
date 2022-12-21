@@ -1,12 +1,11 @@
 import * as React from 'react';
-import { DetailsList, DetailsListLayoutMode, IDetailsFooterProps,
+import { DetailsList, DetailsListLayoutMode, IColumn, IDetailsFooterProps,
   IDetailsListProps, Spinner, SpinnerSize } from '@fluentui/react';
-import FetchService from '../Services/CrmService';
 import { useState, useEffect, useCallback } from 'react';
-import LinkableItems from './LinkableItems';
-import CrmService from '../Services/CrmService';
+import { LinkableItem } from './LinkableItems';
+import { getPagingLimit, getColumns, getRecordsCount, openRecord } from '../Services/CrmService';
 import { GridFooter } from './Footer';
-import utilities from '../utilities';
+import { getEntityName, getItems } from '../Utilities/utilities';
 
 export interface IFetchSubgridProps {
   fetchXml: string | null;
@@ -14,13 +13,14 @@ export interface IFetchSubgridProps {
 }
 
 export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const { numberOfRows, fetchXml } = props;
-  const [items, setItems] = useState<any>([]);
-  const [columns, setColumns] = useState([]);
+  const items = React.useRef<ComponentFramework.WebApi.Entity[]>([]);
+  const [ columns, setColumns] = useState<IColumn[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+
   let nextButtonDisable = true;
-  let recordsPerPage: number = CrmService.getPagingLimit();
+  let recordsPerPage = getPagingLimit();
 
   if (numberOfRows) {
     recordsPerPage = numberOfRows;
@@ -28,17 +28,22 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
 
   React.useEffect(() => {
     (async () => {
-      const recordsCount = await CrmService.getRecordsCount(fetchXml ?? '');
-      if (Math.ceil(recordsCount / recordsPerPage) <= currentPage) {
-        nextButtonDisable = true;
-      }
-      else {
-        nextButtonDisable = false;
-      }
+      const columns = await getColumns(fetchXml);
+      setColumns(columns);
     })();
   }, [fetchXml]);
 
-  const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] =
+  React.useEffect(() => {
+    (async () => {
+      const recordsCount = await getRecordsCount(fetchXml ?? '');
+
+      Math.ceil(recordsCount / recordsPerPage) > currentPage ? nextButtonDisable = false
+        : nextButtonDisable = true;
+
+    })();
+  }, [currentPage]);
+
+  const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = useCallback(
     (props: IDetailsFooterProps | undefined) => {
       const isMovePrevious = !(currentPage > 1);
 
@@ -51,39 +56,31 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
         ></GridFooter>;
       }
       return null;
-    };
+    },
+    [currentPage, nextButtonDisable, setCurrentPage],
+  );
 
-  const onItemInvoked = useCallback((item : any) : void => {
-    for (let i = 0; i < items.length; i++) {
-      if (item.key === items[i].key) {
-        CrmService.openRecord(item.entityName, item.key);
-      }
-    }
-  }, [items]);
+  const onItemInvoked = useCallback((item) : void => {
+    const entityName = getEntityName(fetchXml ?? '');
+    openRecord(entityName, item[`${entityName}id`]);
+
+  }, [items.current]);
 
   useEffect(() => {
     (async () => {
       setIsLoading(true);
-      try {
-        const columns: any = await FetchService.getColumns(fetchXml);
-        setColumns(columns);
-        const items: any = await utilities.getItems(fetchXml, recordsPerPage, currentPage);
+      items.current = await getItems(fetchXml, recordsPerPage, currentPage);
 
-        items.forEach((item: any) => {
-          Object.keys(item).forEach(key => {
-            const value = item[key];
-            item[key] = value.linkable ? LinkableItems.makeItemsLinkable(value) : value.displayName;
-          });
+      items.current.forEach(item => {
+        Object.keys(item).forEach(key => {
+          const value: ComponentFramework.WebApi.Entity = item[key];
+          item[key] = value.linkable ? <LinkableItem item = {value} /> : value.displayName;
         });
+      });
 
-        setItems(items);
-      }
-      catch (err) {
-        setColumns([]);
-        setItems([]);
-      }
       setIsLoading(false);
     })();
+
   }, [props, currentPage]);
 
   if (isLoading) {
@@ -108,7 +105,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     <div className='fetchSubgridControl'>
       <DetailsList
         columns={columns}
-        items={items}
+        items={items.current}
         layoutMode={DetailsListLayoutMode.fixedColumns}
         onItemInvoked= {onItemInvoked}
         onRenderDetailsFooter={onRenderDetailsFooter}

@@ -5,7 +5,7 @@ import { BackIcon, footerButtonStyles, footerStyles,
 
 export interface IGridFooterProps {
   currentPage: number;
-  setCurrentPage: any;
+  setCurrentPage: (page: number) => void;
   nextButtonDisable: boolean;
   isMovePrevious: boolean;
 }

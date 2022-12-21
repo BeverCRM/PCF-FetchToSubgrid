@@ -1,35 +1,36 @@
 import { Link } from '@fluentui/react';
 import * as React from 'react';
-import CrmService from '../Services/CrmService';
+import { openLinkEntityRecord, openLookupForm,
+  openPrimaryEntityForm } from '../Services/CrmService';
+import { AttributeType } from '../Utilities/enums';
 
-enum AttributeType {
-  LOOKUP = 6,
-  OWNER = 9,
+interface IlinkableItemProps {
+  item: ComponentFramework.WebApi.Entity
 }
 
-export default {
-  makeItemsLinkable(item: any) {
-    if (item.isLinkEntity) {
-      return <Link onClick={() => {
-        CrmService.openLinkEntityRecord(item.entity, item.fieldName);
-      }}>
-        {item.displayName}
-      </Link>;
-    }
+export const LinkableItem: React.FunctionComponent<IlinkableItemProps> = props => {
+  const { item } = props;
 
-    if (item.attributeType === AttributeType.LOOKUP ||
-          item.attributeType === AttributeType.OWNER) {
-      return <Link onClick={() => {
-        CrmService.openLookupForm(item.entity, item.fieldName);
-      }}>
-        {item.displayName}
-      </Link>;
-    }
-
+  if (item.isLinkEntity) {
     return <Link onClick={() => {
-      CrmService.openPrimaryEntityForm(item.entity, item.entityName);
+      openLinkEntityRecord(item.entity, item.fieldName);
     }}>
       {item.displayName}
     </Link>;
-  },
+  }
+
+  if (item.attributeType === AttributeType.LOOKUP ||
+          item.attributeType === AttributeType.OWNER) {
+    return <Link onClick={() => {
+      openLookupForm(item.entity, item.fieldName);
+    }}>
+      {item.displayName}
+    </Link>;
+  }
+
+  return <Link onClick={() => {
+    openPrimaryEntityForm(item.entity, item.entityName);
+  }}>
+    {item.displayName}
+  </Link>;
 };
