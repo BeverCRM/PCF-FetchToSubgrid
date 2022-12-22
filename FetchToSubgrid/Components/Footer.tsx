@@ -27,15 +27,24 @@ export const GridFooter: React.FunctionComponent<IGridFooterProps> = props => {
 
   return <div className={footerStyles.content}>
     <div className='buttons'>
-      <IconButton styles={footerButtonStyles} iconProps={PreviousIcon}
-        onClick={ moveToFirst} disabled = {isMovePrevious}
+      <IconButton
+        styles={footerButtonStyles}
+        iconProps={PreviousIcon}
+        onClick={moveToFirst}
+        disabled = {isMovePrevious}
       />
-      <IconButton styles={footerButtonStyles} iconProps={BackIcon}
-        onClick={movePrevious} disabled={isMovePrevious}
+      <IconButton
+        styles={footerButtonStyles}
+        iconProps={BackIcon}
+        onClick={movePrevious}
+        disabled={isMovePrevious}
       />
       <span color='black'> Page {currentPage} </span>
-      <IconButton styles={footerButtonStyles} iconProps={ForwardIcon}
-        onClick={moveNext} disabled={nextButtonDisable}
+      <IconButton
+        styles={footerButtonStyles}
+        iconProps={ForwardIcon}
+        onClick={moveNext}
+        disabled={nextButtonDisable}
       />
     </div>
   </div>;

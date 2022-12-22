@@ -33,8 +33,9 @@ export const getLinkEntitiesNames = (fetchXml: string): Object => {
     const entityName: string = linkentity.attributes['name'].value;
     const alias: string = linkentity.attributes['alias'].value;
     const entityAttributes: string[] = [alias];
-    // eslint-disable-next-line max-len
-    const attributes: NodeListOf<Element> = xmlDoc.querySelectorAll(`link-entity[name="${entityName}"] > attribute`);
+
+    const attributeSelector = `link-entity[name="${entityName}"] > attribute`;
+    const attributes: NodeListOf<Element> = xmlDoc.querySelectorAll(attributeSelector);
 
     Array.prototype.slice.call(attributes).map(attr => {
       entityAttributes.push(attr.attributes.name.value);

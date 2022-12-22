@@ -1,6 +1,13 @@
 import * as React from 'react';
-import { DetailsList, DetailsListLayoutMode, IColumn, IDetailsFooterProps,
-  IDetailsListProps, Spinner, SpinnerSize } from '@fluentui/react';
+import {
+  DetailsList,
+  DetailsListLayoutMode,
+  IColumn,
+  IDetailsFooterProps,
+  IDetailsListProps,
+  Spinner,
+  SpinnerSize,
+} from '@fluentui/react';
 import { useState, useEffect, useCallback } from 'react';
 import { LinkableItem } from './LinkableItems';
 import { getPagingLimit, getColumns, getRecordsCount, openRecord } from '../Services/CrmService';
@@ -53,7 +60,8 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
           setCurrentPage={setCurrentPage}
           nextButtonDisable={nextButtonDisable}
           isMovePrevious={isMovePrevious}
-        ></GridFooter>;
+        >
+        </GridFooter>;
       }
       return null;
     },
@@ -107,7 +115,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
         columns={columns}
         items={items.current}
         layoutMode={DetailsListLayoutMode.fixedColumns}
-        onItemInvoked= {onItemInvoked}
+        onItemInvoked={onItemInvoked}
         onRenderDetailsFooter={onRenderDetailsFooter}
       >
       </DetailsList>
