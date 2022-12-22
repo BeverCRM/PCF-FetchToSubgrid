@@ -1,7 +1,10 @@
 import { IColumn } from '@fluentui/react';
 import { IInputs } from '../generated/ManifestTypes';
-import { getEntityName, getLinkEntitiesNames,
-  getAttributesFieldNames } from '../Utilities/utilities';
+import {
+  getEntityName,
+  getLinkEntitiesNames,
+  getAttributesFieldNames,
+} from '../Utilities/utilities';
 
 let _context: ComponentFramework.Context<IInputs>;
 type EntityMetadata = ComponentFramework.PropertyHelper.EntityMetadata;
@@ -12,7 +15,7 @@ export const setContext = (context: ComponentFramework.Context<IInputs>) => {
 };
 
 export const getPagingLimit = (): number =>
-// @ts-ignore
+  // @ts-ignore
   _context.userSettings.pagingLimit
 ;
 
@@ -84,45 +87,30 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
   return columns;
 };
 
-export const openLookupForm = (entity: any, fieldName: string): void => {
-  _context.navigation.openForm(
-    {
-      entityName: entity[`_${fieldName}_value@Microsoft.Dynamics.CRM.lookuplogicalname`],
-      entityId: entity[`_${fieldName}_value`],
-    },
-  );
-};
-
-export const openLinkEntityRecord = (entity: any, fieldName: string): void => {
-  const entityName = entity[`${fieldName}@Microsoft.Dynamics.CRM.lookuplogicalname`];
-  _context.navigation.openForm(
-    {
-      entityName,
-      entityId: entity[fieldName],
-    },
-  );
-};
-
-export const openPrimaryEntityForm = (entity: any, entityName: string): void => {
-  _context.navigation.openForm(
-    {
-      entityName,
-      entityId: entity[`${entityName}id`],
-    },
-  );
-};
-
-export const openRecord = (entityName: string, entityId: string): void => {
-  _context.navigation.openForm(
-    {
-      entityName,
-      entityId,
-    },
-  );
-};
-
 export const getRecords = async (fetchXml: string | null): Promise<RetriveRecords> => {
   const entityName = getEntityName(fetchXml ?? '');
   const encodeFetchXml = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
   return await _context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
+};
+
+export const openRecord = (entityName: string, entityId: string): void => {
+  _context.navigation.openForm({
+    entityName,
+    entityId,
+  });
+};
+
+export const openLookupForm = (entity: any, fieldName: string): void => {
+  const entityName = entity[`_${fieldName}_value@Microsoft.Dynamics.CRM.lookuplogicalname`];
+  const entityId = entity[`_${fieldName}_value`];
+  openRecord(entityName, entityId);
+};
+
+export const openLinkEntityRecord = (entity: any, fieldName: string): void => {
+  const entityName = entity[`${fieldName}@Microsoft.Dynamics.CRM.lookuplogicalname`];
+  openRecord(entityName, entity[fieldName]);
+};
+
+export const openPrimaryEntityForm = (entity: any, entityName: string): void => {
+  openRecord(entityName, entity[`${entityName}id`]);
 };
