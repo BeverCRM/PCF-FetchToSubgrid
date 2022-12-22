@@ -1,7 +1,12 @@
 import * as React from 'react';
 import { IconButton } from '@fluentui/react/lib/Button';
-import { BackIcon, footerButtonStyles, footerStyles,
-  ForwardIcon, PreviousIcon } from '../Styles/FooterStyles';
+import {
+  BackIcon,
+  footerButtonStyles,
+  footerStyles,
+  ForwardIcon,
+  PreviousIcon,
+} from '../Styles/FooterStyles';
 
 export interface IGridFooterProps {
   currentPage: number;
