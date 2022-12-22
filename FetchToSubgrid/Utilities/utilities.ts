@@ -27,14 +27,15 @@ export const getLinkEntitiesNames = (fetchXml: string): Object => {
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
   const linkEntities: HTMLCollectionOf<Element> = xmlDoc.getElementsByTagName('link-entity');
-  const linkEntityData: any = {};
+  const linkEntityData: { [key: string]: string[] } = {};
 
   Array.prototype.slice.call(linkEntities).forEach(linkentity => {
     const entityName: string = linkentity.attributes['name'].value;
     const alias: string = linkentity.attributes['alias'].value;
     const entityAttributes: string[] = [alias];
-    // eslint-disable-next-line max-len
-    const attributes: NodeListOf<Element> = xmlDoc.querySelectorAll(`link-entity[name="${entityName}"] > attribute`);
+
+    const attributesSelector = `link-entity[name="${entityName}"] > attribute`;
+    const attributes: NodeListOf<Element> = xmlDoc.querySelectorAll(attributesSelector);
 
     Array.prototype.slice.call(attributes).map(attr => {
       entityAttributes.push(attr.attributes.name.value);
@@ -64,7 +65,7 @@ export const getAttributesFieldNames = (fetchXml: string): string[] => {
 };
 
 const genereateItems = (
-  item: any, isLinkEntity: boolean,
+  item: ComponentFramework.WebApi.Entity, isLinkEntity: boolean,
   entityMetadata: ComponentFramework.PropertyHelper.EntityMetadata,
   attributeType: number, fieldName: string, entity: ComponentFramework.WebApi.Entity,
   entityName: string): Object => {
@@ -78,32 +79,31 @@ const genereateItems = (
       attributeType === AttributeType.MULTISELECT_PICKLIST) {
 
     displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
-    linkable = false;
   }
 
-  if (fieldName in entity) {
-    displayName = entity[fieldName];
-    linkable = false;
-  }
-
-  if (isLinkEntity) {
+  else if (isLinkEntity) {
     if (attributeType === AttributeType.LOOKUP || attributeType === AttributeType.OWNER) {
       displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
       linkable = true;
     }
+
+    else if (fieldName in entity) {
+      displayName = entity[fieldName];
+    }
   }
 
-  else if (isLinkEntity === false) {
+  else if (fieldName === entityMetadata._primaryNameAttribute) {
+    displayName = entity[fieldName];
+    linkable = true;
+  }
 
-    if (fieldName === entityMetadata._primaryNameAttribute) {
-      displayName = entity[fieldName];
-      linkable = true;
-    }
+  else if (attributeType === AttributeType.LOOKUP || attributeType === AttributeType.OWNER) {
+    displayName = entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`];
+    linkable = true;
+  }
 
-    else if (attributeType === AttributeType.LOOKUP || attributeType === AttributeType.OWNER) {
-      displayName = entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`];
-      linkable = true;
-    }
+  else if (fieldName in entity) {
+    displayName = entity[fieldName];
   }
 
   return item[fieldName] = {
