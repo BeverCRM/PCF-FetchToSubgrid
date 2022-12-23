@@ -143,7 +143,9 @@ export const getItems = async (
   const items: Array<ComponentFramework.WebApi.Entity> = [];
 
   records.entities.forEach(entity => {
-    const item: ComponentFramework.WebApi.Entity = {};
+    const item: ComponentFramework.WebApi.Entity = {
+      id: entity[`${entityName}id`],
+    };
 
     attributesFieldNames.forEach(fieldName => {
       const attributeType = entityMetadata.Attributes._collection[fieldName].AttributeType;

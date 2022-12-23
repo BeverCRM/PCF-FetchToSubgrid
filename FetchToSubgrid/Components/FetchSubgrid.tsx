@@ -25,6 +25,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   const items = React.useRef<ComponentFramework.WebApi.Entity[]>([]);
   const [ columns, setColumns] = useState<IColumn[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const recordIds = React.useRef<string[]>([]);
 
   let nextButtonDisable = true;
   let recordsPerPage = getPagingLimit();
@@ -35,8 +36,13 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
 
   React.useEffect(() => {
     (async () => {
-      const columns = await getColumns(fetchXml);
-      setColumns(columns);
+      try {
+        const columns = await getColumns(fetchXml);
+        setColumns(columns);
+      }
+      catch {
+        setColumns([]);
+      }
     })();
   }, [fetchXml]);
 
@@ -68,25 +74,33 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     [currentPage, nextButtonDisable, setCurrentPage],
   );
 
-  const onItemInvoked = useCallback((item) : void => {
+  const onItemInvoked = useCallback((
+    item: ComponentFramework.WebApi.Entity,
+    index?: number | undefined) : void => {
     const entityName = getEntityName(fetchXml ?? '');
-    openRecord(entityName, item[`${entityName}id`]);
 
-  }, [items.current]);
+    if (index !== undefined) {
+      openRecord(entityName, recordIds.current[index]);
+    }
+  }, [items]);
 
   useEffect(() => {
     (async () => {
       setIsLoading(true);
-      items.current = await getItems(fetchXml, recordsPerPage, currentPage);
-
-      items.current.forEach(item => {
-        Object.keys(item).forEach(key => {
-          const value: ComponentFramework.WebApi.Entity = item[key];
-          item[key] = value.linkable ? <LinkableItem item = {value} /> : value.displayName;
+      try {
+        items.current = await getItems(fetchXml, recordsPerPage, currentPage);
+        items.current.forEach(item => {
+          recordIds.current.push(item.id);
+          Object.keys(item).forEach(key => {
+            const value: ComponentFramework.WebApi.Entity = item[key];
+            item[key] = value.linkable ? <LinkableItem item = {value} /> : value.displayName;
+          });
         });
-      });
-
-      setIsLoading(false);
+        setIsLoading(false);
+      }
+      catch {
+        setIsLoading(false);
+      }
     })();
 
   }, [props, currentPage]);
