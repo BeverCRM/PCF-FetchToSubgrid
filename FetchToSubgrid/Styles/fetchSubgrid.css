@@ -1,7 +1,6 @@
-.fetchSubgridControl{
-  overflow: auto;
+ .fetchSubgridControl{
   width: 100%;
-}
+} 
 
 .fetchSubgridControl .fetchLoading{
   width: 100%;
@@ -24,4 +23,24 @@
 
 .fetchSubgridControl .ms-DetailsList{
   overflow: inherit;
+} 
+
+.fetchSubgridControl .ms-List {
+  width: 100%;
+}
+
+.fetchSubgridControl .ms-FocusZone, .ms-DetailsRow {
+  display: flex;
+}
+
+.fetchSubgridControl, .ms-DetailsHeader-cell, .ms-DetailsRow-fields, .ms-DetailsRow-cell {
+  flex: 1 1 auto;
+}
+
+.fetchSubgridControl .ms-DetailsHeader-cellIsCheck, .ms-DetailsRow-cellCheck {
+  flex: none;
+}
+
+.fetchSubgridControl .ms-DetailsRow-check{
+  display: none;
 }

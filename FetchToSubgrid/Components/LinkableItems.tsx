@@ -1,45 +1,32 @@
 import { Link } from '@fluentui/react';
 import * as React from 'react';
-import CrmService from '../Services/CrmService';
-import utilities from '../utilities';
+import { AttributeType } from '../Utilities/enums';
+import {
+  openLinkEntityRecord,
+  openLookupForm,
+  openPrimaryEntityForm,
+} from '../Services/CrmService';
 
-export default {
+interface IlinkableItemProps {
+  item: ComponentFramework.WebApi.Entity
+}
 
-  async getLinkableItems(fetchXml: string | null): Promise<ComponentFramework.WebApi.Entity[]> {
-    const attributesFieldNames: string[] = utilities.getAttributesFieldNames(fetchXml ?? '');
-    const entityName: string = utilities.getEntityName(fetchXml ?? '');
+export const LinkableItem: React.FunctionComponent<IlinkableItemProps> = props => {
+  const { item } = props;
 
-    const record = await CrmService.getRecord(fetchXml, entityName);
-    const entityMetadata = await CrmService.getEntityMetadata(entityName, attributesFieldNames);
+  if (item.isLinkEntity) {
+    return <Link onClick={openLinkEntityRecord.bind(null, item.entity, item.fieldName)}>
+      {item.displayName}
+    </Link>;
+  }
 
-    const items: Array<ComponentFramework.WebApi.Entity> = [];
+  if (item.attributeType === AttributeType.LOOKUP || item.attributeType === AttributeType.OWNER) {
+    return <Link onClick={openLookupForm.bind(null, item.entity, item.fieldName)}>
+      {item.displayName}
+    </Link>;
+  }
 
-    record.entities.forEach(entity => {
-      const item: ComponentFramework.WebApi.Entity = {};
-
-      attributesFieldNames.forEach(fieldName => {
-        if (fieldName in entity) {
-          item[fieldName] = entity[fieldName];
-        }
-
-        if (`_${fieldName}_value` in entity) {
-          item[fieldName] =
-            <Link onClick={() => CrmService.openLookupForm(entity, fieldName) }>
-              {entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`]}
-            </Link>;
-        }
-
-        if (fieldName === entityMetadata._primaryNameAttribute) {
-          item[fieldName] =
-            <Link onClick={() => CrmService.openPrimaryEntityForm(entity, entityName) }>
-              {entity[fieldName]}
-            </Link>;
-        }
-      });
-
-      items.push(item);
-    });
-
-    return items;
-  },
+  return <Link onClick={openPrimaryEntityForm.bind(null, item.entity, item.entityName)}>
+    {item.displayName}
+  </Link>;
 };
