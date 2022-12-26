@@ -8,10 +8,9 @@ import {
   Spinner,
   SpinnerSize,
 } from '@fluentui/react';
-import { useState, useEffect, useCallback } from 'react';
 import { LinkableItem } from './LinkableItems';
 import { getPagingLimit, getColumns, getRecordsCount, openRecord } from '../Services/CrmService';
-import { GridFooter } from './Footer';
+import { Footer } from './Footer';
 import { getEntityName, getItems } from '../Utilities/utilities';
 
 export interface IFetchSubgridProps {
@@ -22,9 +21,9 @@ export interface IFetchSubgridProps {
 export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props => {
   const { numberOfRows, fetchXml } = props;
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [ columns, setColumns] = useState<IColumn[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [ columns, setColumns] = React.useState<IColumn[]>([]);
+  const [currentPage, setCurrentPage] = React.useState(1);
 
   const items = React.useRef<ComponentFramework.WebApi.Entity[]>([]);
   const recordIds = React.useRef<string[]>([]);
@@ -55,25 +54,25 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     })();
   }, [currentPage]);
 
-  const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = useCallback(
+  const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = React.useCallback(
     (props: IDetailsFooterProps | undefined) => {
       const isMovePrevious = !(currentPage > 1);
 
       if (props) {
-        return <GridFooter
+        return <Footer
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
           nextButtonDisable={nextButtonDisable}
           isMovePrevious={isMovePrevious}
         >
-        </GridFooter>;
+        </Footer>;
       }
       return null;
     },
-    [currentPage, nextButtonDisable, setCurrentPage],
+    [currentPage, nextButtonDisable],
   );
 
-  const onItemInvoked = useCallback((
+  const onItemInvoked = React.useCallback((
     record: ComponentFramework.WebApi.Entity,
     index?: number | undefined) : void => {
     const entityName = getEntityName(fetchXml ?? '');
@@ -83,7 +82,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     }
   }, [items]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     (async () => {
       setIsLoading(true);
 
@@ -103,12 +102,11 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
         });
 
         items.current = records;
-        setIsLoading(false);
       }
       catch (err) {
         console.log('Error', err);
-        setIsLoading(false);
       }
+      setIsLoading(false);
     })();
 
   }, [props, currentPage]);

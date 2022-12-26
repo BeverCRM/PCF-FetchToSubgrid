@@ -15,7 +15,7 @@ export interface IGridFooterProps {
   isMovePrevious: boolean;
 }
 
-export const GridFooter: React.FunctionComponent<IGridFooterProps> = props => {
+export const Footer: React.FunctionComponent<IGridFooterProps> = props => {
   const { currentPage, setCurrentPage, nextButtonDisable, isMovePrevious } = props;
 
   function moveToFirst() {
