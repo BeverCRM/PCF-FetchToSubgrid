@@ -140,7 +140,7 @@ export const getItems = async (
   const linkentityMetadata: ComponentFramework.PropertyHelper.EntityMetadata[] =
      await Promise.all(promises);
 
-  const items: Array<ComponentFramework.WebApi.Entity> = [];
+  const items: ComponentFramework.WebApi.Entity[] = [];
 
   records.entities.forEach(entity => {
     const item: ComponentFramework.WebApi.Entity = {
@@ -150,9 +150,14 @@ export const getItems = async (
     attributesFieldNames.forEach(fieldName => {
       const attributeType = entityMetadata.Attributes._collection[fieldName].AttributeType;
 
-      genereateItems(item, false, entityMetadata,
-        attributeType, fieldName, entity, entityName);
-
+      genereateItems(
+        item,
+        false,
+        entityMetadata,
+        attributeType,
+        fieldName,
+        entity,
+        entityName);
     });
 
     linkEntityAttributes.forEach(([alias, ...fields]: [string, string], i: number) => {

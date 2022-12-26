@@ -20,11 +20,13 @@ export interface IFetchSubgridProps {
 }
 
 export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props => {
-  const [isLoading, setIsLoading] = useState(false);
   const { numberOfRows, fetchXml } = props;
-  const items = React.useRef<ComponentFramework.WebApi.Entity[]>([]);
+
+  const [isLoading, setIsLoading] = useState(false);
   const [ columns, setColumns] = useState<IColumn[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const items = React.useRef<ComponentFramework.WebApi.Entity[]>([]);
   const recordIds = React.useRef<string[]>([]);
 
   let nextButtonDisable = true;
@@ -49,10 +51,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   React.useEffect(() => {
     (async () => {
       const recordsCount = await getRecordsCount(fetchXml ?? '');
-
-      Math.ceil(recordsCount / recordsPerPage) > currentPage ? nextButtonDisable = false
-        : nextButtonDisable = true;
-
+      if (Math.ceil(recordsCount / recordsPerPage) > currentPage) nextButtonDisable = false;
     })();
   }, [currentPage]);
 
@@ -75,7 +74,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   );
 
   const onItemInvoked = useCallback((
-    item: ComponentFramework.WebApi.Entity,
+    record: ComponentFramework.WebApi.Entity,
     index?: number | undefined) : void => {
     const entityName = getEntityName(fetchXml ?? '');
 
@@ -87,18 +86,27 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   useEffect(() => {
     (async () => {
       setIsLoading(true);
+
       try {
-        items.current = await getItems(fetchXml, recordsPerPage, currentPage);
-        items.current.forEach(item => {
-          recordIds.current.push(item.id);
-          Object.keys(item).forEach(key => {
-            const value: ComponentFramework.WebApi.Entity = item[key];
-            item[key] = value.linkable ? <LinkableItem item = {value} /> : value.displayName;
+        const records: ComponentFramework.WebApi.Entity[] = await getItems(
+          fetchXml,
+          recordsPerPage,
+          currentPage);
+
+        records.forEach(record => {
+          recordIds.current.push(record.id);
+
+          Object.keys(record).forEach(key => {
+            const value: any = record[key];
+            record[key] = value.linkable ? <LinkableItem item = {value} /> : value.displayName;
           });
         });
+
+        items.current = records;
         setIsLoading(false);
       }
-      catch {
+      catch (err) {
+        console.log('Error', err);
         setIsLoading(false);
       }
     })();
