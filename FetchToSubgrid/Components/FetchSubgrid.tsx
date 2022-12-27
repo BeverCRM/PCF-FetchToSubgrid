@@ -11,7 +11,7 @@ import {
 import { LinkableItem } from './LinkableItems';
 import { getPagingLimit, getColumns, getRecordsCount, openRecord } from '../Services/CrmService';
 import { Footer } from './Footer';
-import { getEntityName, getItems } from '../Utilities/utilities';
+import { getCountInFetchXml, getEntityName, getItems } from '../Utilities/utilities';
 
 export interface IFetchSubgridProps {
   fetchXml: string | null;
@@ -28,41 +28,25 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   const items = React.useRef<ComponentFramework.WebApi.Entity[]>([]);
   const recordIds = React.useRef<string[]>([]);
 
-  let nextButtonDisable = true;
-  let recordsPerPage = getPagingLimit();
+  const nextButtonDisable = React.useRef(true);
+  let recordsPerPage: number = getPagingLimit();
+  const countOfRecordsInFetch = getCountInFetchXml(fetchXml);
 
-  if (numberOfRows) {
+  if (countOfRecordsInFetch) {
+    recordsPerPage = countOfRecordsInFetch;
+  }
+  else if (numberOfRows) {
     recordsPerPage = numberOfRows;
   }
-
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const columns = await getColumns(fetchXml);
-        setColumns(columns);
-      }
-      catch {
-        setColumns([]);
-      }
-    })();
-  }, [fetchXml]);
-
-  React.useEffect(() => {
-    (async () => {
-      const recordsCount = await getRecordsCount(fetchXml ?? '');
-      if (Math.ceil(recordsCount / recordsPerPage) > currentPage) nextButtonDisable = false;
-    })();
-  }, [currentPage]);
 
   const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = React.useCallback(
     (props: IDetailsFooterProps | undefined) => {
       const isMovePrevious = !(currentPage > 1);
-
       if (props) {
         return <Footer
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
-          nextButtonDisable={nextButtonDisable}
+          nextButtonDisable={nextButtonDisable.current}
           isMovePrevious={isMovePrevious}
         >
         </Footer>;
@@ -84,9 +68,29 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
 
   React.useEffect(() => {
     (async () => {
-      setIsLoading(true);
-
+      setCurrentPage(1);
       try {
+        const columns = await getColumns(fetchXml);
+        setColumns(columns);
+      }
+      catch {
+        setColumns([]);
+      }
+    })();
+  }, [fetchXml]);
+
+  React.useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+      try {
+        const recordsCount = await getRecordsCount(fetchXml ?? '');
+        if (Math.ceil(recordsCount / recordsPerPage) > currentPage) {
+          nextButtonDisable.current = false;
+        }
+        else {
+          nextButtonDisable.current = true;
+        }
+
         const records: ComponentFramework.WebApi.Entity[] = await getItems(
           fetchXml,
           recordsPerPage,

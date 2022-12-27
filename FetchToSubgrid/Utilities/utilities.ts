@@ -7,10 +7,19 @@ export const addPagingToFetchXml =
  (fetchXml: string, pageSize: number, currentPage: number): string => {
    const parser: DOMParser = new DOMParser();
    const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
-   const fetch: HTMLCollectionOf<Element> = xmlDoc.getElementsByTagName('fetch');
 
-   fetch[0].setAttribute('page', `${currentPage}`);
-   fetch[0].setAttribute('count', `${pageSize}`);
+   const fetch: HTMLCollectionOf<Element> = xmlDoc.getElementsByTagName('fetch');
+   const top = fetch[0].getAttribute('top');
+
+   if (Number(top)) {
+     fetch[0].removeAttribute('top');
+     fetch[0].setAttribute('page', `${currentPage}`);
+     fetch[0].setAttribute('count', `${top}`);
+   }
+   else {
+     fetch[0].setAttribute('page', `${currentPage}`);
+     fetch[0].setAttribute('count', `${pageSize}`);
+   }
 
    return new XMLSerializer().serializeToString(xmlDoc);
  };
@@ -64,14 +73,63 @@ export const getAttributesFieldNames = (fetchXml: string): string[] => {
   return attributesFieldNames;
 };
 
+export const getAliasNames = (fetchXml: string): string[] => {
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+
+  const aggregateAttrNames: string[] = [];
+
+  const entityName = xmlDoc.getElementsByTagName('entity')?.[0]?.getAttribute('name') ?? '';
+  const attributeSelector = `entity[name="${entityName}"] > attribute`;
+  const attributes: NodeListOf<Element> = xmlDoc.querySelectorAll(attributeSelector);
+
+  Array.prototype.slice.call(attributes).map(attr => {
+    aggregateAttrNames.push(attr.attributes.alias.value);
+  });
+
+  return aggregateAttrNames;
+};
+
+export const isAggregate = (fetchXml: string): boolean => {
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+
+  const aggregate = xmlDoc.getElementsByTagName('fetch')?.[0]?.getAttribute('aggregate') ?? '';
+  if (aggregate === 'true') return true;
+
+  return false;
+};
+
 const genereateItems = (
-  item: ComponentFramework.WebApi.Entity, isLinkEntity: boolean,
+  item: ComponentFramework.WebApi.Entity,
+  isLinkEntity: boolean,
   entityMetadata: ComponentFramework.PropertyHelper.EntityMetadata,
-  attributeType: number, fieldName: string, entity: ComponentFramework.WebApi.Entity,
-  entityName: string): Object => {
+  attributeType: number,
+  fieldName: string,
+  entity: ComponentFramework.WebApi.Entity,
+  entityName: string,
+  hasAggregate: boolean,
+  fetchXml: string | null,
+  index: number): Object => {
 
   let displayName: string = '';
   let linkable: boolean = false;
+
+  if (hasAggregate) {
+    const aggregateAttrNames = getAliasNames(fetchXml ?? '');
+
+    return item[fieldName] = {
+      displayName: entity[aggregateAttrNames[index]],
+      linkable: false,
+      entity,
+      fieldName,
+      attributeType,
+      entityName,
+      isLinkEntity,
+    };
+  }
+
+  item['id'] = entity[`${entityName}id`];
 
   if (attributeType === AttributeType.MONEY ||
       attributeType === AttributeType.PICKLIST ||
@@ -117,13 +175,27 @@ const genereateItems = (
   };
 };
 
+export const getCountInFetchXml = (fetchXml: string | null): number => {
+
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
+  const count = xmlDoc.getElementsByTagName('fetch')?.[0]?.getAttribute('count') ?? '';
+
+  return Number(count);
+};
+
 export const getItems = async (
   fetchXml: string | null,
   pageSize: number,
   currentPage: number): Promise<ComponentFramework.WebApi.Entity[]> => {
-  const pagingFetchData: string = fetchXml
-    ? addPagingToFetchXml(fetchXml, pageSize, currentPage)
-    : '';
+
+  const countOfRecordsInFetch = getCountInFetchXml(fetchXml);
+
+  const pagingFetchData: string = countOfRecordsInFetch
+    ? addPagingToFetchXml(fetchXml ?? '', countOfRecordsInFetch, currentPage)
+    : addPagingToFetchXml(fetchXml ?? '', pageSize, currentPage);
+
+  const hasAggregate = isAggregate(fetchXml ?? '');
 
   const attributesFieldNames: string[] = getAttributesFieldNames(pagingFetchData);
   const entityName: string = getEntityName(fetchXml ?? '');
@@ -143,11 +215,9 @@ export const getItems = async (
   const items: ComponentFramework.WebApi.Entity[] = [];
 
   records.entities.forEach(entity => {
-    const item: ComponentFramework.WebApi.Entity = {
-      id: entity[`${entityName}id`],
-    };
+    const item: ComponentFramework.WebApi.Entity = {};
 
-    attributesFieldNames.forEach(fieldName => {
+    attributesFieldNames.forEach((fieldName: string, i: number) => {
       const attributeType = entityMetadata.Attributes._collection[fieldName].AttributeType;
 
       genereateItems(
@@ -157,15 +227,26 @@ export const getItems = async (
         attributeType,
         fieldName,
         entity,
-        entityName);
+        entityName,
+        hasAggregate,
+        fetchXml,
+        i);
     });
 
     linkEntityAttributes.forEach(([alias, ...fields]: [string, string], i: number) => {
       fields.forEach(fieldName => {
         const attributeType = linkentityMetadata[i].Attributes._collection[fieldName].AttributeType;
 
-        genereateItems(item, true, linkentityMetadata,
-          attributeType, `${alias}.${fieldName}`, entity, entityName);
+        genereateItems(item,
+          true,
+          linkentityMetadata,
+          attributeType,
+          `${alias}.${fieldName}`,
+          entity,
+          entityName,
+          hasAggregate,
+          fetchXml,
+          i);
       });
     });
     items.push(item);

@@ -1,3 +1,5 @@
+/* global HTMLCollectionOf */
+
 import { IColumn } from '@fluentui/react';
 import { IInputs } from '../generated/ManifestTypes';
 import {
@@ -20,8 +22,18 @@ export const getPagingLimit = (): number =>
 ;
 
 export const getRecordsCount = async (fetchXml: string): Promise<number> => {
-  const entityName = getEntityName(fetchXml);
-  const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
+
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+  const fetch: HTMLCollectionOf<Element> = xmlDoc.getElementsByTagName('fetch');
+
+  fetch[0].removeAttribute('count');
+  fetch[0].removeAttribute('page');
+
+  const fetchWithoutCount = new XMLSerializer().serializeToString(xmlDoc);
+
+  const entityName = getEntityName(fetchWithoutCount);
+  const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchWithoutCount ?? '')}`;
   const records = await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
   return records.entities.length;
 };
