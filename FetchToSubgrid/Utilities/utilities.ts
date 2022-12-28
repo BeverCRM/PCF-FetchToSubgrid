@@ -178,10 +178,10 @@ const genereateItems = (
 export const getCountInFetchXml = (fetchXml: string | null): number => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
-  const fetch: HTMLCollectionOf<Element> = xmlDoc.getElementsByTagName('fetch');
+  const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
 
-  const count = fetch[0].getAttribute('count');
-  const top = fetch[0].getAttribute('top');
+  const count = fetch.getAttribute('count');
+  const top = fetch.getAttribute('top');
 
   return Number(count) || Number(top);
 };
