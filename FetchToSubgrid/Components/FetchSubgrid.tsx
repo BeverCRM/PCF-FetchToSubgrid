@@ -24,8 +24,8 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   const [isLoading, setIsLoading] = React.useState(false);
   const [ columns, setColumns] = React.useState<IColumn[]>([]);
   const [currentPage, setCurrentPage] = React.useState(1);
+  const [items, setItems] = React.useState<ComponentFramework.WebApi.Entity[]>([]);
 
-  const items = React.useRef<ComponentFramework.WebApi.Entity[]>([]);
   const recordIds = React.useRef<string[]>([]);
 
   const nextButtonDisable = React.useRef(true);
@@ -105,7 +105,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
           });
         });
 
-        items.current = records;
+        setItems(records);
       }
       catch (err) {
         console.log('Error', err);
@@ -137,7 +137,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     <div className='fetchSubgridControl'>
       <DetailsList
         columns={columns}
-        items={items.current}
+        items={items}
         layoutMode={DetailsListLayoutMode.fixedColumns}
         onItemInvoked={onItemInvoked}
         onRenderDetailsFooter={onRenderDetailsFooter}
