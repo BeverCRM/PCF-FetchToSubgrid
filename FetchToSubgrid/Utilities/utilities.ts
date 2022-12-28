@@ -8,17 +8,17 @@ export const addPagingToFetchXml =
    const parser: DOMParser = new DOMParser();
    const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
-   const fetch: HTMLCollectionOf<Element> = xmlDoc.getElementsByTagName('fetch');
-   const top = fetch[0].getAttribute('top');
+   const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
+   const top = fetch.getAttribute('top');
 
    if (Number(top)) {
-     fetch[0].removeAttribute('top');
-     fetch[0].setAttribute('page', `${currentPage}`);
-     fetch[0].setAttribute('count', `${top}`);
+     fetch.removeAttribute('top');
+     fetch.setAttribute('page', `${currentPage}`);
+     fetch.setAttribute('count', `${top}`);
    }
    else {
-     fetch[0].setAttribute('page', `${currentPage}`);
-     fetch[0].setAttribute('count', `${pageSize}`);
+     fetch.setAttribute('page', `${currentPage}`);
+     fetch.setAttribute('count', `${pageSize}`);
    }
 
    return new XMLSerializer().serializeToString(xmlDoc);
