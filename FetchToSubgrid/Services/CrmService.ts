@@ -20,9 +20,20 @@ export const getPagingLimit = (): number =>
 ;
 
 export const getRecordsCount = async (fetchXml: string): Promise<number> => {
-  const entityName = getEntityName(fetchXml);
-  const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
-  const records = await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+  const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
+
+  fetch.removeAttribute('count');
+  fetch.removeAttribute('page');
+
+  const fetchWithoutCount: string = new XMLSerializer().serializeToString(xmlDoc);
+  const entityName: string = getEntityName(fetchWithoutCount);
+
+  const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchWithoutCount ?? '')}`;
+  const records: ComponentFramework.WebApi.RetrieveMultipleResponse =
+   await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
+
   return records.entities.length;
 };
 
