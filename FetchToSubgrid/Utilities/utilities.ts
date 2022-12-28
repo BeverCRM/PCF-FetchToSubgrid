@@ -183,7 +183,7 @@ export const getCountInFetchXml = (fetchXml: string | null): number => {
   const count = fetch[0].getAttribute('count');
   const top = fetch[0].getAttribute('top');
 
-  return Number(count) ? Number(count) : Number(top);
+  return Number(count) || Number(top);
 };
 
 export const getItems = async (
