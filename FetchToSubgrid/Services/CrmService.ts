@@ -72,24 +72,6 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
   const hasAggregate: boolean = isAggregate(fetchXml ?? '');
   const aggregateAttrNames: string[] | null = hasAggregate ? getAliasNames(fetchXml ?? '') : null;
 
-  entityFieldNames.forEach((attr: any, index: number) => {
-    const entityName: string = entityNames[index];
-
-    for (let i = 1; i < attr.length; i++) {
-      const alias: string = attr[0];
-      const attributeName: string = attr[i];
-      const display: string = data[entityName][attributeName].DisplayName;
-      columns.push({
-        name: `${display} (${alias})`,
-        fieldName: `${alias}.${attributeName}`,
-        key: `col-el-${i}`,
-        minWidth: 10,
-        isResizable: true,
-        isMultiline: false,
-      });
-    }
-  });
-
   attributesFieldNames.forEach((name, index) => {
     let displayName = displayNameCollection[name].DisplayName;
 
@@ -106,6 +88,24 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
       isResizable: true,
       isMultiline: false,
     });
+  });
+
+  entityFieldNames.forEach((attr: any, index: number) => {
+    const entityName: string = entityNames[index];
+
+    for (let i = 1; i < attr.length; i++) {
+      const alias: string = attr[0];
+      const attributeName: string = attr[i];
+      const display: string = data[entityName][attributeName].DisplayName;
+      columns.push({
+        name: `${display} (${alias})`,
+        fieldName: `${alias}.${attributeName}`,
+        key: `col-el-${i}`,
+        minWidth: 10,
+        isResizable: true,
+        isMultiline: false,
+      });
+    }
   });
 
   return columns;
