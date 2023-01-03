@@ -3,13 +3,26 @@
 import { getRecords, getEntityMetadata } from '../Services/CrmService';
 import { AttributeType } from './enums';
 
+type Entity = ComponentFramework.WebApi.Entity;
+type EntityMetadata = ComponentFramework.PropertyHelper.EntityMetadata;
+type IItemProps = {
+  item: Entity;
+  isLinkEntity: boolean;
+  entityMetadata: EntityMetadata;
+  attributeType: number;
+  fieldName: string;
+  entity: Entity;
+  fetchXml: string | null;
+  index: number;
+}
+
 export const addPagingToFetchXml =
  (fetchXml: string, pageSize: number, currentPage: number): string => {
    const parser: DOMParser = new DOMParser();
    const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
    const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
-   const top = fetch.getAttribute('top');
+   const top: string | null = fetch.getAttribute('top');
 
    if (Number(top)) {
      fetch.removeAttribute('top');
@@ -31,7 +44,7 @@ export const getEntityName = (fetchXml: string): string => {
   return xmlDoc.getElementsByTagName('entity')?.[0]?.getAttribute('name') ?? '';
 };
 
-export const getLinkEntitiesNames = (fetchXml: string): Object => {
+export const getLinkEntitiesNames = (fetchXml: string): { [key: string]: string[] } => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
@@ -100,36 +113,38 @@ export const isAggregate = (fetchXml: string): boolean => {
   return false;
 };
 
-const genereateItems = (
-  item: ComponentFramework.WebApi.Entity,
-  isLinkEntity: boolean,
-  entityMetadata: ComponentFramework.PropertyHelper.EntityMetadata,
-  attributeType: number,
-  fieldName: string,
-  entity: ComponentFramework.WebApi.Entity,
-  entityName: string,
-  hasAggregate: boolean,
-  fetchXml: string | null,
-  index: number): Object => {
+const genereateItems = (props: IItemProps): Entity => {
+  const {
+    item,
+    isLinkEntity,
+    entityMetadata,
+    attributeType,
+    fieldName,
+    entity,
+    fetchXml,
+    index } = props;
 
-  let displayName: string = '';
-  let linkable: boolean = false;
+  let displayName = '';
+  let linkable = false;
+
+  const hasAggregate: boolean = isAggregate(fetchXml ?? '');
+  const entityName: string = getEntityName(fetchXml ?? '');
 
   if (hasAggregate) {
     const aggregateAttrNames = getAliasNames(fetchXml ?? '');
 
-    return item[fieldName] = {
+    return item[aggregateAttrNames[index]] = {
       displayName: entity[aggregateAttrNames[index]],
       linkable: false,
       entity,
-      fieldName,
+      fieldName: aggregateAttrNames[index],
       attributeType,
       entityName,
       isLinkEntity,
+      aggregate: true,
+
     };
   }
-
-  item['id'] = entity[`${entityName}id`];
 
   if (attributeType === AttributeType.MONEY ||
       attributeType === AttributeType.PICKLIST ||
@@ -138,28 +153,23 @@ const genereateItems = (
 
     displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
   }
-
   else if (isLinkEntity) {
     if (attributeType === AttributeType.LOOKUP || attributeType === AttributeType.OWNER) {
       displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
       linkable = true;
     }
-
     else if (fieldName in entity) {
       displayName = entity[fieldName];
     }
   }
-
   else if (fieldName === entityMetadata._primaryNameAttribute) {
     displayName = entity[fieldName];
     linkable = true;
   }
-
   else if (attributeType === AttributeType.LOOKUP || attributeType === AttributeType.OWNER) {
     displayName = entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`];
     linkable = true;
   }
-
   else if (fieldName in entity) {
     displayName = entity[fieldName];
   }
@@ -180,8 +190,8 @@ export const getCountInFetchXml = (fetchXml: string | null): number => {
   const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
   const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
 
-  const count = fetch.getAttribute('count');
-  const top = fetch.getAttribute('top');
+  const count: string | null = fetch.getAttribute('count');
+  const top: string | null = fetch.getAttribute('top');
 
   return Number(count) || Number(top);
 };
@@ -189,66 +199,68 @@ export const getCountInFetchXml = (fetchXml: string | null): number => {
 export const getItems = async (
   fetchXml: string | null,
   pageSize: number,
-  currentPage: number): Promise<ComponentFramework.WebApi.Entity[]> => {
+  currentPage: number): Promise<Entity[]> => {
 
   const countOfRecordsInFetch = getCountInFetchXml(fetchXml);
 
-  const pagingFetchData: string = countOfRecordsInFetch
-    ? addPagingToFetchXml(fetchXml ?? '', countOfRecordsInFetch, currentPage)
-    : addPagingToFetchXml(fetchXml ?? '', pageSize, currentPage);
-
-  const hasAggregate = isAggregate(fetchXml ?? '');
+  const pagingFetchData: string = addPagingToFetchXml(
+    fetchXml ?? '', countOfRecordsInFetch || pageSize, currentPage);
 
   const attributesFieldNames: string[] = getAttributesFieldNames(pagingFetchData);
   const entityName: string = getEntityName(fetchXml ?? '');
-  const records = await getRecords(pagingFetchData);
-  const entityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
+  const records: ComponentFramework.WebApi.RetrieveMultipleResponse =
+   await getRecords(pagingFetchData);
 
-  const linkEntityAttFieldNames = getLinkEntitiesNames(fetchXml ?? '');
+  const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
+  const linkEntityAttFieldNames: { [key: string]: string[] } = getLinkEntitiesNames(fetchXml ?? '');
   const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
   const linkEntityAttributes: any = Object.values(linkEntityAttFieldNames);
 
   const promises = linkEntityNames.map((linkEntityNames, i) => getEntityMetadata(
     linkEntityNames, linkEntityAttributes[i]));
 
-  const linkentityMetadata: ComponentFramework.PropertyHelper.EntityMetadata[] =
-     await Promise.all(promises);
+  const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
 
-  const items: ComponentFramework.WebApi.Entity[] = [];
+  const items: Entity[] = [];
 
   records.entities.forEach(entity => {
-    const item: ComponentFramework.WebApi.Entity = {};
+    const item: Entity = {
+      id: entity[`${entityName}id`],
+    };
 
-    attributesFieldNames.forEach((fieldName: string, i: number) => {
-      const attributeType = entityMetadata.Attributes._collection[fieldName].AttributeType;
+    attributesFieldNames.forEach((fieldName, index) => {
+      const attributeType: number = entityMetadata.Attributes._collection[fieldName].AttributeType;
 
-      genereateItems(
+      const attributes = {
         item,
-        false,
+        isLinkEntity: false,
         entityMetadata,
         attributeType,
         fieldName,
         entity,
-        entityName,
-        hasAggregate,
         fetchXml,
-        i);
+        index,
+      };
+
+      genereateItems(attributes);
     });
 
-    linkEntityAttributes.forEach(([alias, ...fields]: [string, string], i: number) => {
+    linkEntityAttributes.forEach(([alias, ...fields]: [string, string], index: number) => {
       fields.forEach(fieldName => {
-        const attributeType = linkentityMetadata[i].Attributes._collection[fieldName].AttributeType;
+        const attributeType: number =
+         linkentityMetadata[index].Attributes._collection[fieldName].AttributeType;
 
-        genereateItems(item,
-          true,
-          linkentityMetadata,
+        const attributes = {
+          item,
+          isLinkEntity: true,
+          entityMetadata: linkentityMetadata[index],
           attributeType,
-          `${alias}.${fieldName}`,
+          fieldName: `${alias}.${fieldName}`,
           entity,
-          entityName,
-          hasAggregate,
           fetchXml,
-          i);
+          index,
+        };
+        genereateItems(attributes);
       });
     });
     items.push(item);
