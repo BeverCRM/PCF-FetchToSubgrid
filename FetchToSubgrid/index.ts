@@ -1,7 +1,7 @@
 import { IInputs, IOutputs } from './generated/ManifestTypes';
-import { FetchSubgrid, IFetchSubgridProps } from './Components/FetchSubgrid';
+import { FetchSubgrid, IFetchSubgridProps } from './components/FetchSubgrid';
 import * as React from 'react';
-import { setContext } from './Services/CrmService';
+import { setContext } from './services/crmService';
 
 export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, IOutputs> {
     private Component: ComponentFramework.ReactControl<IInputs, IOutputs>;

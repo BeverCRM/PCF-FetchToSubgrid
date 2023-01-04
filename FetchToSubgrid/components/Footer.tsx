@@ -6,7 +6,7 @@ import {
   footerStyles,
   ForwardIcon,
   PreviousIcon,
-} from '../Styles/FooterStyles';
+} from '../styles/footerStyles';
 
 export interface IGridFooterProps {
   currentPage: number;
