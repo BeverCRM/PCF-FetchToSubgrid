@@ -34,7 +34,7 @@ export const getRecordsCount = async (fetchXml: string): Promise<number> => {
 
   const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchWithoutCount ?? '')}`;
   const records: RetriveRecords =
-  await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
+    await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
 
   return records.entities.length;
 };
@@ -139,6 +139,8 @@ export const openLinkEntityRecord = (
   openRecord(entityName, entity[fieldName]);
 };
 
-export const openPrimaryEntityForm = (entity: any, entityName: string): void => {
+export const openPrimaryEntityForm = (
+  entity: ComponentFramework.WebApi.Entity,
+  entityName: string): void => {
   openRecord(entityName, entity[`${entityName}id`]);
 };

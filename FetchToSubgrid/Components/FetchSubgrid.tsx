@@ -37,13 +37,13 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     (props: IDetailsFooterProps | undefined) => {
       const isMovePrevious = !(currentPage > 1);
       if (props) {
-        return <Footer
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          nextButtonDisable={nextButtonDisable.current}
-          isMovePrevious={isMovePrevious}
-        >
-        </Footer>;
+        return (
+          <Footer
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            nextButtonDisable={nextButtonDisable.current}
+            isMovePrevious={isMovePrevious}
+          />);
       }
       return null;
     },
@@ -127,8 +127,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
         layoutMode={DetailsListLayoutMode.fixedColumns}
         onItemInvoked={onItemInvoked}
         onRenderDetailsFooter={onRenderDetailsFooter}
-      >
-      </DetailsList>
+      />
     </div>
   );
 };
