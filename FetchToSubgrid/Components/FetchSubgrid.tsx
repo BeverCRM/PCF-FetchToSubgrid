@@ -5,13 +5,13 @@ import {
   IColumn,
   IDetailsFooterProps,
   IDetailsListProps,
-  Spinner,
-  SpinnerSize,
 } from '@fluentui/react';
 import { LinkableItem } from './LinkableItems';
 import { getPagingLimit, getColumns, getRecordsCount, openRecord } from '../Services/CrmService';
 import { Footer } from './Footer';
-import { getCountInFetchXml, getEntityName, getItems } from '../Utilities/utilities';
+import { getCountInFetchXml, getEntityName, getItems, isAggregate } from '../Utilities/utilities';
+import { Loader } from './Loader';
+import { InfoMessage } from './InfoMessage';
 
 export interface IFetchSubgridProps {
   fetchXml: string | null;
@@ -22,34 +22,28 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   const { numberOfRows, fetchXml } = props;
 
   const [isLoading, setIsLoading] = React.useState(false);
-  const [ columns, setColumns] = React.useState<IColumn[]>([]);
+  const [columns, setColumns] = React.useState<IColumn[]>([]);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [items, setItems] = React.useState<ComponentFramework.WebApi.Entity[]>([]);
 
   const recordIds = React.useRef<string[]>([]);
-
   const nextButtonDisable = React.useRef(true);
   let recordsPerPage: number = getPagingLimit();
-  const countOfRecordsInFetch = getCountInFetchXml(fetchXml);
+  const countOfRecordsInFetch: number = getCountInFetchXml(fetchXml);
 
-  if (countOfRecordsInFetch) {
-    recordsPerPage = countOfRecordsInFetch;
-  }
-  else if (numberOfRows) {
-    recordsPerPage = numberOfRows;
-  }
+  recordsPerPage = countOfRecordsInFetch || numberOfRows || recordsPerPage;
 
   const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = React.useCallback(
     (props: IDetailsFooterProps | undefined) => {
       const isMovePrevious = !(currentPage > 1);
       if (props) {
-        return <Footer
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          nextButtonDisable={nextButtonDisable.current}
-          isMovePrevious={isMovePrevious}
-        >
-        </Footer>;
+        return (
+          <Footer
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            nextButtonDisable={nextButtonDisable.current}
+            isMovePrevious={isMovePrevious}
+          />);
       }
       return null;
     },
@@ -59,9 +53,10 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   const onItemInvoked = React.useCallback((
     record: ComponentFramework.WebApi.Entity,
     index?: number | undefined) : void => {
-    const entityName = getEntityName(fetchXml ?? '');
+    const entityName: string = getEntityName(fetchXml ?? '');
+    const hasAggregate: boolean = isAggregate(fetchXml ?? '');
 
-    if (index !== undefined) {
+    if (index !== undefined && !hasAggregate) {
       openRecord(entityName, recordIds.current[index]);
     }
   }, [items]);
@@ -70,7 +65,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     (async () => {
       setCurrentPage(1);
       try {
-        const columns = await getColumns(fetchXml);
+        const columns: IColumn[] = await getColumns(fetchXml);
         setColumns(columns);
       }
       catch {
@@ -83,7 +78,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     (async () => {
       setIsLoading(true);
       try {
-        const recordsCount = await getRecordsCount(fetchXml ?? '');
+        const recordsCount: number = await getRecordsCount(fetchXml ?? '');
         if (Math.ceil(recordsCount / recordsPerPage) > currentPage) {
           nextButtonDisable.current = false;
         }
@@ -100,8 +95,10 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
           recordIds.current.push(record.id);
 
           Object.keys(record).forEach(key => {
-            const value: any = record[key];
-            record[key] = value.linkable ? <LinkableItem item = {value} /> : value.displayName;
+            if (key !== 'id') {
+              const value: any = record[key];
+              record[key] = value.linkable ? <LinkableItem item = {value} /> : value.displayName;
+            }
           });
         });
 
@@ -112,25 +109,14 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
       }
       setIsLoading(false);
     })();
-
   }, [props, currentPage]);
 
   if (isLoading) {
-    return (
-      <div className='fetchSubgridControl'>
-        <div className='fetchLoading'>
-          <Spinner size={SpinnerSize.large} />
-          <p className='loadingText'>  Loading ...</p>
-        </div>
-      </div>);
+    return <Loader/>;
   }
 
   if (columns.length === 0) {
-    return <div className='fetchSubgridControl'>
-      <div className='infoMessage'>
-        <h1 className='infoMessageText'>No data available</h1>
-      </div>
-    </div>;
+    return <InfoMessage/>;
   }
 
   return (
@@ -141,8 +127,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
         layoutMode={DetailsListLayoutMode.fixedColumns}
         onItemInvoked={onItemInvoked}
         onRenderDetailsFooter={onRenderDetailsFooter}
-      >
-      </DetailsList>
+      />
     </div>
   );
 };

@@ -4,6 +4,8 @@ import {
   getEntityName,
   getLinkEntitiesNames,
   getAttributesFieldNames,
+  isAggregate,
+  getAliasNames,
 } from '../Utilities/utilities';
 
 let _context: ComponentFramework.Context<IInputs>;
@@ -31,8 +33,8 @@ export const getRecordsCount = async (fetchXml: string): Promise<number> => {
   const entityName: string = getEntityName(fetchWithoutCount);
 
   const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchWithoutCount ?? '')}`;
-  const records: ComponentFramework.WebApi.RetrieveMultipleResponse =
-   await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
+  const records: RetriveRecords =
+    await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
 
   return records.entities.length;
 };
@@ -45,13 +47,14 @@ export const getEntityMetadata = async (entityName: string, attributesFieldNames
 
 export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> => {
   const attributesFieldNames: string[] = getAttributesFieldNames(fetchXml ?? '');
-  const entityName = getEntityName(fetchXml ?? '');
+  const entityName: string = getEntityName(fetchXml ?? '');
 
-  const entityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
+  const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
   const displayNameCollection: { [entityName: string]: EntityMetadata } =
    entityMetadata.Attributes._collection;
 
-  const linkEntityNameAndAttributes = getLinkEntitiesNames(fetchXml ?? '');
+  const linkEntityNameAndAttributes: {[key: string]: string[]} =
+   getLinkEntitiesNames(fetchXml ?? '');
   const columns: IColumn[] = [];
 
   const entityNames: Array<string> = Object.keys(linkEntityNameAndAttributes);
@@ -61,10 +64,31 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
 
   for (const [i, fieldNames] of Array.from(entityFieldNames.entries())) {
     const attributeNames: string[] = fieldNames.slice(1);
-    const medData = await getEntityMetadata(entityNames[i], attributeNames);
-    const displayNameCollection: EntityMetadata = medData.Attributes._collection;
+    const mataData: EntityMetadata = await getEntityMetadata(entityNames[i], attributeNames);
+    const displayNameCollection: EntityMetadata = mataData.Attributes._collection;
     data[entityNames[i]] = displayNameCollection;
   }
+
+  const hasAggregate: boolean = isAggregate(fetchXml ?? '');
+  const aggregateAttrNames: string[] | null = hasAggregate ? getAliasNames(fetchXml ?? '') : null;
+
+  attributesFieldNames.forEach((name, index) => {
+    let displayName = displayNameCollection[name].DisplayName;
+
+    if (aggregateAttrNames?.length) {
+      displayName = aggregateAttrNames[index];
+      name = aggregateAttrNames[index];
+    }
+
+    columns.push({
+      name: displayName,
+      fieldName: name,
+      key: `col-${index}`,
+      minWidth: 10,
+      isResizable: true,
+      isMultiline: false,
+    });
+  });
 
   entityFieldNames.forEach((attr: any, index: number) => {
     const entityName: string = entityNames[index];
@@ -84,23 +108,12 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
     }
   });
 
-  attributesFieldNames.forEach((name, index) => {
-    columns.push({
-      name: displayNameCollection[name].DisplayName,
-      fieldName: name,
-      key: `col-${index}`,
-      minWidth: 10,
-      isResizable: true,
-      isMultiline: false,
-    });
-  });
-
   return columns;
 };
 
 export const getRecords = async (fetchXml: string | null): Promise<RetriveRecords> => {
-  const entityName = getEntityName(fetchXml ?? '');
-  const encodeFetchXml = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
+  const entityName: string = getEntityName(fetchXml ?? '');
+  const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
   return await _context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
 };
 
@@ -111,17 +124,23 @@ export const openRecord = (entityName: string, entityId: string): void => {
   });
 };
 
-export const openLookupForm = (entity: any, fieldName: string): void => {
-  const entityName = entity[`_${fieldName}_value@Microsoft.Dynamics.CRM.lookuplogicalname`];
-  const entityId = entity[`_${fieldName}_value`];
+export const openLookupForm = (
+  entity: ComponentFramework.WebApi.Entity,
+  fieldName: string): void => {
+  const entityName: string = entity[`_${fieldName}_value@Microsoft.Dynamics.CRM.lookuplogicalname`];
+  const entityId: string = entity[`_${fieldName}_value`];
   openRecord(entityName, entityId);
 };
 
-export const openLinkEntityRecord = (entity: any, fieldName: string): void => {
-  const entityName = entity[`${fieldName}@Microsoft.Dynamics.CRM.lookuplogicalname`];
+export const openLinkEntityRecord = (
+  entity: ComponentFramework.WebApi.Entity,
+  fieldName: string): void => {
+  const entityName: string = entity[`${fieldName}@Microsoft.Dynamics.CRM.lookuplogicalname`];
   openRecord(entityName, entity[fieldName]);
 };
 
-export const openPrimaryEntityForm = (entity: any, entityName: string): void => {
+export const openPrimaryEntityForm = (
+  entity: ComponentFramework.WebApi.Entity,
+  entityName: string): void => {
   openRecord(entityName, entity[`${entityName}id`]);
 };
