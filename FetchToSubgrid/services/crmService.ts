@@ -6,7 +6,7 @@ import {
   getAttributesFieldNames,
   isAggregate,
   getAliasNames,
-} from '../Utilities/utilities';
+} from '../utilities/utilities';
 
 let _context: ComponentFramework.Context<IInputs>;
 type EntityMetadata = ComponentFramework.PropertyHelper.EntityMetadata;

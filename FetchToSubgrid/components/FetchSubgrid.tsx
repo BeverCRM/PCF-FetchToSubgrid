@@ -7,9 +7,9 @@ import {
   IDetailsListProps,
 } from '@fluentui/react';
 import { LinkableItem } from './LinkableItems';
-import { getPagingLimit, getColumns, getRecordsCount, openRecord } from '../Services/CrmService';
+import { getPagingLimit, getColumns, getRecordsCount, openRecord } from '../services/crmService';
 import { Footer } from './Footer';
-import { getCountInFetchXml, getEntityName, getItems, isAggregate } from '../Utilities/utilities';
+import { getCountInFetchXml, getEntityName, getItems, isAggregate } from '../utilities/utilities';
 import { Loader } from './Loader';
 import { InfoMessage } from './InfoMessage';
 

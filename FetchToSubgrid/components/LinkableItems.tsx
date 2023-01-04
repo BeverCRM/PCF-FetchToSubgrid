@@ -1,11 +1,11 @@
 import { Link } from '@fluentui/react';
 import * as React from 'react';
-import { AttributeType } from '../Utilities/enums';
+import { AttributeType } from '../utilities/enums';
 import {
   openLinkEntityRecord,
   openLookupForm,
   openPrimaryEntityForm,
-} from '../Services/CrmService';
+} from '../services/crmService';
 
 interface IlinkableItemProps {
   item: ComponentFramework.WebApi.Entity

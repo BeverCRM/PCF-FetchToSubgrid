@@ -1,6 +1,6 @@
 /* global HTMLCollectionOf, NodeListOf */
 
-import { getRecords, getEntityMetadata } from '../Services/CrmService';
+import { getRecords, getEntityMetadata } from '../services/crmService';
 import { AttributeType } from './enums';
 
 type Entity = ComponentFramework.WebApi.Entity;
