@@ -206,12 +206,26 @@ export const getItems = async (
   const pagingFetchData: string = addPagingToFetchXml(
     fetchXml ?? '', countOfRecordsInFetch || pageSize, currentPage);
 
-  const attributesFieldNames: string[] = getAttributesFieldNames(pagingFetchData);
+  let attributesFieldNames: string[] = getAttributesFieldNames(pagingFetchData);
   const entityName: string = getEntityName(fetchXml ?? '');
   const records: ComponentFramework.WebApi.RetrieveMultipleResponse =
    await getRecords(pagingFetchData);
 
+  let isAllAttribute = false;
+
+  if (attributesFieldNames.length === 0 && entityName) {
+    attributesFieldNames = Object.keys(records.entities[0]);
+    isAllAttribute = true;
+  }
+
   const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
+  const attributesCollection: { [entityName: string]: EntityMetadata } =
+   entityMetadata.Attributes._collection;
+
+  if (isAllAttribute) {
+    attributesFieldNames = Object.keys(attributesCollection);
+  }
+
   const linkEntityAttFieldNames: { [key: string]: string[] } = getLinkEntitiesNames(fetchXml ?? '');
   const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
   const linkEntityAttributes: any = Object.values(linkEntityAttFieldNames);

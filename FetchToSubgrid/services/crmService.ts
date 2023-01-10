@@ -16,6 +16,12 @@ export const setContext = (context: ComponentFramework.Context<IInputs>) => {
   _context = context;
 };
 
+export const getRecords = async (fetchXml: string | null): Promise<RetriveRecords> => {
+  const entityName: string = getEntityName(fetchXml ?? '');
+  const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
+  return await _context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
+};
+
 export const getPagingLimit = (): number =>
   // @ts-ignore
   _context.userSettings.pagingLimit
@@ -40,21 +46,32 @@ export const getRecordsCount = async (fetchXml: string): Promise<number> => {
 };
 
 export const getEntityMetadata = async (entityName: string, attributesFieldNames: string[]):
-  Promise<EntityMetadata> => {
+ Promise<EntityMetadata> => {
   const entityMetadata: EntityMetadata = await _context.utils.getEntityMetadata(
-    entityName,
-    [...attributesFieldNames]);
+    entityName, [...attributesFieldNames]);
 
   return entityMetadata;
 };
 
 export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> => {
-  const attributesFieldNames: string[] = getAttributesFieldNames(fetchXml ?? '');
+  let attributesFieldNames: string[] = getAttributesFieldNames(fetchXml ?? '');
   const entityName: string = getEntityName(fetchXml ?? '');
+
+  let isAllAttribute = false;
+
+  if (attributesFieldNames.length === 0 && entityName) {
+    const recors = await getRecords(fetchXml ?? '');
+    attributesFieldNames = Object.keys(recors.entities[0]);
+    isAllAttribute = true;
+  }
 
   const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
   const displayNameCollection: { [entityName: string]: EntityMetadata } =
    entityMetadata.Attributes._collection;
+
+  if (isAllAttribute) {
+    attributesFieldNames = Object.keys(displayNameCollection);
+  }
 
   const linkEntityNameAndAttributes: {[key: string]: string[]} =
    getLinkEntitiesNames(fetchXml ?? '');
@@ -112,12 +129,6 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
   });
 
   return columns;
-};
-
-export const getRecords = async (fetchXml: string | null): Promise<RetriveRecords> => {
-  const entityName: string = getEntityName(fetchXml ?? '');
-  const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
-  return await _context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
 };
 
 export const openRecord = (entityName: string, entityId: string): void => {
