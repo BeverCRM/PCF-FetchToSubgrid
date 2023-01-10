@@ -40,9 +40,10 @@ export const getRecordsCount = async (fetchXml: string): Promise<number> => {
 };
 
 export const getEntityMetadata = async (entityName: string, attributesFieldNames: string[]):
- Promise<EntityMetadata> => {
+  Promise<EntityMetadata> => {
   const entityMetadata: EntityMetadata = await _context.utils.getEntityMetadata(
-    entityName, [...attributesFieldNames]);
+    entityName,
+    [...attributesFieldNames]);
 
   return entityMetadata;
 };
