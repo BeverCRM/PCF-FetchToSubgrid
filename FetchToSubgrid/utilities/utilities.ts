@@ -154,7 +154,9 @@ const genereateItems = (props: IItemProps): Entity => {
     displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
   }
   else if (isLinkEntity) {
-    if (attributeType === AttributeType.LOOKUP || attributeType === AttributeType.OWNER) {
+    if (attributeType === AttributeType.LOOKUP ||
+        attributeType === AttributeType.OWNER ||
+        attributeType === AttributeType.CUSTOMER) {
       displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
       linkable = true;
     }
@@ -166,7 +168,9 @@ const genereateItems = (props: IItemProps): Entity => {
     displayName = entity[fieldName];
     linkable = true;
   }
-  else if (attributeType === AttributeType.LOOKUP || attributeType === AttributeType.OWNER) {
+  else if (attributeType === AttributeType.LOOKUP ||
+    attributeType === AttributeType.OWNER ||
+    attributeType === AttributeType.CUSTOMER) {
     displayName = entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`];
     linkable = true;
   }

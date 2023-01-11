@@ -1,4 +1,5 @@
 export enum AttributeType {
+  CUSTOMER = 1,
   DATE_TIME = 2,
   LOOKUP = 6,
   MONEY = 8,
