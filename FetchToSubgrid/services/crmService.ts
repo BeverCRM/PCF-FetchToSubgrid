@@ -11,6 +11,7 @@ import {
 let _context: ComponentFramework.Context<IInputs>;
 type EntityMetadata = ComponentFramework.PropertyHelper.EntityMetadata;
 type RetriveRecords = ComponentFramework.WebApi.RetrieveMultipleResponse;
+type Entity = ComponentFramework.WebApi.Entity;
 
 export const setContext = (context: ComponentFramework.Context<IInputs>) => {
   _context = context;
@@ -20,6 +21,41 @@ export const getPagingLimit = (): number =>
   // @ts-ignore
   _context.userSettings.pagingLimit
 ;
+
+export const getTimeZoneDefinitions = async () => {
+  // @ts-ignore
+  const contextPage = _context.page;
+
+  const request = await fetch(`${contextPage.getClientUrl()}/api/data/v9.0/timezonedefinitions`);
+  const results = await request.json();
+
+  return results;
+};
+
+export const getWholeNumberFieldName = (
+  format: string, entity: Entity, fieldName: string, timeZoneDefinitions: any) => {
+  let fieldValue: number = entity[fieldName];
+
+  if (format === '3') { return _context.formatting.formatLanguage(fieldValue); }
+  if (format === '2') {
+    return timeZoneDefinitions.value.find((e: any) =>
+      e.timezonecode === Number(fieldValue)).userinterfacename;
+  }
+
+  if (fieldValue) {
+    let unit: string;
+    if (fieldValue < 60) { unit = 'minute'; }
+    else if (fieldValue < 1440) {
+      fieldValue /= 60;
+      unit = 'hour';
+    }
+    else {
+      fieldValue /= 1440;
+      unit = 'day';
+    }
+    return `${fieldValue} ${unit}${fieldValue === 1 ? '' : 's'}`;
+  }
+};
 
 export const getRecordsCount = async (fetchXml: string): Promise<number> => {
   const parser: DOMParser = new DOMParser();

@@ -1,11 +1,15 @@
 /* global HTMLCollectionOf, NodeListOf */
-
-import { getRecords, getEntityMetadata } from '../services/crmService';
+import {
+  getRecords,
+  getEntityMetadata,
+  getWholeNumberFieldName,
+  getTimeZoneDefinitions } from '../services/crmService';
 import { AttributeType } from './enums';
 
 type Entity = ComponentFramework.WebApi.Entity;
 type EntityMetadata = ComponentFramework.PropertyHelper.EntityMetadata;
 type IItemProps = {
+  timeZoneDefinitions: any;
   item: Entity;
   isLinkEntity: boolean;
   entityMetadata: EntityMetadata;
@@ -115,6 +119,7 @@ export const isAggregate = (fetchXml: string): boolean => {
 
 const genereateItems = (props: IItemProps): Entity => {
   const {
+    timeZoneDefinitions,
     item,
     isLinkEntity,
     entityMetadata,
@@ -142,21 +147,27 @@ const genereateItems = (props: IItemProps): Entity => {
       entityName,
       isLinkEntity,
       aggregate: true,
-
     };
   }
 
-  if (attributeType === AttributeType.MONEY ||
+  if (attributeType === AttributeType.WHOLE_NUMBER) {
+    const format: string = entityMetadata.Attributes._collection[fieldName].Format;
+    const field: string = getWholeNumberFieldName(format, entity, fieldName, timeZoneDefinitions);
+    displayName = field;
+  }
+  else if (attributeType === AttributeType.MONEY ||
       attributeType === AttributeType.PICKLIST ||
       attributeType === AttributeType.DATE_TIME ||
-      attributeType === AttributeType.MULTISELECT_PICKLIST) {
+      attributeType === AttributeType.MULTISELECT_PICKLIST ||
+      attributeType === AttributeType.TWO_OPTIONS) {
 
     displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
   }
   else if (isLinkEntity) {
     if (attributeType === AttributeType.LOOKUP ||
         attributeType === AttributeType.OWNER ||
-        attributeType === AttributeType.CUSTOMER) {
+        attributeType === AttributeType.CUSTOMER ||
+        attributeType === AttributeType.TWO_OPTIONS) {
       displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
       linkable = true;
     }
@@ -190,14 +201,17 @@ const genereateItems = (props: IItemProps): Entity => {
 };
 
 export const getCountInFetchXml = (fetchXml: string | null): number => {
-  const parser: DOMParser = new DOMParser();
-  const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
-  const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
+  if (fetchXml) {
+    const parser: DOMParser = new DOMParser();
+    const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
+    const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
 
-  const count: string | null = fetch.getAttribute('count');
-  const top: string | null = fetch.getAttribute('top');
+    const count: string | null = fetch.getAttribute('count');
+    const top: string | null = fetch.getAttribute('top');
 
-  return Number(count) || Number(top);
+    return Number(count) || Number(top);
+  }
+  return 0;
 };
 
 export const getItems = async (
@@ -224,8 +238,8 @@ export const getItems = async (
     linkEntityNames, linkEntityAttributes[i]));
 
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
-
   const items: Entity[] = [];
+  const timeZoneDefinitions = await getTimeZoneDefinitions();
 
   records.entities.forEach(entity => {
     const item: Entity = {
@@ -236,6 +250,7 @@ export const getItems = async (
       const attributeType: number = entityMetadata.Attributes._collection[fieldName].AttributeType;
 
       const attributes = {
+        timeZoneDefinitions,
         item,
         isLinkEntity: false,
         entityMetadata,
@@ -255,6 +270,7 @@ export const getItems = async (
          linkentityMetadata[index].Attributes._collection[fieldName].AttributeType;
 
         const attributes = {
+          timeZoneDefinitions,
           item,
           isLinkEntity: true,
           entityMetadata: linkentityMetadata[index],

@@ -116,7 +116,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   }
 
   if (columns.length === 0) {
-    return <InfoMessage/>;
+    return <InfoMessage fetchXml ={fetchXml}/>;
   }
 
   return (
