@@ -12,6 +12,11 @@ let _context: ComponentFramework.Context<IInputs>;
 type EntityMetadata = ComponentFramework.PropertyHelper.EntityMetadata;
 type RetriveRecords = ComponentFramework.WebApi.RetrieveMultipleResponse;
 type Entity = ComponentFramework.WebApi.Entity;
+interface EntityAttribute {
+  linkEntityAlias: string | undefined;
+  name: string;
+  attributeAlias: string;
+}
 
 export const setContext = (context: ComponentFramework.Context<IInputs>) => {
   _context = context;
@@ -92,21 +97,13 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
   const displayNameCollection: { [entityName: string]: EntityMetadata } =
    entityMetadata.Attributes._collection;
 
-  const linkEntityNameAndAttributes: {[key: string]: string[]} =
-   getLinkEntitiesNames(fetchXml ?? '');
   const columns: IColumn[] = [];
 
-  const entityNames: Array<string> = Object.keys(linkEntityNameAndAttributes);
-  const entityFieldNames: string[][] = Object.values(linkEntityNameAndAttributes);
-
-  const data: { [entityName: string]: EntityMetadata } = {};
-
-  for (const [i, fieldNames] of Array.from(entityFieldNames.entries())) {
-    const attributeNames: string[] = fieldNames.slice(1);
-    const mataData: EntityMetadata = await getEntityMetadata(entityNames[i], attributeNames);
-    const displayNameCollection: EntityMetadata = mataData.Attributes._collection;
-    data[entityNames[i]] = displayNameCollection;
-  }
+  const linkEntityAttFieldNames: { [key: string]: EntityAttribute[] } =
+   getLinkEntitiesNames(fetchXml ?? '');
+  const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
+  const linkEntityAttributes: Array<Array<EntityAttribute>> =
+   Object.values(linkEntityAttFieldNames);
 
   const hasAggregate: boolean = isAggregate(fetchXml ?? '');
   const aggregateAttrNames: string[] | null = hasAggregate ? getAliasNames(fetchXml ?? '') : null;
@@ -129,22 +126,32 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
     });
   });
 
-  entityFieldNames.forEach((attr: any, index: number) => {
-    const entityName: string = entityNames[index];
+  linkEntityNames.forEach(async (linkEntityName, i) => {
+    const linkAttributeNames: string[] = linkEntityAttributes[i].map(attr => attr.name);
+    const mataData: EntityMetadata = await getEntityMetadata(linkEntityName, linkAttributeNames);
 
-    for (let i = 1; i < attr.length; i++) {
-      const alias: string = attr[0];
-      const attributeName: string = attr[i];
-      const display: string = data[entityName][attributeName].DisplayName;
+    linkEntityAttributes[i].forEach((attr, index) => {
+      let fieldName = attr.attributeAlias;
+
+      if (!fieldName && attr.linkEntityAlias) {
+        fieldName = `${attr.linkEntityAlias}.${attr.name}`;
+      }
+      else if (!fieldName) {
+        fieldName = `${linkEntityName}${i + 1}.${attr.name}`;
+      }
+
+      const columnName: string = attr.attributeAlias ||
+       mataData.Attributes._collection[attr.name].DisplayName;
+
       columns.push({
-        name: `${display} (${alias})`,
-        fieldName: `${alias}.${attributeName}`,
-        key: `col-el-${i}`,
+        name: columnName,
+        fieldName,
+        key: `col-el-${index}`,
         minWidth: 10,
         isResizable: true,
         isMultiline: false,
       });
-    }
+    });
   });
 
   return columns;

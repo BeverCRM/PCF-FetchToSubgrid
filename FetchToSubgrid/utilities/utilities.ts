@@ -19,6 +19,11 @@ type IItemProps = {
   fetchXml: string | null;
   index: number;
 }
+interface EntityAttribute {
+  linkEntityAlias: string | undefined;
+  name: string;
+  attributeAlias: string;
+}
 
 export const addPagingToFetchXml =
  (fetchXml: string, pageSize: number, currentPage: number): string => {
@@ -48,23 +53,31 @@ export const getEntityName = (fetchXml: string): string => {
   return xmlDoc.getElementsByTagName('entity')?.[0]?.getAttribute('name') ?? '';
 };
 
-export const getLinkEntitiesNames = (fetchXml: string): { [key: string]: string[] } => {
+export const getLinkEntitiesNames = (fetchXml: string): { [key: string]: EntityAttribute[] } => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
   const linkEntities: HTMLCollectionOf<Element> = xmlDoc.getElementsByTagName('link-entity');
-  const linkEntityData: { [key: string]: string[] } = {};
+  const linkEntityData: { [key: string]: EntityAttribute[] } = {};
 
   Array.prototype.slice.call(linkEntities).forEach(linkentity => {
     const entityName: string = linkentity.attributes['name'].value;
-    const alias: string = linkentity.attributes['alias'].value;
-    const entityAttributes: string[] = [alias];
+    const entityAttributes: EntityAttribute[] = [];
 
     const attributesSelector = `link-entity[name="${entityName}"] > attribute`;
     const attributes: NodeListOf<Element> = xmlDoc.querySelectorAll(attributesSelector);
+    const linkEntityAlias: string | undefined =
+     linkentity.attributes['alias'] && linkentity.attributes['alias'].value;
 
     Array.prototype.slice.call(attributes).map(attr => {
-      entityAttributes.push(attr.attributes.name.value);
+      const attributeAlias: string = attr.attributes['alias'] ? attr.attributes['alias'].value : '';
+
+      entityAttributes.push(
+        {
+          linkEntityAlias,
+          name: attr.attributes.name.value,
+          attributeAlias,
+        });
     });
 
     linkEntityData[entityName] = entityAttributes;
@@ -230,12 +243,16 @@ export const getItems = async (
    await getRecords(pagingFetchData);
 
   const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
-  const linkEntityAttFieldNames: { [key: string]: string[] } = getLinkEntitiesNames(fetchXml ?? '');
+  const linkEntityAttFieldNames: { [key: string]: EntityAttribute[] } =
+   getLinkEntitiesNames(fetchXml ?? '');
   const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
-  const linkEntityAttributes: any = Object.values(linkEntityAttFieldNames);
+  const linkEntityAttributes:Array<Array<EntityAttribute>> =
+   Object.values(linkEntityAttFieldNames);
 
-  const promises = linkEntityNames.map((linkEntityNames, i) => getEntityMetadata(
-    linkEntityNames, linkEntityAttributes[i]));
+  const promises = linkEntityNames.map((linkEntityNames, i) => {
+    const attributeNames: string[] = linkEntityAttributes[i].map(attr => attr.name);
+    return getEntityMetadata(linkEntityNames, attributeNames);
+  });
 
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
   const items: Entity[] = [];
@@ -264,18 +281,27 @@ export const getItems = async (
       genereateItems(attributes);
     });
 
-    linkEntityAttributes.forEach(([alias, ...fields]: [string, string], index: number) => {
-      fields.forEach(fieldName => {
+    linkEntityNames.forEach((linkEntityName, i) => {
+      linkEntityAttributes[i].forEach((attr, index) => {
+        let fieldName = attr.attributeAlias;
+
+        if (!fieldName && attr.linkEntityAlias) {
+          fieldName = `${attr.linkEntityAlias}.${attr.name}`;
+        }
+        else if (!fieldName) {
+          fieldName = `${linkEntityName}${i + 1}.${attr.name}`;
+        }
+
         const attributeType: number =
-         linkentityMetadata[index].Attributes._collection[fieldName].AttributeType;
+      linkentityMetadata[i].Attributes._collection[attr.name].AttributeType;
 
         const attributes = {
           timeZoneDefinitions,
           item,
           isLinkEntity: true,
-          entityMetadata: linkentityMetadata[index],
+          entityMetadata: linkentityMetadata[i],
           attributeType,
-          fieldName: `${alias}.${fieldName}`,
+          fieldName,
           entity,
           fetchXml,
           index,
