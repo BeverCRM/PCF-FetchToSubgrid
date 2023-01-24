@@ -46,11 +46,47 @@ export const addPagingToFetchXml =
    return new XMLSerializer().serializeToString(xmlDoc);
  };
 
+export const parseString = (userParameters: string): {
+   NewVIsiblitiy: string,
+   DeleteVisiblity: string,
+   FetchXml: string } => {
+  const parametersObj: any = {};
+  const parts = userParameters.slice(1, -1).split(',');
+  for (let i = 0; i < parts.length; i++) {
+    const keyValue = parts[i].split(':');
+    parametersObj[keyValue[0].trim().slice(1, -1)] = keyValue[1].trim().slice(1, -1);
+  }
+  return parametersObj;
+};
+
 export const getEntityName = (fetchXml: string): string => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
   return xmlDoc.getElementsByTagName('entity')?.[0]?.getAttribute('name') ?? '';
+};
+
+export const addOrderToFetch = (fetchXml: string, fieldName: string, dialogEvent: any) => {
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+  const entity = xmlDoc.getElementsByTagName('entity')[0];
+
+  const order = xmlDoc.getElementsByTagName('order')[0];
+  if (order) {
+    entity.removeChild(order);
+    const newOrder = xmlDoc.createElement('order');
+    newOrder.setAttribute('attribute', `${fieldName}`);
+    newOrder.setAttribute('descending', `${dialogEvent.checked}`);
+    entity.appendChild(newOrder);
+  }
+  else {
+    const order = xmlDoc.createElement('order');
+    order.setAttribute('attribute', `${fieldName}`);
+    order.setAttribute('descending', `${dialogEvent.checked}`);
+    entity.appendChild(order);
+  }
+
+  return new XMLSerializer().serializeToString(xmlDoc);
 };
 
 export const getLinkEntitiesNames = (fetchXml: string): { [key: string]: EntityAttribute[] } => {
@@ -227,15 +263,26 @@ export const getCountInFetchXml = (fetchXml: string | null): number => {
   return 0;
 };
 
+export const getPageInFetch = (fetchXml: string | null): number => {
+  if (fetchXml) {
+    const parser: DOMParser = new DOMParser();
+    const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
+    const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
+
+    const count: string | null = fetch.getAttribute('page');
+
+    return Number(count) || 1;
+  }
+  return 0;
+};
+
 export const getItems = async (
   fetchXml: string | null,
   pageSize: number,
   currentPage: number): Promise<Entity[]> => {
 
-  const countOfRecordsInFetch = getCountInFetchXml(fetchXml);
-
   const pagingFetchData: string = addPagingToFetchXml(
-    fetchXml ?? '', countOfRecordsInFetch || pageSize, currentPage);
+    fetchXml ?? '', pageSize, currentPage);
 
   const attributesFieldNames: string[] = getAttributesFieldNames(pagingFetchData);
   const entityName: string = getEntityName(fetchXml ?? '');

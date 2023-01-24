@@ -6,8 +6,8 @@
     </external-service-usage>
 
     <property name="fetchXmlProperty" display-name-key="Property_Display_Key" description-key="Property_Desc_Key" of-type="Multiple" usage="bound" required="true" />
-    <property name="defaultFetchXmlProperty" display-name-key="Default fetchXml" description-key="If the field is blank, the default value from the users personalization settings is used." of-type="Multiple" usage="input"/>
     <property name="numberOfRows" display-name-key="Default number of rows" description-key="If you want to change the number of rows in the control, use Default number of rows property" of-type="Whole.None" usage="input"/>
+    <property name="userParameters" display-name-key="User Parameters" description-key='Give parameters if you want to show or hide buttons, like this {"NewVIsiblitiy":"True", "DeleteVisiblity":"False","FetchXml":""}' of-type="Multiple" usage="input"/>
     <resources>
       <code path="index.ts" order="1"/>
       <platform-library name="React" version="16.8.6" />

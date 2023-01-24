@@ -1,4 +1,4 @@
-import { IColumn } from '@fluentui/react';
+import { ColumnActionsMode, IColumn } from '@fluentui/react';
 import { IInputs } from '../generated/ManifestTypes';
 import {
   getEntityName,
@@ -26,6 +26,11 @@ export const getPagingLimit = (): number =>
   // @ts-ignore
   _context.userSettings.pagingLimit
 ;
+
+export const getEntityDisplayName = async (entityName: string): Promise<string> => {
+  const entityMetadata = await _context.utils.getEntityMetadata(entityName);
+  return entityMetadata._displayName;
+};
 
 export const getTimeZoneDefinitions = async () => {
   // @ts-ignore
@@ -77,7 +82,22 @@ export const getRecordsCount = async (fetchXml: string): Promise<number> => {
   const records: RetriveRecords =
     await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
 
-  return records.entities.length;
+  let allRecordsCount = records.entities.length;
+  let nextPage = 2;
+
+  while (allRecordsCount === 5000) {
+    fetch.setAttribute('page', `${nextPage}`);
+    const fetchNextPage: string = new XMLSerializer().serializeToString(xmlDoc);
+    const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchNextPage ?? '')}`;
+    const nextRecords: RetriveRecords =
+    await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
+
+    allRecordsCount += nextRecords.entities.length;
+    nextPage++;
+    if (nextRecords.entities.length !== 5000) break;
+  }
+
+  return allRecordsCount;
 };
 
 export const getEntityMetadata = async (entityName: string, attributesFieldNames: string[]):
@@ -123,6 +143,8 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
       minWidth: 10,
       isResizable: true,
       isMultiline: false,
+      columnActionsMode: ColumnActionsMode.hasDropdown,
+      isSortedDescending: false,
     });
   });
 
@@ -189,4 +211,34 @@ export const openPrimaryEntityForm = (
   entity: ComponentFramework.WebApi.Entity,
   entityName: string): void => {
   openRecord(entityName, entity[`${entityName}id`]);
+};
+
+const deleteSelectedRecords = async (recordIds: string[], entityName: string): Promise<void> => {
+  try {
+    for (const id of recordIds) {
+      await _context.webAPI.deleteRecord(entityName, id);
+    }
+  }
+  catch (e) {
+    console.log(e);
+  }
+};
+
+export const openRecordDeleteDialog = async (
+  selectedRecordIds: string[],
+  entityName: string,
+  setIsUsedButton: any): Promise<void> => {
+
+  const entityMetadata = await _context.utils.getEntityMetadata(entityName);
+  const confirmStrings = { text: `Do you want to delete this ${entityMetadata._displayName}?
+   You can't undo this action.`, title: 'Confirm Deletion' };
+  const confirmOptions = { height: 200, width: 450 };
+  _context.navigation.openConfirmDialog(confirmStrings, confirmOptions).then(
+    async success => {
+      setIsUsedButton(true);
+      if (success.confirmed) {
+        await deleteSelectedRecords(selectedRecordIds, entityName);
+      }
+      setIsUsedButton(false);
+    });
 };
