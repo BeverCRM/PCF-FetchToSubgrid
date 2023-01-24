@@ -76,17 +76,32 @@ export const addOrderToFetch = (fetchXml: string, fieldName: string, dialogEvent
     entity.removeChild(order);
     const newOrder = xmlDoc.createElement('order');
     newOrder.setAttribute('attribute', `${fieldName}`);
-    newOrder.setAttribute('descending', `${dialogEvent.checked}`);
+    newOrder.setAttribute('descending', `${!dialogEvent.checked}`);
     entity.appendChild(newOrder);
   }
   else {
     const order = xmlDoc.createElement('order');
     order.setAttribute('attribute', `${fieldName}`);
-    order.setAttribute('descending', `${dialogEvent.checked}`);
+    order.setAttribute('descending', `${!dialogEvent.checked}`);
     entity.appendChild(order);
   }
 
   return new XMLSerializer().serializeToString(xmlDoc);
+};
+
+export const getOrderInFetch = (fetchXml: string) => {
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+  const order: any = xmlDoc.getElementsByTagName('order');
+
+  if (order.length) {
+    const descending: string = order[0].attributes.descending.value;
+    const attribute: string = order[0].attributes.attribute.value;
+    return {
+      [descending]: attribute,
+    };
+  }
+  return null;
 };
 
 export const getLinkEntitiesNames = (fetchXml: string): { [key: string]: EntityAttribute[] } => {

@@ -27,7 +27,8 @@ import {
   getPageInFetch,
   isAggregate,
   addOrderToFetch,
-  parseString } from '../utilities/utilities';
+  parseString,
+  getOrderInFetch } from '../utilities/utilities';
 import { Loader } from './Loader';
 import { InfoMessage } from './InfoMessage';
 import { dataSetStyles } from '../styles/comandBarStyles';
@@ -91,7 +92,23 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
       try {
         displayName.current = await getEntityDisplayName(getEntityName(fetchXml ?? ''));
         const columns: IColumn[] = await getColumns(fetchXml);
-        setColumns(columns);
+
+        const order = getOrderInFetch(fetchXml ?? '');
+        if (order) {
+          const filteredColumns = columns.map(col => {
+            if (col.fieldName === Object.values(order)[0]) {
+              col.isSorted = true;
+              col.isSortedDescending = !(Object.keys(order)[0] === 'true');
+              return col;
+            }
+            return col;
+          });
+
+          setColumns(filteredColumns);
+        }
+        else {
+          setColumns(columns);
+        }
       }
       catch {
         setColumns([]);
@@ -172,15 +189,15 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
 
     setItems(records);
 
-    const filteredColumns = columns.map(c => {
-      if (column.key === c.key) {
-        c.isSortedDescending = dialogEvent.checked;
-        c.isSorted = true;
+    const filteredColumns = columns.map(col => {
+      if (column.key === col.key) {
+        col.isSortedDescending = dialogEvent.checked;
+        col.isSorted = true;
       }
       else {
-        c.isSorted = false;
+        col.isSorted = false;
       }
-      return c;
+      return col;
     });
 
     setColumns(filteredColumns);
