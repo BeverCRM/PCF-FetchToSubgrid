@@ -5,46 +5,37 @@ import {
   getWholeNumberFieldName,
   getTimeZoneDefinitions } from '../services/crmService';
 import { AttributeType } from './enums';
+import { Dictionary, Entity, EntityMetadata, EntityMetadataDictionary, IItemProps } from './types';
 
-type Entity = ComponentFramework.WebApi.Entity;
-type EntityMetadata = ComponentFramework.PropertyHelper.EntityMetadata;
-type IItemProps = {
-  timeZoneDefinitions: any;
-  item: Entity;
-  isLinkEntity: boolean;
-  entityMetadata: EntityMetadata;
-  attributeType: number;
-  fieldName: string;
-  entity: Entity;
-  fetchXml: string | null;
-  index: number;
-}
+
 interface EntityAttribute {
   linkEntityAlias: string | undefined;
   name: string;
   attributeAlias: string;
 }
 
-export const addPagingToFetchXml =
- (fetchXml: string, pageSize: number, currentPage: number): string => {
-   const parser: DOMParser = new DOMParser();
-   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+export const addPagingToFetchXml = (
+  fetchXml: string,
+  pageSize: number,
+  currentPage: number): string => {
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
-   const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
-   const top: string | null = fetch.getAttribute('top');
+  const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
+  const top: string | null = fetch.getAttribute('top');
 
-   if (Number(top)) {
-     fetch.removeAttribute('top');
-     fetch.setAttribute('page', `${currentPage}`);
-     fetch.setAttribute('count', `${top}`);
-   }
-   else {
-     fetch.setAttribute('page', `${currentPage}`);
-     fetch.setAttribute('count', `${pageSize}`);
-   }
+  if (Number(top)) {
+    fetch.removeAttribute('top');
+    fetch.setAttribute('page', `${currentPage}`);
+    fetch.setAttribute('count', `${top}`);
+  }
+  else {
+    fetch.setAttribute('page', `${currentPage}`);
+    fetch.setAttribute('count', `${pageSize}`);
+  }
 
-   return new XMLSerializer().serializeToString(xmlDoc);
- };
+  return new XMLSerializer().serializeToString(xmlDoc);
+};
 
 export const getEntityName = (fetchXml: string): string => {
   const parser: DOMParser = new DOMParser();
@@ -140,7 +131,8 @@ const genereateItems = (props: IItemProps): Entity => {
     fieldName,
     entity,
     fetchXml,
-    index } = props;
+    index,
+  } = props;
 
   let displayName = '';
   let linkable = false;
@@ -173,7 +165,6 @@ const genereateItems = (props: IItemProps): Entity => {
       attributeType === AttributeType.DateTime ||
       attributeType === AttributeType.MultiSelectPickList ||
       attributeType === AttributeType.TwoOptions) {
-
     displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
   }
   else if (isLinkEntity) {
@@ -235,16 +226,26 @@ export const getItems = async (
   const countOfRecordsInFetch = getCountInFetchXml(fetchXml);
 
   const pagingFetchData: string = addPagingToFetchXml(
-    fetchXml ?? '', countOfRecordsInFetch || pageSize, currentPage);
+    fetchXml ?? '',
+    countOfRecordsInFetch || pageSize,
+    currentPage);
 
-  const attributesFieldNames: string[] = getAttributesFieldNames(pagingFetchData);
+  let attributesFieldNames: string[] = getAttributesFieldNames(pagingFetchData);
   const entityName: string = getEntityName(fetchXml ?? '');
-  const records: ComponentFramework.WebApi.RetrieveMultipleResponse =
-   await getRecords(pagingFetchData);
+  const records: ComponentFramework.WebApi.RetrieveMultipleResponse = await getRecords(
+    pagingFetchData);
+
+  let isAllAttribute = false;
+
+  if (attributesFieldNames.length === 0 && entityName) {
+    attributesFieldNames = Object.keys(records.entities[0]);
+    isAllAttribute = true;
+  }
 
   const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
-  const linkEntityAttFieldNames: { [key: string]: EntityAttribute[] } =
-   getLinkEntitiesNames(fetchXml ?? '');
+  const linkEntityAttFieldNames: { [key: string]: EntityAttribute[] } = getLinkEntitiesNames(
+    fetchXml ?? '');
+
   const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
   const linkEntityAttributes:Array<Array<EntityAttribute>> =
    Object.values(linkEntityAttFieldNames);

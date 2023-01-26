@@ -1,5 +1,6 @@
 import { IColumn } from '@fluentui/react';
 import { IInputs } from '../generated/ManifestTypes';
+import { RetriveRecords, Entity, EntityMetadata, EntityMetadataDictionary } from '../utilities/types';
 import {
   getEntityName,
   getLinkEntitiesNames,
@@ -9,9 +10,7 @@ import {
 } from '../utilities/utilities';
 
 let _context: ComponentFramework.Context<IInputs>;
-type EntityMetadata = ComponentFramework.PropertyHelper.EntityMetadata;
-type RetriveRecords = ComponentFramework.WebApi.RetrieveMultipleResponse;
-type Entity = ComponentFramework.WebApi.Entity;
+
 interface EntityAttribute {
   linkEntityAlias: string | undefined;
   name: string;
@@ -72,14 +71,15 @@ export const getRecordsCount = async (fetchXml: string): Promise<number> => {
   const entityName: string = getEntityName(fetchWithoutCount);
 
   const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchWithoutCount ?? '')}`;
-  const records: RetriveRecords =
-    await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
+  const records: RetriveRecords = await _context.webAPI.retrieveMultipleRecords(
+    `${entityName}`,
+    encodeFetchXml);
 
   return records.entities.length;
 };
 
 export const getEntityMetadata = async (entityName: string, attributesFieldNames: string[]):
-  Promise<EntityMetadata> => {
+ Promise<EntityMetadata> => {
   const entityMetadata: EntityMetadata = await _context.utils.getEntityMetadata(
     entityName,
     [...attributesFieldNames]);
@@ -88,20 +88,33 @@ export const getEntityMetadata = async (entityName: string, attributesFieldNames
 };
 
 export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> => {
-  const attributesFieldNames: string[] = getAttributesFieldNames(fetchXml ?? '');
+  let attributesFieldNames: string[] = getAttributesFieldNames(fetchXml ?? '');
   const entityName: string = getEntityName(fetchXml ?? '');
 
+  let isAllAttribute = false;
+
+  if (attributesFieldNames.length === 0 && entityName) {
+    const recors = await getRecords(fetchXml ?? '');
+    attributesFieldNames = Object.keys(recors.entities[0]);
+    isAllAttribute = true;
+  }
+
   const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
-  const displayNameCollection: { [entityName: string]: EntityMetadata } =
-   entityMetadata.Attributes._collection;
+  const displayNameCollection: EntityMetadataDictionary = entityMetadata.Attributes._collection;
+
+  if (isAllAttribute) {
+    attributesFieldNames = Object.keys(displayNameCollection);
+  }
 
   const columns: IColumn[] = [];
+  const linkEntityNameAndAttributes: { [key: string]: string[] } = getLinkEntitiesNames(
+    fetchXml ?? '');
 
-  const linkEntityAttFieldNames: { [key: string]: EntityAttribute[] } =
-   getLinkEntitiesNames(fetchXml ?? '');
+  const linkEntityAttFieldNames: { [key: string]: EntityAttribute[] } = getLinkEntitiesNames(
+    fetchXml ?? '');
   const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
-  const linkEntityAttributes: Array<Array<EntityAttribute>> =
-   Object.values(linkEntityAttFieldNames);
+  const linkEntityAttributes: Array<Array<EntityAttribute>> = Object.values(
+    linkEntityAttFieldNames);
 
   const hasAggregate: boolean = isAggregate(fetchXml ?? '');
   const aggregateAttrNames: string[] | null = hasAggregate ? getAliasNames(fetchXml ?? '') : null;
