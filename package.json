@@ -1,7 +1,7 @@
 {
-  "name": "pcf-project",
+  "name": "pcf-fetch-to-subgrid",
   "version": "1.0.0",
-  "description": "Project containing your PowerApps Component Framework (PCF) control.",
+  "description": "This control converts a FetchXml string into a subgrid.",
   "scripts": {
     "build": "pcf-scripts build",
     "clean": "pcf-scripts clean",

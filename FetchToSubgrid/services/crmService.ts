@@ -1,5 +1,6 @@
 import { IColumn } from '@fluentui/react';
 import { IInputs } from '../generated/ManifestTypes';
+import { RetriveRecords, EntityMetadata, EntityMetadataDictionary } from '../utilities/types';
 import {
   getEntityName,
   getLinkEntitiesNames,
@@ -9,8 +10,6 @@ import {
 } from '../utilities/utilities';
 
 let _context: ComponentFramework.Context<IInputs>;
-type EntityMetadata = ComponentFramework.PropertyHelper.EntityMetadata;
-type RetriveRecords = ComponentFramework.WebApi.RetrieveMultipleResponse;
 
 export const setContext = (context: ComponentFramework.Context<IInputs>) => {
   _context = context;
@@ -39,8 +38,9 @@ export const getRecordsCount = async (fetchXml: string): Promise<number> => {
   const entityName: string = getEntityName(fetchWithoutCount);
 
   const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchWithoutCount ?? '')}`;
-  const records: RetriveRecords =
-    await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
+  const records: RetriveRecords = await _context.webAPI.retrieveMultipleRecords(
+    `${entityName}`,
+    encodeFetchXml);
 
   return records.entities.length;
 };
@@ -48,7 +48,8 @@ export const getRecordsCount = async (fetchXml: string): Promise<number> => {
 export const getEntityMetadata = async (entityName: string, attributesFieldNames: string[]):
  Promise<EntityMetadata> => {
   const entityMetadata: EntityMetadata = await _context.utils.getEntityMetadata(
-    entityName, [...attributesFieldNames]);
+    entityName,
+    [...attributesFieldNames]);
 
   return entityMetadata;
 };
@@ -66,21 +67,20 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
   }
 
   const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
-  const displayNameCollection: { [entityName: string]: EntityMetadata } =
-   entityMetadata.Attributes._collection;
+  const displayNameCollection: EntityMetadataDictionary = entityMetadata.Attributes._collection;
 
   if (isAllAttribute) {
     attributesFieldNames = Object.keys(displayNameCollection);
   }
 
-  const linkEntityNameAndAttributes: {[key: string]: string[]} =
-   getLinkEntitiesNames(fetchXml ?? '');
   const columns: IColumn[] = [];
+  const linkEntityNameAndAttributes: { [key: string]: string[] } = getLinkEntitiesNames(
+    fetchXml ?? '');
 
   const entityNames: Array<string> = Object.keys(linkEntityNameAndAttributes);
   const entityFieldNames: string[][] = Object.values(linkEntityNameAndAttributes);
 
-  const data: { [entityName: string]: EntityMetadata } = {};
+  const data: EntityMetadataDictionary = {};
 
   for (const [i, fieldNames] of Array.from(entityFieldNames.entries())) {
     const attributeNames: string[] = fieldNames.slice(1);
