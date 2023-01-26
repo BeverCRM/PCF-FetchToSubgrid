@@ -163,24 +163,24 @@ const genereateItems = (props: IItemProps): Entity => {
     };
   }
 
-  if (attributeType === AttributeType.WHOLE_NUMBER) {
+  if (attributeType === AttributeType.WholeNumber) {
     const format: string = entityMetadata.Attributes._collection[fieldName].Format;
     const field: string = getWholeNumberFieldName(format, entity, fieldName, timeZoneDefinitions);
     displayName = field;
   }
-  else if (attributeType === AttributeType.MONEY ||
-      attributeType === AttributeType.PICKLIST ||
-      attributeType === AttributeType.DATE_TIME ||
-      attributeType === AttributeType.MULTISELECT_PICKLIST ||
-      attributeType === AttributeType.TWO_OPTIONS) {
+  else if (attributeType === AttributeType.Money ||
+      attributeType === AttributeType.PickList ||
+      attributeType === AttributeType.DateTime ||
+      attributeType === AttributeType.MultiSelectPickList ||
+      attributeType === AttributeType.TwoOptions) {
 
     displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
   }
   else if (isLinkEntity) {
-    if (attributeType === AttributeType.LOOKUP ||
-        attributeType === AttributeType.OWNER ||
-        attributeType === AttributeType.CUSTOMER ||
-        attributeType === AttributeType.TWO_OPTIONS) {
+    if (attributeType === AttributeType.Lookup ||
+        attributeType === AttributeType.Owner ||
+        attributeType === AttributeType.Customer ||
+        attributeType === AttributeType.TwoOptions) {
       displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
       linkable = true;
     }
@@ -192,9 +192,9 @@ const genereateItems = (props: IItemProps): Entity => {
     displayName = entity[fieldName];
     linkable = true;
   }
-  else if (attributeType === AttributeType.LOOKUP ||
-    attributeType === AttributeType.OWNER ||
-    attributeType === AttributeType.CUSTOMER) {
+  else if (attributeType === AttributeType.Lookup ||
+    attributeType === AttributeType.Owner ||
+    attributeType === AttributeType.Customer) {
     displayName = entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`];
     linkable = true;
   }
@@ -293,7 +293,7 @@ export const getItems = async (
         }
 
         const attributeType: number =
-      linkentityMetadata[i].Attributes._collection[attr.name].AttributeType;
+          linkentityMetadata[i].Attributes._collection[attr.name].AttributeType;
 
         const attributes = {
           timeZoneDefinitions,

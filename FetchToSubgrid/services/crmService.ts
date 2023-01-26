@@ -22,10 +22,8 @@ export const setContext = (context: ComponentFramework.Context<IInputs>) => {
   _context = context;
 };
 
-export const getPagingLimit = (): number =>
-  // @ts-ignore
-  _context.userSettings.pagingLimit
-;
+// @ts-ignore
+export const getPagingLimit = (): number => _context.userSettings.pagingLimit;
 
 export const getTimeZoneDefinitions = async () => {
   // @ts-ignore
