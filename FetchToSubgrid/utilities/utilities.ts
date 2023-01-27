@@ -1,8 +1,18 @@
 /* global HTMLCollectionOf, NodeListOf */
-
-import { getRecords, getEntityMetadata } from '../services/crmService';
+import {
+  getRecords,
+  getEntityMetadata,
+  getWholeNumberFieldName,
+  getTimeZoneDefinitions } from '../services/crmService';
 import { AttributeType } from './enums';
 import { Dictionary, Entity, EntityMetadata, EntityMetadataDictionary, IItemProps } from './types';
+
+
+interface EntityAttribute {
+  linkEntityAlias: string | undefined;
+  name: string;
+  attributeAlias: string;
+}
 
 export const addPagingToFetchXml = (
   fetchXml: string,
@@ -34,23 +44,31 @@ export const getEntityName = (fetchXml: string): string => {
   return xmlDoc.getElementsByTagName('entity')?.[0]?.getAttribute('name') ?? '';
 };
 
-export const getLinkEntitiesNames = (fetchXml: string): Dictionary => {
+export const getLinkEntitiesNames = (fetchXml: string): { [key: string]: EntityAttribute[] } => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
   const linkEntities: HTMLCollectionOf<Element> = xmlDoc.getElementsByTagName('link-entity');
-  const linkEntityData: Dictionary = {};
+  const linkEntityData: { [key: string]: EntityAttribute[] } = {};
 
   Array.prototype.slice.call(linkEntities).forEach(linkentity => {
     const entityName: string = linkentity.attributes['name'].value;
-    const alias: string = linkentity.attributes['alias'].value;
-    const entityAttributes: string[] = [alias];
+    const entityAttributes: EntityAttribute[] = [];
 
     const attributesSelector = `link-entity[name="${entityName}"] > attribute`;
     const attributes: NodeListOf<Element> = xmlDoc.querySelectorAll(attributesSelector);
+    const linkEntityAlias: string | undefined =
+     linkentity.attributes['alias'] && linkentity.attributes['alias'].value;
 
     Array.prototype.slice.call(attributes).map(attr => {
-      entityAttributes.push(attr.attributes.name.value);
+      const attributeAlias: string = attr.attributes['alias'] ? attr.attributes['alias'].value : '';
+
+      entityAttributes.push(
+        {
+          linkEntityAlias,
+          name: attr.attributes.name.value,
+          attributeAlias,
+        });
     });
 
     linkEntityData[entityName] = entityAttributes;
@@ -105,6 +123,7 @@ export const isAggregate = (fetchXml: string): boolean => {
 
 const genereateItems = (props: IItemProps): Entity => {
   const {
+    timeZoneDefinitions,
     item,
     isLinkEntity,
     entityMetadata,
@@ -136,14 +155,23 @@ const genereateItems = (props: IItemProps): Entity => {
     };
   }
 
-  if (attributeType === AttributeType.MONEY ||
-      attributeType === AttributeType.PICKLIST ||
-      attributeType === AttributeType.DATE_TIME ||
-      attributeType === AttributeType.MULTISELECT_PICKLIST) {
+  if (attributeType === AttributeType.WholeNumber) {
+    const format: string = entityMetadata.Attributes._collection[fieldName].Format;
+    const field: string = getWholeNumberFieldName(format, entity, fieldName, timeZoneDefinitions);
+    displayName = field;
+  }
+  else if (attributeType === AttributeType.Money ||
+      attributeType === AttributeType.PickList ||
+      attributeType === AttributeType.DateTime ||
+      attributeType === AttributeType.MultiSelectPickList ||
+      attributeType === AttributeType.TwoOptions) {
     displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
   }
   else if (isLinkEntity) {
-    if (attributeType === AttributeType.LOOKUP || attributeType === AttributeType.OWNER) {
+    if (attributeType === AttributeType.Lookup ||
+        attributeType === AttributeType.Owner ||
+        attributeType === AttributeType.Customer ||
+        attributeType === AttributeType.TwoOptions) {
       displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
       linkable = true;
     }
@@ -155,7 +183,9 @@ const genereateItems = (props: IItemProps): Entity => {
     displayName = entity[fieldName];
     linkable = true;
   }
-  else if (attributeType === AttributeType.LOOKUP || attributeType === AttributeType.OWNER) {
+  else if (attributeType === AttributeType.Lookup ||
+    attributeType === AttributeType.Owner ||
+    attributeType === AttributeType.Customer) {
     displayName = entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`];
     linkable = true;
   }
@@ -175,14 +205,17 @@ const genereateItems = (props: IItemProps): Entity => {
 };
 
 export const getCountInFetchXml = (fetchXml: string | null): number => {
-  const parser: DOMParser = new DOMParser();
-  const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
-  const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
+  if (fetchXml) {
+    const parser: DOMParser = new DOMParser();
+    const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
+    const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
 
-  const count: string | null = fetch.getAttribute('count');
-  const top: string | null = fetch.getAttribute('top');
+    const count: string | null = fetch.getAttribute('count');
+    const top: string | null = fetch.getAttribute('top');
 
-  return Number(count) || Number(top);
+    return Number(count) || Number(top);
+  }
+  return 0;
 };
 
 export const getItems = async (
@@ -210,22 +243,21 @@ export const getItems = async (
   }
 
   const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
-  const attributesCollection: EntityMetadataDictionary = entityMetadata.Attributes._collection;
+  const linkEntityAttFieldNames: { [key: string]: EntityAttribute[] } = getLinkEntitiesNames(
+    fetchXml ?? '');
 
-  if (isAllAttribute) {
-    attributesFieldNames = Object.keys(attributesCollection);
-  }
-
-  const linkEntityAttFieldNames: Dictionary = getLinkEntitiesNames(fetchXml ?? '');
   const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
-  const linkEntityAttributes: any = Object.values(linkEntityAttFieldNames);
+  const linkEntityAttributes:Array<Array<EntityAttribute>> =
+   Object.values(linkEntityAttFieldNames);
 
-  const promises = linkEntityNames.map((linkEntityNames, i) => getEntityMetadata(
-    linkEntityNames, linkEntityAttributes[i]));
+  const promises = linkEntityNames.map((linkEntityNames, i) => {
+    const attributeNames: string[] = linkEntityAttributes[i].map(attr => attr.name);
+    return getEntityMetadata(linkEntityNames, attributeNames);
+  });
 
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
-
   const items: Entity[] = [];
+  const timeZoneDefinitions = await getTimeZoneDefinitions();
 
   records.entities.forEach(entity => {
     const item: Entity = {
@@ -236,6 +268,7 @@ export const getItems = async (
       const attributeType: number = entityMetadata.Attributes._collection[fieldName].AttributeType;
 
       const attributes = {
+        timeZoneDefinitions,
         item,
         isLinkEntity: false,
         entityMetadata,
@@ -249,17 +282,27 @@ export const getItems = async (
       genereateItems(attributes);
     });
 
-    linkEntityAttributes.forEach(([alias, ...fields]: [string, string], index: number) => {
-      fields.forEach(fieldName => {
+    linkEntityNames.forEach((linkEntityName, i) => {
+      linkEntityAttributes[i].forEach((attr, index) => {
+        let fieldName = attr.attributeAlias;
+
+        if (!fieldName && attr.linkEntityAlias) {
+          fieldName = `${attr.linkEntityAlias}.${attr.name}`;
+        }
+        else if (!fieldName) {
+          fieldName = `${linkEntityName}${i + 1}.${attr.name}`;
+        }
+
         const attributeType: number =
-         linkentityMetadata[index].Attributes._collection[fieldName].AttributeType;
+          linkentityMetadata[i].Attributes._collection[attr.name].AttributeType;
 
         const attributes = {
+          timeZoneDefinitions,
           item,
           isLinkEntity: true,
-          entityMetadata: linkentityMetadata[index],
+          entityMetadata: linkentityMetadata[i],
           attributeType,
-          fieldName: `${alias}.${fieldName}`,
+          fieldName,
           entity,
           fetchXml,
           index,

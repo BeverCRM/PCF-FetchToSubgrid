@@ -28,10 +28,8 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
 
   const recordIds = React.useRef<string[]>([]);
   const nextButtonDisable = React.useRef(true);
-  let recordsPerPage: number = getPagingLimit();
   const countOfRecordsInFetch: number = getCountInFetchXml(fetchXml);
-
-  recordsPerPage = countOfRecordsInFetch || numberOfRows || recordsPerPage;
+  const recordsPerPage: number = countOfRecordsInFetch || numberOfRows || getPagingLimit();
 
   const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = React.useCallback(
     (props: IDetailsFooterProps | undefined) => {
@@ -116,7 +114,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   }
 
   if (columns.length === 0) {
-    return <InfoMessage/>;
+    return <InfoMessage fetchXml ={fetchXml}/>;
   }
 
   return (

@@ -1,6 +1,6 @@
 import { IColumn } from '@fluentui/react';
 import { IInputs } from '../generated/ManifestTypes';
-import { RetriveRecords, EntityMetadata, EntityMetadataDictionary } from '../utilities/types';
+import { RetriveRecords, Entity, EntityMetadata, EntityMetadataDictionary } from '../utilities/types';
 import {
   getEntityName,
   getLinkEntitiesNames,
@@ -11,20 +11,53 @@ import {
 
 let _context: ComponentFramework.Context<IInputs>;
 
+interface EntityAttribute {
+  linkEntityAlias: string | undefined;
+  name: string;
+  attributeAlias: string;
+}
+
 export const setContext = (context: ComponentFramework.Context<IInputs>) => {
   _context = context;
 };
 
-export const getRecords = async (fetchXml: string | null): Promise<RetriveRecords> => {
-  const entityName: string = getEntityName(fetchXml ?? '');
-  const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
-  return await _context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
+// @ts-ignore
+export const getPagingLimit = (): number => _context.userSettings.pagingLimit;
+
+export const getTimeZoneDefinitions = async () => {
+  // @ts-ignore
+  const contextPage = _context.page;
+
+  const request = await fetch(`${contextPage.getClientUrl()}/api/data/v9.0/timezonedefinitions`);
+  const results = await request.json();
+
+  return results;
 };
 
-export const getPagingLimit = (): number =>
-  // @ts-ignore
-  _context.userSettings.pagingLimit
-;
+export const getWholeNumberFieldName = (
+  format: string, entity: Entity, fieldName: string, timeZoneDefinitions: any) => {
+  let fieldValue: number = entity[fieldName];
+
+  if (format === '3') { return _context.formatting.formatLanguage(fieldValue); }
+  if (format === '2') {
+    return timeZoneDefinitions.value.find((e: any) =>
+      e.timezonecode === Number(fieldValue)).userinterfacename;
+  }
+
+  if (fieldValue) {
+    let unit: string;
+    if (fieldValue < 60) { unit = 'minute'; }
+    else if (fieldValue < 1440) {
+      fieldValue /= 60;
+      unit = 'hour';
+    }
+    else {
+      fieldValue /= 1440;
+      unit = 'day';
+    }
+    return `${fieldValue} ${unit}${fieldValue === 1 ? '' : 's'}`;
+  }
+};
 
 export const getRecordsCount = async (fetchXml: string): Promise<number> => {
   const parser: DOMParser = new DOMParser();
@@ -77,17 +110,11 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
   const linkEntityNameAndAttributes: { [key: string]: string[] } = getLinkEntitiesNames(
     fetchXml ?? '');
 
-  const entityNames: Array<string> = Object.keys(linkEntityNameAndAttributes);
-  const entityFieldNames: string[][] = Object.values(linkEntityNameAndAttributes);
-
-  const data: EntityMetadataDictionary = {};
-
-  for (const [i, fieldNames] of Array.from(entityFieldNames.entries())) {
-    const attributeNames: string[] = fieldNames.slice(1);
-    const mataData: EntityMetadata = await getEntityMetadata(entityNames[i], attributeNames);
-    const displayNameCollection: EntityMetadata = mataData.Attributes._collection;
-    data[entityNames[i]] = displayNameCollection;
-  }
+  const linkEntityAttFieldNames: { [key: string]: EntityAttribute[] } = getLinkEntitiesNames(
+    fetchXml ?? '');
+  const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
+  const linkEntityAttributes: Array<Array<EntityAttribute>> = Object.values(
+    linkEntityAttFieldNames);
 
   const hasAggregate: boolean = isAggregate(fetchXml ?? '');
   const aggregateAttrNames: string[] | null = hasAggregate ? getAliasNames(fetchXml ?? '') : null;
@@ -110,25 +137,41 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
     });
   });
 
-  entityFieldNames.forEach((attr: any, index: number) => {
-    const entityName: string = entityNames[index];
+  linkEntityNames.forEach(async (linkEntityName, i) => {
+    const linkAttributeNames: string[] = linkEntityAttributes[i].map(attr => attr.name);
+    const mataData: EntityMetadata = await getEntityMetadata(linkEntityName, linkAttributeNames);
 
-    for (let i = 1; i < attr.length; i++) {
-      const alias: string = attr[0];
-      const attributeName: string = attr[i];
-      const display: string = data[entityName][attributeName].DisplayName;
+    linkEntityAttributes[i].forEach((attr, index) => {
+      let fieldName = attr.attributeAlias;
+
+      if (!fieldName && attr.linkEntityAlias) {
+        fieldName = `${attr.linkEntityAlias}.${attr.name}`;
+      }
+      else if (!fieldName) {
+        fieldName = `${linkEntityName}${i + 1}.${attr.name}`;
+      }
+
+      const columnName: string = attr.attributeAlias ||
+       mataData.Attributes._collection[attr.name].DisplayName;
+
       columns.push({
-        name: `${display} (${alias})`,
-        fieldName: `${alias}.${attributeName}`,
-        key: `col-el-${i}`,
+        name: columnName,
+        fieldName,
+        key: `col-el-${index}`,
         minWidth: 10,
         isResizable: true,
         isMultiline: false,
       });
-    }
+    });
   });
 
   return columns;
+};
+
+export const getRecords = async (fetchXml: string | null): Promise<RetriveRecords> => {
+  const entityName: string = getEntityName(fetchXml ?? '');
+  const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
+  return await _context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
 };
 
 export const openRecord = (entityName: string, entityId: string): void => {

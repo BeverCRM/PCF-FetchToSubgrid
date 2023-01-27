@@ -15,18 +15,26 @@ export const LinkableItem: React.FunctionComponent<IlinkableItemProps> = props =
   const { item } = props;
 
   if (item.isLinkEntity) {
-    return <Link onClick={openLinkEntityRecord.bind(null, item.entity, item.fieldName)}>
-      {item.displayName}
-    </Link>;
+    return (
+      <Link onClick={openLinkEntityRecord.bind(null, item.entity, item.fieldName)}>
+        {item.displayName}
+      </Link>
+    );
   }
 
-  if (item.attributeType === AttributeType.LOOKUP || item.attributeType === AttributeType.OWNER) {
-    return <Link onClick={openLookupForm.bind(null, item.entity, item.fieldName)}>
-      {item.displayName}
-    </Link>;
+  if (item.attributeType === AttributeType.Lookup ||
+      item.attributeType === AttributeType.Owner ||
+      item.attributeType === AttributeType.Customer) {
+    return (
+      <Link onClick={openLookupForm.bind(null, item.entity, item.fieldName)}>
+        {item.displayName}
+      </Link>
+    );
   }
 
-  return <Link onClick={openPrimaryEntityForm.bind(null, item.entity, item.entityName)}>
-    {item.displayName}
-  </Link>;
+  return (
+    <Link onClick={openPrimaryEntityForm.bind(null, item.entity, item.entityName)}>
+      {item.displayName}
+    </Link>
+  );
 };

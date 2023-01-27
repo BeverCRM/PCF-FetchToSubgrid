@@ -1,8 +1,11 @@
 export enum AttributeType {
-  DATE_TIME = 2,
-  LOOKUP = 6,
-  MONEY = 8,
-  OWNER = 9,
-  PICKLIST = 11,
-  MULTISELECT_PICKLIST = 17,
+  TwoOptions = 0,
+  Customer = 1,
+  DateTime = 2,
+  WholeNumber = 5,
+  Lookup = 6,
+  Money = 8,
+  Owner = 9,
+  PickList = 11,
+  MultiSelectPickList = 17,
 }
