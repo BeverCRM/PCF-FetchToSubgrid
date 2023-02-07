@@ -20,9 +20,9 @@ export const LinkableItem: React.FunctionComponent<IlinkableItemProps> = props =
     </Link>;
   }
 
-  if (item.attributeType === AttributeType.LOOKUP ||
-      item.attributeType === AttributeType.OWNER ||
-      item.attributeType === AttributeType.CUSTOMER) {
+  if (item.attributeType === AttributeType.LookUp ||
+      item.attributeType === AttributeType.Owner ||
+      item.attributeType === AttributeType.Customer) {
     return <Link onClick={openLookupForm.bind(null, item.entity, item.fieldName)}>
       {item.displayName}
     </Link>;

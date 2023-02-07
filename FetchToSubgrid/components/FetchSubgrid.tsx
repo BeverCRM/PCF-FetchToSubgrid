@@ -11,6 +11,7 @@ import {
   IDetailsListProps,
   Stack,
   Selection,
+  IObjectWithKey,
 } from '@fluentui/react';
 import { LinkableItem } from './LinkableItems';
 import {
@@ -27,7 +28,6 @@ import {
   getPageInFetch,
   isAggregate,
   addOrderToFetch,
-  parseString,
   getOrderInFetch } from '../utilities/utilities';
 import { Loader } from './Loader';
 import { InfoMessage } from './InfoMessage';
@@ -36,12 +36,19 @@ import { CommandBar } from './ComandBar';
 
 export interface IFetchSubgridProps {
   fetchXml: string | null;
-  numberOfRows: number | null;
-  userParameters: string;
+  defaultPageSize: number | null;
+  deleteButtonVisibility: string | null;
+  newButtonVisibility: string | null;
+  userParameters: any;
 }
 
 export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props => {
-  const { userParameters, numberOfRows, fetchXml } = props;
+  const {
+    userParameters,
+    deleteButtonVisibility,
+    newButtonVisibility,
+    defaultPageSize,
+    fetchXml } = props;
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [columns, setColumns] = React.useState<IColumn[]>([]);
@@ -54,9 +61,12 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   const recordIds = React.useRef<string[]>([]);
   const nextButtonDisable = React.useRef(true);
   const displayName = React.useRef('');
+  const deleteBtnClassName = React.useRef('disableButton');
 
-  let pageSize: number = numberOfRows || getPagingLimit();
-  pageSize = pageSize > getCountInFetchXml(fetchXml) ? getCountInFetchXml(fetchXml) : pageSize;
+  const isDeleteBtnVisible = userParameters?.DeleteButtonVisibility || deleteButtonVisibility;
+  const isNewBtnVisible = userParameters?.DeleteButtonVisibility || newButtonVisibility;
+
+  const pageSize: number = getCountInFetchXml(fetchXml) || defaultPageSize || getPagingLimit();
 
   const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = React.useCallback(
     (props: IDetailsFooterProps | undefined) => {
@@ -117,6 +127,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   }, [fetchXml]);
 
   React.useEffect(() => {
+    deleteBtnClassName.current = 'disableButton';
     (async () => {
       setIsLoading(true);
       try {
@@ -167,9 +178,10 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     });
   };
 
-  const onDialogClick = async (column: any, dialogEvent: any) => {
-    const { fieldName } = column;
-    const newFetchXml = addOrderToFetch(fetchXml ?? '', fieldName, dialogEvent);
+  const onDialogClick = async (column?: IColumn,
+    dialogEvent?: React.MouseEvent<HTMLElement, MouseEvent>) => {
+    const fieldName = column?.fieldName;
+    const newFetchXml = addOrderToFetch(fetchXml ?? '', fieldName ?? '', dialogEvent);
 
     const records: ComponentFramework.WebApi.Entity[] = await getItems(
       newFetchXml,
@@ -190,8 +202,9 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     setItems(records);
 
     const filteredColumns = columns.map(col => {
-      if (column.key === col.key) {
-        col.isSortedDescending = dialogEvent.checked;
+      if (column?.key === col.key) {
+        // @ts-ignore
+        col.isSortedDescending = dialogEvent?.checked;
         col.isSorted = true;
       }
       else {
@@ -203,8 +216,8 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     setColumns(filteredColumns);
   };
 
-  const getContextualMenuProps =
-  (ev: React.MouseEvent<HTMLElement>, column: IColumn): any => {
+  const getContextualMenuProps = (ev?: React.MouseEvent<HTMLElement, MouseEvent> | undefined,
+    column?: IColumn): Object => {
     const items: IContextualMenuItem[] = [
       {
         key: 'aToZ',
@@ -222,7 +235,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
 
     return {
       items,
-      target: ev.currentTarget as HTMLElement,
+      target: ev?.currentTarget as HTMLElement,
       directionalHint: DirectionalHint.bottomLeftEdge,
       gapSpace: 10,
       isBeakVisible: true,
@@ -233,16 +246,18 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     };
   };
 
-  const onColumnContextMenu = (column: IColumn, ev: React.MouseEvent<HTMLElement>): void => {
-    if (column.columnActionsMode !== ColumnActionsMode.disabled) {
+  const onColumnContextMenu = (column?: IColumn,
+    ev?: React.MouseEvent<HTMLElement, MouseEvent> | undefined): void => {
+    if (column?.columnActionsMode !== ColumnActionsMode.disabled) {
       setMenuProps({
         contextualMenuProps: getContextualMenuProps(ev, column),
       });
     }
   };
 
-  const columnClick = (ev: any, col: any) => {
-    const { key } = col;
+  const columnClick = (ev?: React.MouseEvent<HTMLElement, MouseEvent> | undefined,
+    col?: IColumn) => {
+    const key = col?.key;
     const filteredColumns = columns.map(column => {
       if (column.key === key) {
         onColumnContextMenu(col, ev);
@@ -259,10 +274,13 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     setColumns(filteredColumns);
   };
 
-  const selection: any = new Selection({
+  const selection = new Selection({
     onSelectionChanged: () => {
-      const currentSelection = selection.getSelection();
-      const recordIds = currentSelection.map((record: any) => record.id);
+      const currentSelection: IObjectWithKey[] = selection.getSelection();
+      currentSelection.length
+        ? deleteBtnClassName.current = 'ms-Button'
+        : deleteBtnClassName.current = 'disableButton';
+      const recordIds: string[] = currentSelection.map((record: any) => record.id);
       setSelectedRecordIds(recordIds);
     },
   });
@@ -275,8 +293,10 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
           selectedRecordIds={selectedRecordIds}
           displayName={displayName.current}
           setIsUsedButton={setIsUsedButton}
-          userParameters={parseString(userParameters)}
-        ></CommandBar>
+          className = {deleteBtnClassName.current}
+          deleteButtonVisibility={isDeleteBtnVisible}
+          newButtonVisibility={isNewBtnVisible}
+        />
       </Stack>
       <DetailsList
         columns={columns}

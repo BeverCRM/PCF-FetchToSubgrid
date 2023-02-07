@@ -5,20 +5,8 @@ import {
   getWholeNumberFieldName,
   getTimeZoneDefinitions } from '../services/crmService';
 import { AttributeType } from './enums';
+import { Entity, EntityMetadata, IItemProps } from './types';
 
-type Entity = ComponentFramework.WebApi.Entity;
-type EntityMetadata = ComponentFramework.PropertyHelper.EntityMetadata;
-type IItemProps = {
-  timeZoneDefinitions: any;
-  item: Entity;
-  isLinkEntity: boolean;
-  entityMetadata: EntityMetadata;
-  attributeType: number;
-  fieldName: string;
-  entity: Entity;
-  fetchXml: string | null;
-  index: number;
-}
 interface EntityAttribute {
   linkEntityAlias: string | undefined;
   name: string;
@@ -45,19 +33,6 @@ export const addPagingToFetchXml =
 
    return new XMLSerializer().serializeToString(xmlDoc);
  };
-
-export const parseString = (userParameters: string): {
-   NewVIsiblitiy: string,
-   DeleteVisiblity: string,
-   FetchXml: string } => {
-  const parametersObj: any = {};
-  const parts = userParameters.slice(1, -1).split(',');
-  for (let i = 0; i < parts.length; i++) {
-    const keyValue = parts[i].split(':');
-    parametersObj[keyValue[0].trim().slice(1, -1)] = keyValue[1].trim().slice(1, -1);
-  }
-  return parametersObj;
-};
 
 export const getEntityName = (fetchXml: string): string => {
   const parser: DOMParser = new DOMParser();
@@ -214,24 +189,24 @@ const genereateItems = (props: IItemProps): Entity => {
     };
   }
 
-  if (attributeType === AttributeType.WHOLE_NUMBER) {
+  if (attributeType === AttributeType.WholeNumber) {
     const format: string = entityMetadata.Attributes._collection[fieldName].Format;
     const field: string = getWholeNumberFieldName(format, entity, fieldName, timeZoneDefinitions);
     displayName = field;
   }
-  else if (attributeType === AttributeType.MONEY ||
-      attributeType === AttributeType.PICKLIST ||
-      attributeType === AttributeType.DATE_TIME ||
-      attributeType === AttributeType.MULTISELECT_PICKLIST ||
-      attributeType === AttributeType.TWO_OPTIONS) {
+  else if (attributeType === AttributeType.Money ||
+      attributeType === AttributeType.PickList ||
+      attributeType === AttributeType.DateTime ||
+      attributeType === AttributeType.MultiselectPickList ||
+      attributeType === AttributeType.TwoOptions) {
 
     displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
   }
   else if (isLinkEntity) {
-    if (attributeType === AttributeType.LOOKUP ||
-        attributeType === AttributeType.OWNER ||
-        attributeType === AttributeType.CUSTOMER ||
-        attributeType === AttributeType.TWO_OPTIONS) {
+    if (attributeType === AttributeType.LookUp ||
+        attributeType === AttributeType.Owner ||
+        attributeType === AttributeType.Customer ||
+        attributeType === AttributeType.TwoOptions) {
       displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
       linkable = true;
     }
@@ -243,9 +218,9 @@ const genereateItems = (props: IItemProps): Entity => {
     displayName = entity[fieldName];
     linkable = true;
   }
-  else if (attributeType === AttributeType.LOOKUP ||
-    attributeType === AttributeType.OWNER ||
-    attributeType === AttributeType.CUSTOMER) {
+  else if (attributeType === AttributeType.LookUp ||
+    attributeType === AttributeType.Owner ||
+    attributeType === AttributeType.Customer) {
     displayName = entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`];
     linkable = true;
   }

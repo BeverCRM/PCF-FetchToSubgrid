@@ -1,6 +1,12 @@
 import { ColumnActionsMode, IColumn } from '@fluentui/react';
 import { IInputs } from '../generated/ManifestTypes';
 import {
+  Dictionary,
+  Entity,
+  EntityAttribute,
+  EntityMetadata,
+  RetriveRecords } from '../utilities/types';
+import {
   getEntityName,
   getLinkEntitiesNames,
   getAttributesFieldNames,
@@ -9,14 +15,6 @@ import {
 } from '../utilities/utilities';
 
 let _context: ComponentFramework.Context<IInputs>;
-type EntityMetadata = ComponentFramework.PropertyHelper.EntityMetadata;
-type RetriveRecords = ComponentFramework.WebApi.RetrieveMultipleResponse;
-type Entity = ComponentFramework.WebApi.Entity;
-interface EntityAttribute {
-  linkEntityAlias: string | undefined;
-  name: string;
-  attributeAlias: string;
-}
 
 export const setContext = (context: ComponentFramework.Context<IInputs>) => {
   _context = context;
@@ -80,7 +78,7 @@ export const getRecordsCount = async (fetchXml: string): Promise<number> => {
 
   const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchWithoutCount ?? '')}`;
   const records: RetriveRecords =
-    await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
+  await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
 
   let allRecordsCount = records.entities.length;
   let nextPage = 2;
@@ -114,15 +112,15 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
   const entityName: string = getEntityName(fetchXml ?? '');
 
   const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
-  const displayNameCollection: { [entityName: string]: EntityMetadata } =
+  const displayNameCollection: Dictionary<EntityMetadata> =
    entityMetadata.Attributes._collection;
 
   const columns: IColumn[] = [];
 
-  const linkEntityAttFieldNames: { [key: string]: EntityAttribute[] } =
+  const linkEntityAttFieldNames: Dictionary<EntityAttribute[]> =
    getLinkEntitiesNames(fetchXml ?? '');
   const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
-  const linkEntityAttributes: Array<Array<EntityAttribute>> =
+  const linkEntityAttributes: EntityAttribute[][] =
    Object.values(linkEntityAttFieldNames);
 
   const hasAggregate: boolean = isAggregate(fetchXml ?? '');

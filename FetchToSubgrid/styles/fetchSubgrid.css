@@ -38,7 +38,7 @@
   border-bottom: 1px solid rgb(237, 235, 233);
 }
 
-.ms-Button--commandBar:hover .ms-Button-icon {
+.fetchSubgridControl, .ms-Button--commandBar:hover .ms-Button-icon {
   color: rgb(161, 159, 157);
 }
 
@@ -48,7 +48,7 @@
   font-weight: 400;
 }
 
-.ms-DetailsRow-cell{
+.fetchSubgridControl, .ms-DetailsRow-cell{
   flex: 1 1 auto;
   font-size: 14px;
   font-weight: 400;
@@ -60,4 +60,8 @@
 
 .ms-DetailsHeader-cell{
   font-size: 13px;
+}
+
+.fetchSubgridControl .disableButton{
+  display: none;
 }

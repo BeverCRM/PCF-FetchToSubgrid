@@ -2,7 +2,6 @@ import { IInputs, IOutputs } from './generated/ManifestTypes';
 import { FetchSubgrid, IFetchSubgridProps } from './components/FetchSubgrid';
 import * as React from 'react';
 import { setContext } from './services/crmService';
-import { parseString } from './utilities/utilities';
 
 export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, IOutputs> {
     private Component: ComponentFramework.ReactControl<IInputs, IOutputs>;
@@ -20,17 +19,32 @@ export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, 
     }
 
     public updateView(context: ComponentFramework.Context<IInputs>): React.ReactElement {
-      const userParameters = context.parameters.userParameters.raw ||
-      `{"NewVIsiblitiy":"true", "DeleteVisiblity":"true", "FetchXml":""}`;
+      const fetchXml = context.parameters.fetchXmlProperty.raw;
+      const pageSize = context.parameters.defaultPageSize.raw;
 
-      const props: IFetchSubgridProps = {
-        numberOfRows: context.parameters.numberOfRows.raw,
-        fetchXml: context.parameters.fetchXmlProperty.raw ??
-        parseString(userParameters).FetchXml,
-        userParameters,
-      };
-
-      return React.createElement(FetchSubgrid, props);
+      try {
+        const userParameters = JSON.parse(fetchXml ?? '');
+        const props: IFetchSubgridProps = {
+          fetchXml: userParameters.FetchXml || context.parameters.defaultFetchXmlProperty.raw,
+          defaultPageSize: Number(userParameters.PageSize) || pageSize,
+          newButtonVisibility: userParameters.NewButtonVIsiblitiy ||
+           context.parameters.newButtonVisibility.raw,
+          deleteButtonVisibility: userParameters.DeleteButtonVisiblity ||
+           context.parameters.deleteButtonVisibility.raw,
+          userParameters,
+        };
+        return React.createElement(FetchSubgrid, props);
+      }
+      catch {
+        const props: IFetchSubgridProps = {
+          fetchXml: fetchXml ?? context.parameters.defaultFetchXmlProperty.raw,
+          defaultPageSize: pageSize,
+          newButtonVisibility: context.parameters.newButtonVisibility.raw,
+          deleteButtonVisibility: context.parameters.deleteButtonVisibility.raw,
+          userParameters: {},
+        };
+        return React.createElement(FetchSubgrid, props);
+      }
     }
 
     public getOutputs(): IOutputs {
