@@ -245,10 +245,10 @@ export const getCountInFetchXml = (fetchXml: string | null): number => {
     const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
     const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
 
-    const count: string | null = fetch.getAttribute('count');
-    const top: string | null = fetch.getAttribute('top');
+    const count: string | null = fetch?.getAttribute('count');
+    const top: string | null = fetch?.getAttribute('top');
 
-    return Number(count) || Number(top);
+    return Number(count) || Number(top) || 0;
   }
   return 0;
 };
@@ -258,8 +258,7 @@ export const getPageInFetch = (fetchXml: string | null): number => {
     const parser: DOMParser = new DOMParser();
     const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
     const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
-
-    const count: string | null = fetch.getAttribute('page');
+    const count: string | null = fetch?.getAttribute('page');
 
     return Number(count) || 1;
   }

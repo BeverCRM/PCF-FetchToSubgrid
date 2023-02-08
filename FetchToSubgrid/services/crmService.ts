@@ -70,8 +70,8 @@ export const getRecordsCount = async (fetchXml: string): Promise<number> => {
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
   const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
 
-  fetch.removeAttribute('count');
-  fetch.removeAttribute('page');
+  fetch?.removeAttribute('count');
+  fetch?.removeAttribute('page');
 
   const fetchWithoutCount: string = new XMLSerializer().serializeToString(xmlDoc);
   const entityName: string = getEntityName(fetchWithoutCount);
