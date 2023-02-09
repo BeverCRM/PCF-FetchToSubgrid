@@ -9,6 +9,10 @@ import {
 } from '../styles/footerStyles';
 
 export interface IGridFooterProps {
+  firstNumber:any;
+  lastNumber:any;
+  selectedItems: number;
+  totalRecordsCount:number;
   currentPage: number;
   setCurrentPage: (page: number) => void;
   nextButtonDisable: boolean;
@@ -16,7 +20,15 @@ export interface IGridFooterProps {
 }
 
 export const Footer: React.FunctionComponent<IGridFooterProps> = props => {
-  const { currentPage, setCurrentPage, nextButtonDisable, isMovePrevious } = props;
+  const {
+    firstNumber,
+    lastNumber,
+    selectedItems,
+    totalRecordsCount,
+    currentPage,
+    setCurrentPage,
+    nextButtonDisable,
+    isMovePrevious } = props;
 
   function moveToFirst() {
     setCurrentPage(1);
@@ -30,7 +42,12 @@ export const Footer: React.FunctionComponent<IGridFooterProps> = props => {
     setCurrentPage(currentPage + 1);
   }
 
+  const selected = `${firstNumber} - ${lastNumber} of 
+  ${totalRecordsCount >= 5000 ? '5000+' : totalRecordsCount}
+   ${selectedItems !== 0 ? `(${selectedItems} Selected)` : ''}`;
+
   return <div className={footerStyles.content}>
+    <span > {selected} </span>
     <div className='buttons'>
       <IconButton
         styles={footerButtonStyles}

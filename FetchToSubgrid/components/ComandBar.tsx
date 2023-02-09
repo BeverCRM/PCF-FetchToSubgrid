@@ -9,8 +9,8 @@ export interface ICommandBarProps {
   selectedRecordIds: string[];
   displayName: string;
   setIsUsedButton: any;
-  newButtonVisibility: string | null;
-  deleteButtonVisibility: string | null;
+  newButtonVisibility: boolean;
+  deleteButtonVisibility: boolean;
 }
 
 export const stackStyles: Partial<IStackStyles> = { root: { height: 44, marginLeft: 100 } };
@@ -28,7 +28,7 @@ export const CommandBar = ({
   <div className='containerButtons'>
     <CommandBarButton
       maxLength={1}
-      disabled={newButtonVisibility !== 'true'}
+      disabled={!newButtonVisibility}
       iconProps={addIcon}
       styles={ContainerButtonStyles}
       text={`New ${displayName}`}
@@ -37,7 +37,7 @@ export const CommandBar = ({
 
     <CommandBarButton
       className={className}
-      disabled={deleteButtonVisibility !== 'true'}
+      disabled={!deleteButtonVisibility}
       iconProps={deleteIcon}
       styles={ContainerButtonStyles}
       text="Delete"

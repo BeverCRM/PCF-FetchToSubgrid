@@ -62,9 +62,13 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   const nextButtonDisable = React.useRef(true);
   const displayName = React.useRef('');
   const deleteBtnClassName = React.useRef('disableButton');
+  const totalRecords = React.useRef(0);
+  const selectItemsCount = React.useRef(0);
+  const firstNumber = React.useRef(0);
+  const lastNumber = React.useRef(0);
 
   const isDeleteBtnVisible = userParameters?.DeleteButtonVisibility || deleteButtonVisibility;
-  const isNewBtnVisible = userParameters?.DeleteButtonVisibility || newButtonVisibility;
+  const isNewBtnVisible = userParameters?.NewButtonVisibility || newButtonVisibility;
 
   const pageSize: number = getCountInFetchXml(fetchXml) || defaultPageSize || getPagingLimit();
 
@@ -74,6 +78,10 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
       if (props) {
         return (
           <Footer
+            firstNumber={firstNumber.current}
+            lastNumber={lastNumber.current}
+            selectedItems = {selectItemsCount.current}
+            totalRecordsCount={totalRecords.current}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             nextButtonDisable={nextButtonDisable.current}
@@ -132,6 +140,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
       setIsLoading(true);
       try {
         const recordsCount: number = await getRecordsCount(fetchXml ?? '');
+        totalRecords.current = recordsCount;
         if (Math.ceil(recordsCount / pageSize) > currentPage) {
           nextButtonDisable.current = false;
         }
@@ -154,7 +163,8 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
             }
           });
         });
-
+        lastNumber.current = (currentPage - 1) * pageSize + records.length;
+        firstNumber.current = (currentPage - 1) * pageSize + 1;
         setItems(records);
       }
       catch (err) {
@@ -277,7 +287,9 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   const selection = new Selection({
     onSelectionChanged: () => {
       const currentSelection: IObjectWithKey[] = selection.getSelection();
-      currentSelection.length
+      selectItemsCount.current = currentSelection.length;
+
+      currentSelection.length && !isAggregate(fetchXml ?? '')
         ? deleteBtnClassName.current = 'ms-Button'
         : deleteBtnClassName.current = 'disableButton';
       const recordIds: string[] = currentSelection.map((record: any) => record.id);

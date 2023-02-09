@@ -1,4 +1,5 @@
 import { ColumnActionsMode, IColumn } from '@fluentui/react';
+import { IFetchSubgridProps } from '../components/FetchSubgrid';
 import { IInputs } from '../generated/ManifestTypes';
 import {
   Dictionary,
@@ -18,6 +19,34 @@ let _context: ComponentFramework.Context<IInputs>;
 
 export const setContext = (context: ComponentFramework.Context<IInputs>) => {
   _context = context;
+};
+
+export const getProps = () => {
+  const fetchXml = _context.parameters.fetchXmlProperty.raw;
+  const pageSize = _context.parameters.defaultPageSize.raw;
+  try {
+    const userParameters = JSON.parse(fetchXml ?? '');
+    const props: IFetchSubgridProps = {
+      fetchXml: userParameters.FetchXml || _context.parameters.defaultFetchXmlProperty.raw,
+      defaultPageSize: Number(userParameters.PageSize) || pageSize,
+      newButtonVisibility: userParameters.NewButtonVisibility ??
+       _context.parameters.newButtonVisibility.raw === 'true',
+      deleteButtonVisibility: userParameters.DeleteButtonVisiblity ??
+       _context.parameters.deleteButtonVisibility.raw === 'true',
+      userParameters,
+    };
+    return props;
+  }
+  catch {
+    const props: IFetchSubgridProps = {
+      fetchXml: fetchXml ?? _context.parameters.defaultFetchXmlProperty.raw,
+      defaultPageSize: pageSize,
+      newButtonVisibility: _context.parameters.newButtonVisibility.raw,
+      deleteButtonVisibility: _context.parameters.deleteButtonVisibility.raw,
+      userParameters: {},
+    };
+    return props;
+  }
 };
 
 export const getPagingLimit = (): number =>
