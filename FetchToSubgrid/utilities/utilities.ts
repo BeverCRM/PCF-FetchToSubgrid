@@ -55,20 +55,19 @@ export const getOrderInFetch = (fetchXml: string) => {
   let isLinkEntity = false;
 
   for (let i = 0; i < entity[0].childNodes.length; i++) {
-    if (entity[0].childNodes[i].tagName === 'order') {
+    if (entity.length && entity[0].childNodes[i].nodeName === 'order') {
       isLinkEntity = false;
-      break;
     }
-    else if (linkEntiity[0].childNodes[i].tagName === 'order') {
+    else if (linkEntiity.length && linkEntiity[0].childNodes[i].nodeName === 'order') {
       isLinkEntity = true;
-      break;
     }
   }
 
-  const { descending, attribute } = order[0].attributes;
+  const descending: string = order[0].attributes.descending.value;
+  const attribute: string = order[0].attributes.attribute.value;
 
   return {
-    [descending.value]: attribute.value,
+    [descending]: attribute,
     isLinkEntity,
   };
 };

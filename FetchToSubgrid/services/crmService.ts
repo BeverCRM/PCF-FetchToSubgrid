@@ -70,10 +70,15 @@ export const getWholeNumberFieldName = (
   format: string, entity: Entity, fieldName: string, timeZoneDefinitions: any) => {
   let fieldValue: number = entity[fieldName];
 
-  if (format === '3') { return _context.formatting.formatLanguage(fieldValue); }
+  if (format === '3') {
+    return _context.formatting.formatLanguage(fieldValue);
+  }
   if (format === '2') {
     return timeZoneDefinitions.value.find((e: any) =>
       e.timezonecode === Number(fieldValue)).userinterfacename;
+  }
+  if (format === '0') {
+    return fieldValue;
   }
 
   if (fieldValue) {
