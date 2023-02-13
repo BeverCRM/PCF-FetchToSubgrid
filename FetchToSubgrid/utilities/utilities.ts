@@ -1,11 +1,12 @@
 /* global HTMLCollectionOf, NodeListOf */
+import { IColumn } from '@fluentui/react';
 import {
   getRecords,
   getEntityMetadata,
   getWholeNumberFieldName,
   getTimeZoneDefinitions } from '../services/crmService';
 import { AttributeType } from './enums';
-import { Entity, EntityMetadata, IItemProps } from './types';
+import { Entity, EntityMetadata, IItemProps, RetriveRecords } from './types';
 
 interface EntityAttribute {
   linkEntityAlias: string | undefined;
@@ -14,22 +15,23 @@ interface EntityAttribute {
 }
 
 export const addPagingToFetchXml =
- (fetchXml: string, pageSize: number, currentPage: number): string => {
+ (fetchXml: string, pageSize: number, currentPage :number, recordsCount: number): string => {
    const parser: DOMParser = new DOMParser();
    const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
    const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
-   const top: string | null = fetch.getAttribute('top');
+   fetch?.removeAttribute('count');
+   fetch?.removeAttribute('page');
+   fetch?.removeAttribute('top');
 
-   if (Number(top)) {
-     fetch.removeAttribute('top');
-     fetch.setAttribute('page', `${currentPage}`);
-     fetch.setAttribute('count', `${top}`);
+   let recordsPerPage = pageSize;
+
+   if (currentPage * recordsPerPage > recordsCount) {
+     recordsPerPage = recordsCount % pageSize;
    }
-   else {
-     fetch.setAttribute('page', `${currentPage}`);
-     fetch.setAttribute('count', `${pageSize}`);
-   }
+
+   fetch.setAttribute('page', `${currentPage}`);
+   fetch.setAttribute('count', `${recordsPerPage}`);
 
    return new XMLSerializer().serializeToString(xmlDoc);
  };
@@ -41,42 +43,70 @@ export const getEntityName = (fetchXml: string): string => {
   return xmlDoc.getElementsByTagName('entity')?.[0]?.getAttribute('name') ?? '';
 };
 
-export const addOrderToFetch = (fetchXml: string, fieldName: string, dialogEvent: any) => {
-  const parser: DOMParser = new DOMParser();
-  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
-  const entity = xmlDoc.getElementsByTagName('entity')[0];
-
-  const order = xmlDoc.getElementsByTagName('order')[0];
-  if (order) {
-    entity.removeChild(order);
-    const newOrder = xmlDoc.createElement('order');
-    newOrder.setAttribute('attribute', `${fieldName}`);
-    newOrder.setAttribute('descending', `${!dialogEvent.checked}`);
-    entity.appendChild(newOrder);
-  }
-  else {
-    const order = xmlDoc.createElement('order');
-    order.setAttribute('attribute', `${fieldName}`);
-    order.setAttribute('descending', `${!dialogEvent.checked}`);
-    entity.appendChild(order);
-  }
-
-  return new XMLSerializer().serializeToString(xmlDoc);
-};
-
 export const getOrderInFetch = (fetchXml: string) => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
   const order: any = xmlDoc.getElementsByTagName('order');
 
-  if (order.length) {
-    const descending: string = order[0].attributes.descending.value;
-    const attribute: string = order[0].attributes.attribute.value;
-    return {
-      [descending]: attribute,
-    };
+  if (!order.length) return null;
+
+  const entity: any = xmlDoc.getElementsByTagName('entity');
+  const linkEntiity: any = xmlDoc.getElementsByTagName('link-entity');
+  let isLinkEntity = false;
+
+  for (let i = 0; i < entity[0].childNodes.length; i++) {
+    if (entity[0].childNodes[i].tagName === 'order') {
+      isLinkEntity = false;
+      break;
+    }
+    else if (linkEntiity[0].childNodes[i].tagName === 'order') {
+      isLinkEntity = true;
+      break;
+    }
   }
-  return null;
+
+  const { descending, attribute } = order[0].attributes;
+
+  return {
+    [descending.value]: attribute.value,
+    isLinkEntity,
+  };
+};
+
+export const addOrderToFetch = (fetchXml: string,
+  fieldName: string,
+  dialogEvent: any,
+  column?: IColumn,
+): string => {
+
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+
+  const entity: Element = xmlDoc.getElementsByTagName('entity')[0];
+  const linkEntity: Element = xmlDoc.getElementsByTagName('link-entity')[0];
+
+  const entityOrder: Element = entity.getElementsByTagName('order')[0];
+  const linkOrder: Element = linkEntity.getElementsByTagName('order')[0];
+
+  if (entityOrder) {
+    const parent: Element = linkOrder ? linkEntity : entity;
+    parent.removeChild(linkOrder || entityOrder);
+  }
+
+  if (column?.className === 'linkEntity') {
+    const newOrder: HTMLElement = xmlDoc.createElement('order');
+    newOrder.setAttribute('attribute', `${fieldName}`);
+    newOrder.setAttribute('descending', `${dialogEvent.key === 'zToA'}`);
+    linkEntity.appendChild(newOrder);
+  }
+  else {
+    const newOrder: HTMLElement = xmlDoc.createElement('order');
+    newOrder.setAttribute('attribute', `${fieldName}`);
+    newOrder.setAttribute('descending', `${dialogEvent.key === 'zToA'}`);
+    entity.appendChild(newOrder);
+  }
+
+  return new XMLSerializer().serializeToString(xmlDoc);
 };
 
 export const getLinkEntitiesNames = (fetchXml: string): { [key: string]: EntityAttribute[] } => {
@@ -239,51 +269,34 @@ const genereateItems = (props: IItemProps): Entity => {
   };
 };
 
-export const getCountInFetchXml = (fetchXml: string | null): number => {
-  if (fetchXml) {
-    const parser: DOMParser = new DOMParser();
-    const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
-    const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
+export const getTopInFetchXml = (fetchXml: string | null): number => {
+  if (!fetchXml) return 0;
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
+  const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
 
-    const count: string | null = fetch?.getAttribute('count');
-    const top: string | null = fetch?.getAttribute('top');
+  const top: string | null = fetch?.getAttribute('top');
 
-    return Number(count) || Number(top) || 0;
-  }
-  return 0;
-};
-
-export const getPageInFetch = (fetchXml: string | null): number => {
-  if (fetchXml) {
-    const parser: DOMParser = new DOMParser();
-    const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
-    const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
-    const count: string | null = fetch?.getAttribute('page');
-
-    return Number(count) || 1;
-  }
-  return 0;
+  return Number(top) || 0;
 };
 
 export const getItems = async (
   fetchXml: string | null,
   pageSize: number,
-  currentPage: number): Promise<Entity[]> => {
+  currentPage: number,
+  recordsCount: number): Promise<Entity[]> => {
 
-  const pagingFetchData: string = addPagingToFetchXml(
-    fetchXml ?? '', pageSize, currentPage);
-
+  const pagingFetchData: string =
+  addPagingToFetchXml(fetchXml ?? '', pageSize, currentPage, recordsCount);
   const attributesFieldNames: string[] = getAttributesFieldNames(pagingFetchData);
   const entityName: string = getEntityName(fetchXml ?? '');
-  const records: ComponentFramework.WebApi.RetrieveMultipleResponse =
-   await getRecords(pagingFetchData);
+  const records: RetriveRecords = await getRecords(pagingFetchData);
 
   const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
   const linkEntityAttFieldNames: { [key: string]: EntityAttribute[] } =
    getLinkEntitiesNames(fetchXml ?? '');
   const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
-  const linkEntityAttributes:Array<Array<EntityAttribute>> =
-   Object.values(linkEntityAttFieldNames);
+  const linkEntityAttributes: EntityAttribute[][] = Object.values(linkEntityAttFieldNames);
 
   const promises = linkEntityNames.map((linkEntityNames, i) => {
     const attributeNames: string[] = linkEntityAttributes[i].map(attr => attr.name);
@@ -291,6 +304,7 @@ export const getItems = async (
   });
 
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
+
   const items: Entity[] = [];
   const timeZoneDefinitions = await getTimeZoneDefinitions();
 

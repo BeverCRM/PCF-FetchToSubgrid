@@ -7,11 +7,11 @@ import {
   openPrimaryEntityForm,
 } from '../services/crmService';
 
-interface IlinkableItemProps {
+interface ILinkableItemProps {
   item: ComponentFramework.WebApi.Entity
 }
 
-export const LinkableItem: React.FunctionComponent<IlinkableItemProps> = props => {
+export const LinkableItem: React.FC<ILinkableItemProps> = props => {
   const { item } = props;
 
   if (item.isLinkEntity) {

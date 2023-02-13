@@ -8,7 +8,7 @@ import {
   PreviousIcon,
 } from '../styles/footerStyles';
 
-export interface IGridFooterProps {
+export interface IFooterProps {
   firstNumber:any;
   lastNumber:any;
   selectedItems: number;
@@ -19,7 +19,7 @@ export interface IGridFooterProps {
   isMovePrevious: boolean;
 }
 
-export const Footer: React.FunctionComponent<IGridFooterProps> = props => {
+export const Footer: React.FC<IFooterProps> = props => {
   const {
     firstNumber,
     lastNumber,

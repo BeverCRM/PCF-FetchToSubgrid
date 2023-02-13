@@ -4,9 +4,7 @@ import * as React from 'react';
 import { getProps, setContext } from './services/crmService';
 
 export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, IOutputs> {
-    private Component: ComponentFramework.ReactControl<IInputs, IOutputs>;
     private notifyOutputChanged: () => void;
-    private context: ComponentFramework.Context<IInputs>;
 
     constructor() { }
 

@@ -4,45 +4,43 @@ import {
   ContextualMenu,
   DetailsList,
   DetailsListLayoutMode,
-  DirectionalHint,
   IColumn,
-  IContextualMenuItem,
   IDetailsFooterProps,
   IDetailsListProps,
   Stack,
   Selection,
-  IObjectWithKey,
 } from '@fluentui/react';
 import { LinkableItem } from './LinkableItems';
 import {
-  getPagingLimit,
   getColumns,
   getRecordsCount,
   openRecord,
   getEntityDisplayName } from '../services/crmService';
 import { Footer } from './Footer';
 import {
-  getCountInFetchXml,
   getEntityName,
   getItems,
-  getPageInFetch,
   isAggregate,
-  addOrderToFetch,
   getOrderInFetch } from '../utilities/utilities';
 import { Loader } from './Loader';
 import { InfoMessage } from './InfoMessage';
 import { dataSetStyles } from '../styles/comandBarStyles';
 import { CommandBar } from './ComandBar';
+import {
+  getContextualMenuProps,
+  onColumnClick,
+  onDialogClick,
+  selectionChanged } from '../utilities/sortItems';
 
 export interface IFetchSubgridProps {
   fetchXml: string | null;
-  defaultPageSize: number | null;
-  deleteButtonVisibility: string | null;
-  newButtonVisibility: string | null;
+  defaultPageSize: number;
+  deleteButtonVisibility: boolean;
+  newButtonVisibility: boolean;
   userParameters: any;
 }
 
-export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props => {
+export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
   const {
     userParameters,
     deleteButtonVisibility,
@@ -55,8 +53,8 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
   const [Items, setItems] = React.useState<ComponentFramework.WebApi.Entity[]>([]);
   const [menuProps, setMenuProps] = React.useState<any>({ contextualMenuProps: undefined });
   const [selectedRecordIds, setSelectedRecordIds] = React.useState<any>([]);
-  const [currentPage, setCurrentPage] = React.useState(getPageInFetch(fetchXml));
-  const [isUsedButton, setIsUsedButton] = React.useState(false);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [isDialogAccepted, setDialogAccepted] = React.useState(false);
 
   const recordIds = React.useRef<string[]>([]);
   const nextButtonDisable = React.useRef(true);
@@ -69,8 +67,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
 
   const isDeleteBtnVisible = userParameters?.DeleteButtonVisibility || deleteButtonVisibility;
   const isNewBtnVisible = userParameters?.NewButtonVisibility || newButtonVisibility;
-
-  const pageSize: number = getCountInFetchXml(fetchXml) || defaultPageSize || getPagingLimit();
+  const pageSize: number = defaultPageSize;
 
   const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = React.useCallback(
     (props: IDetailsFooterProps | undefined) => {
@@ -90,7 +87,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
       }
       return null;
     },
-    [currentPage, nextButtonDisable],
+    [currentPage, nextButtonDisable, selectItemsCount],
   );
 
   const onItemInvoked = React.useCallback((
@@ -106,22 +103,23 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
 
   React.useEffect(() => {
     (async () => {
-      setCurrentPage(getPageInFetch(fetchXml));
+      setCurrentPage(1);
       try {
         displayName.current = await getEntityDisplayName(getEntityName(fetchXml ?? ''));
         const columns: IColumn[] = await getColumns(fetchXml);
-
         const order = getOrderInFetch(fetchXml ?? '');
+
         if (order) {
           const filteredColumns = columns.map(col => {
-            if (col.fieldName === Object.values(order)[0]) {
+            if (col.ariaLabel === Object.values(order)[0] ||
+            col.fieldName === Object.values(order)[0]) {
+
               col.isSorted = true;
-              col.isSortedDescending = !(Object.keys(order)[0] === 'true');
+              col.isSortedDescending = Object.keys(order)[0] === 'true';
               return col;
             }
             return col;
           });
-
           setColumns(filteredColumns);
         }
         else {
@@ -132,7 +130,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
         setColumns([]);
       }
     })();
-  }, [fetchXml]);
+  }, [fetchXml, userParameters]);
 
   React.useEffect(() => {
     deleteBtnClassName.current = 'disableButton';
@@ -151,7 +149,8 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
         const records: ComponentFramework.WebApi.Entity[] = await getItems(
           fetchXml,
           pageSize,
-          currentPage);
+          currentPage,
+          recordsCount);
 
         records.forEach(record => {
           recordIds.current.push(record.id);
@@ -172,7 +171,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
       }
       setIsLoading(false);
     })();
-  }, [props, currentPage, isUsedButton]);
+  }, [props, currentPage, isDialogAccepted]);
 
   if (isLoading) {
     return <Loader/>;
@@ -188,112 +187,44 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
     });
   };
 
-  const onDialogClick = async (column?: IColumn,
-    dialogEvent?: React.MouseEvent<HTMLElement, MouseEvent>) => {
-    const fieldName = column?.fieldName;
-    const newFetchXml = addOrderToFetch(fetchXml ?? '', fieldName ?? '', dialogEvent);
-
-    const records: ComponentFramework.WebApi.Entity[] = await getItems(
-      newFetchXml,
-      pageSize,
-      currentPage);
-
-    records.forEach(record => {
-      recordIds.current.push(record.id);
-
-      Object.keys(record).forEach(key => {
-        if (key !== 'id') {
-          const value: any = record[key];
-          record[key] = value.linkable ? <LinkableItem item = {value} /> : value.displayName;
-        }
-      });
-    });
-
-    setItems(records);
-
-    const filteredColumns = columns.map(col => {
-      if (column?.key === col.key) {
-        // @ts-ignore
-        col.isSortedDescending = dialogEvent?.checked;
-        col.isSorted = true;
-      }
-      else {
-        col.isSorted = false;
-      }
-      return col;
-    });
-
-    setColumns(filteredColumns);
-  };
-
-  const getContextualMenuProps = (ev?: React.MouseEvent<HTMLElement, MouseEvent> | undefined,
-    column?: IColumn): Object => {
-    const items: IContextualMenuItem[] = [
-      {
-        key: 'aToZ',
-        name: 'A to Z',
-        iconProps: { iconName: 'SortUp' },
-        checked: false,
-      },
-      {
-        key: 'zToA',
-        name: 'Z to A',
-        iconProps: { iconName: 'SortDown' },
-        checked: true,
-      },
-    ];
-
-    return {
-      items,
-      target: ev?.currentTarget as HTMLElement,
-      directionalHint: DirectionalHint.bottomLeftEdge,
-      gapSpace: 10,
-      isBeakVisible: true,
-      onDismiss: onContextualMenuDismissed,
-      onItemClick: (col: IColumn, dialogEvent: React.MouseEvent<HTMLElement>) => {
-        onDialogClick(column, dialogEvent);
-      },
-    };
-  };
-
-  const onColumnContextMenu = (column?: IColumn,
-    ev?: React.MouseEvent<HTMLElement, MouseEvent> | undefined): void => {
+  const onColumnContextMenu = (
+    column?: IColumn,
+    ev?: React.MouseEvent<HTMLElement, MouseEvent>): void => {
     if (column?.columnActionsMode !== ColumnActionsMode.disabled) {
+      const onDialogClickParameters = {
+        fetchXml,
+        pageSize,
+        currentPage,
+        setItems,
+        setColumns,
+        recordIds,
+        columns,
+      };
+
       setMenuProps({
-        contextualMenuProps: getContextualMenuProps(ev, column),
+        contextualMenuProps: getContextualMenuProps(
+          ev,
+          column,
+          onContextualMenuDismissed,
+          onDialogClick,
+          onDialogClickParameters,
+        ),
       });
     }
   };
 
-  const columnClick = (ev?: React.MouseEvent<HTMLElement, MouseEvent> | undefined,
-    col?: IColumn) => {
-    const key = col?.key;
-    const filteredColumns = columns.map(column => {
-      if (column.key === key) {
-        onColumnContextMenu(col, ev);
-        column.onColumnClick = (ev, columnContex) => {
-          onColumnContextMenu(columnContex, ev);
-        };
-      }
-      else {
-        column.isSorted = false;
-      }
-      return column;
-    });
-
-    setColumns(filteredColumns);
+  const columnClick = (ev?: React.MouseEvent<HTMLElement, MouseEvent>, col?: IColumn) => {
+    onColumnClick(ev, col, columns, onColumnContextMenu, setColumns);
   };
 
   const selection = new Selection({
     onSelectionChanged: () => {
-      const currentSelection: IObjectWithKey[] = selection.getSelection();
-      selectItemsCount.current = currentSelection.length;
-
-      currentSelection.length && !isAggregate(fetchXml ?? '')
-        ? deleteBtnClassName.current = 'ms-Button'
-        : deleteBtnClassName.current = 'disableButton';
-      const recordIds: string[] = currentSelection.map((record: any) => record.id);
-      setSelectedRecordIds(recordIds);
+      selectionChanged(
+        selection,
+        selectItemsCount,
+        fetchXml,
+        deleteBtnClassName,
+        setSelectedRecordIds);
     },
   });
 
@@ -304,7 +235,7 @@ export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props =
           entityName={getEntityName(fetchXml ?? '')}
           selectedRecordIds={selectedRecordIds}
           displayName={displayName.current}
-          setIsUsedButton={setIsUsedButton}
+          setDialogAccepted={setDialogAccepted}
           className = {deleteBtnClassName.current}
           deleteButtonVisibility={isDeleteBtnVisible}
           newButtonVisibility={isNewBtnVisible}

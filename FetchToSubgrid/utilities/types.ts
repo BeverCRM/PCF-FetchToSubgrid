@@ -5,7 +5,7 @@ export type RetriveRecords = ComponentFramework.WebApi.RetrieveMultipleResponse;
 export type Entity = ComponentFramework.WebApi.Entity;
 
 export interface EntityAttribute {
-  linkEntityAlias: string | undefined;
+  linkEntityAlias?: string;
   name: string;
   attributeAlias: string;
 }
@@ -20,6 +20,6 @@ export type IItemProps = {
   entity: Entity;
   fetchXml: string | null;
   index: number;
-}
+};
 
 export type Dictionary<T> = { [key: string]: T }

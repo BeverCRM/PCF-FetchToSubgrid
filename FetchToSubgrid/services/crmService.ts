@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { ColumnActionsMode, IColumn } from '@fluentui/react';
 import { IFetchSubgridProps } from '../components/FetchSubgrid';
 import { IInputs } from '../generated/ManifestTypes';
@@ -12,8 +13,7 @@ import {
   getLinkEntitiesNames,
   getAttributesFieldNames,
   isAggregate,
-  getAliasNames,
-} from '../utilities/utilities';
+  getAliasNames } from '../utilities/utilities';
 
 let _context: ComponentFramework.Context<IInputs>;
 
@@ -23,16 +23,18 @@ export const setContext = (context: ComponentFramework.Context<IInputs>) => {
 
 export const getProps = () => {
   const fetchXml = _context.parameters.fetchXmlProperty.raw;
-  const pageSize = _context.parameters.defaultPageSize.raw;
+  const pageSize = _context.parameters.defaultPageSize.raw || 0;
   try {
     const userParameters = JSON.parse(fetchXml ?? '');
     const props: IFetchSubgridProps = {
       fetchXml: userParameters.FetchXml || _context.parameters.defaultFetchXmlProperty.raw,
-      defaultPageSize: Number(userParameters.PageSize) || pageSize,
+      defaultPageSize: Number(userParameters.PageSize) >= 250
+        ? 250
+        : Number(userParameters.PageSize) || pageSize,
       newButtonVisibility: userParameters.NewButtonVisibility ??
-       _context.parameters.newButtonVisibility.raw === 'true',
+       _context.parameters.newButtonVisibility.raw === '0',
       deleteButtonVisibility: userParameters.DeleteButtonVisiblity ??
-       _context.parameters.deleteButtonVisibility.raw === 'true',
+       _context.parameters.deleteButtonVisibility.raw === '0',
       userParameters,
     };
     return props;
@@ -40,19 +42,14 @@ export const getProps = () => {
   catch {
     const props: IFetchSubgridProps = {
       fetchXml: fetchXml ?? _context.parameters.defaultFetchXmlProperty.raw,
-      defaultPageSize: pageSize,
-      newButtonVisibility: _context.parameters.newButtonVisibility.raw,
-      deleteButtonVisibility: _context.parameters.deleteButtonVisibility.raw,
+      defaultPageSize: Number(pageSize) >= 250 ? 250 : Number(pageSize),
+      newButtonVisibility: _context.parameters.newButtonVisibility.raw === '0',
+      deleteButtonVisibility: _context.parameters.deleteButtonVisibility.raw === '0',
       userParameters: {},
     };
     return props;
   }
 };
-
-export const getPagingLimit = (): number =>
-  // @ts-ignore
-  _context.userSettings.pagingLimit
-;
 
 export const getEntityDisplayName = async (entityName: string): Promise<string> => {
   const entityMetadata = await _context.utils.getEntityMetadata(entityName);
@@ -149,8 +146,14 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
   const linkEntityAttFieldNames: Dictionary<EntityAttribute[]> =
    getLinkEntitiesNames(fetchXml ?? '');
   const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
-  const linkEntityAttributes: EntityAttribute[][] =
-   Object.values(linkEntityAttFieldNames);
+
+  const linkEntityAttributes: EntityAttribute[][] = Object.values(linkEntityAttFieldNames);
+
+  const promises = linkEntityNames.map((linkEntityNames, i) => {
+    const attributeNames: string[] = linkEntityAttributes[i].map(attr => attr.name);
+    return getEntityMetadata(linkEntityNames, attributeNames);
+  });
+  const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
 
   const hasAggregate: boolean = isAggregate(fetchXml ?? '');
   const aggregateAttrNames: string[] | null = hasAggregate ? getAliasNames(fetchXml ?? '') : null;
@@ -164,6 +167,7 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
     }
 
     columns.push({
+      className: 'entity',
       name: displayName,
       fieldName: name,
       key: `col-${index}`,
@@ -175,10 +179,7 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
     });
   });
 
-  linkEntityNames.forEach(async (linkEntityName, i) => {
-    const linkAttributeNames: string[] = linkEntityAttributes[i].map(attr => attr.name);
-    const mataData: EntityMetadata = await getEntityMetadata(linkEntityName, linkAttributeNames);
-
+  linkEntityNames.forEach((linkEntityName, i) => {
     linkEntityAttributes[i].forEach((attr, index) => {
       let fieldName = attr.attributeAlias;
 
@@ -190,9 +191,11 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
       }
 
       const columnName: string = attr.attributeAlias ||
-       mataData.Attributes._collection[attr.name].DisplayName;
+      linkentityMetadata[i].Attributes._collection[attr.name].DisplayName;
 
       columns.push({
+        className: 'linkEntity',
+        ariaLabel: attr.name,
         name: columnName,
         fieldName,
         key: `col-el-${index}`,
@@ -254,18 +257,19 @@ const deleteSelectedRecords = async (recordIds: string[], entityName: string): P
 export const openRecordDeleteDialog = async (
   selectedRecordIds: string[],
   entityName: string,
-  setIsUsedButton: any): Promise<void> => {
+  setDialogAccepted: React.Dispatch<React.SetStateAction<boolean>>): Promise<void> => {
 
   const entityMetadata = await _context.utils.getEntityMetadata(entityName);
   const confirmStrings = { text: `Do you want to delete this ${entityMetadata._displayName}?
    You can't undo this action.`, title: 'Confirm Deletion' };
   const confirmOptions = { height: 200, width: 450 };
-  _context.navigation.openConfirmDialog(confirmStrings, confirmOptions).then(
-    async success => {
-      setIsUsedButton(true);
-      if (success.confirmed) {
-        await deleteSelectedRecords(selectedRecordIds, entityName);
-      }
-      setIsUsedButton(false);
-    });
+
+  const deleteDialogStatus =
+   await _context.navigation.openConfirmDialog(confirmStrings, confirmOptions);
+
+  if (deleteDialogStatus.confirmed) {
+    setDialogAccepted(true);
+    await deleteSelectedRecords(selectedRecordIds, entityName);
+    setDialogAccepted(false);
+  }
 };
