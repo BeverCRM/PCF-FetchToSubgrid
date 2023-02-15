@@ -1,27 +1,27 @@
- .fetchSubgridControl{
+ .fetchSubgridControl {
   width: 100%;
 } 
 
-.fetchSubgridControl .fetchLoading{
+.fetchSubgridControl .fetchLoading {
   width: 100%;
   justify-content: center;
 }
 
-.fetchSubgridControl .fetchLoading .loadingText{
+.fetchSubgridControl .fetchLoading .loadingText {
   width: 100%;
   margin-top: 5px;
   text-align: center;
 }
 
-.fetchSubgridControl .infoMessage{
+.fetchSubgridControl .infoMessage {
   width: 100%;
 }
 
-.fetchSubgridControl .infoMessage .infoMessageText{
+.fetchSubgridControl .infoMessage .infoMessageText {
   text-align: center;
 }
 
-.fetchSubgridControl .ms-DetailsList{
+.fetchSubgridControl .ms-DetailsList {
   overflow: inherit;
 } 
 
@@ -34,7 +34,7 @@
   padding-top: 0px;
 }
 
-.fetchSubgridControl .ms-Stack{
+.fetchSubgridControl .ms-Stack {
   border-bottom: 1px solid rgb(237, 235, 233);
 }
 
@@ -42,26 +42,46 @@
   color: rgb(161, 159, 157);
 }
 
-.fetchSubgridControl, .ms-DetailsHeader-cell, .ms-DetailsRow-fields{
+.fetchSubgridControl, .ms-DetailsHeader-cell, .ms-DetailsRow-fields {
   flex: 1 1 auto;
   font-size: 12px;
   font-weight: 400;
+  cursor: pointer;
 }
 
-.fetchSubgridControl, .ms-DetailsRow-cell{
+.fetchSubgridControl, .ms-DetailsRow-cell {
   flex: 1 1 auto;
   font-size: 14px;
   font-weight: 400;
+  cursor: pointer;
+}
+
+.fetchSubgridControl .ms-DetailsHeader-cellName {
+  font-size: 12px;
 }
 
 .fetchSubgridControl .ms-DetailsHeader-cellIsCheck, .ms-DetailsRow-cellCheck {
   flex: none;
 }
 
-.ms-DetailsHeader-cell{
+.ms-DetailsHeader-cell {
   font-size: 13px;
 }
 
-.fetchSubgridControl .disableButton{
+.fetchSubgridControl .disableButton {
   display: none;
+}
+
+.fetchSubgridControl .ms-DetailsHeader-filterChevron {
+  font-size: 8px;
+  display: inline-block;
+  -webkit-font-smoothing: antialiased;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 8px;
+  color: rgb(96, 94, 92);
+}
+
+.fetchSubgridControl .ms-DetailsHeader-check {
+  opacity: 1;
 }

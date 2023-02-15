@@ -23,7 +23,11 @@ export const setContext = (context: ComponentFramework.Context<IInputs>) => {
 
 export const getProps = () => {
   const fetchXml = _context.parameters.fetchXmlProperty.raw;
-  const pageSize = _context.parameters.defaultPageSize.raw || 0;
+  let pageSize = _context.parameters.defaultPageSize.raw || 1;
+  if (pageSize && pageSize <= 0) {
+    pageSize = 1;
+  }
+
   try {
     const userParameters = JSON.parse(fetchXml ?? '');
     const props: IFetchSubgridProps = {
@@ -73,15 +77,14 @@ export const getWholeNumberFieldName = (
   if (format === '3') {
     return _context.formatting.formatLanguage(fieldValue);
   }
-  if (format === '2') {
+  else if (format === '2') {
     return timeZoneDefinitions.value.find((e: any) =>
       e.timezonecode === Number(fieldValue)).userinterfacename;
   }
-  if (format === '0') {
+  else if (format === '0') {
     return fieldValue;
   }
-
-  if (fieldValue) {
+  else if (fieldValue) {
     let unit: string;
     if (fieldValue < 60) { unit = 'minute'; }
     else if (fieldValue < 1440) {
@@ -114,7 +117,7 @@ export const getRecordsCount = async (fetchXml: string): Promise<number> => {
   let allRecordsCount = records.entities.length;
   let nextPage = 2;
 
-  while (allRecordsCount === 5000) {
+  while (allRecordsCount >= 5000) {
     fetch.setAttribute('page', `${nextPage}`);
     const fetchNextPage: string = new XMLSerializer().serializeToString(xmlDoc);
     const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchNextPage ?? '')}`;
@@ -123,7 +126,9 @@ export const getRecordsCount = async (fetchXml: string): Promise<number> => {
 
     allRecordsCount += nextRecords.entities.length;
     nextPage++;
-    if (nextRecords.entities.length !== 5000) break;
+    if (nextRecords.entities.length !== 5000) {
+      return allRecordsCount;
+    }
   }
 
   return allRecordsCount;
@@ -180,7 +185,6 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
       isResizable: true,
       isMultiline: false,
       columnActionsMode: ColumnActionsMode.hasDropdown,
-      isSortedDescending: false,
     });
   });
 
@@ -207,6 +211,7 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
         minWidth: 10,
         isResizable: true,
         isMultiline: false,
+        columnActionsMode: ColumnActionsMode.hasDropdown,
       });
     });
   });

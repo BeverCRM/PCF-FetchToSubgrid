@@ -84,8 +84,8 @@ export const addOrderToFetch = (fetchXml: string,
   const entity: Element = xmlDoc.getElementsByTagName('entity')[0];
   const linkEntity: Element = xmlDoc.getElementsByTagName('link-entity')[0];
 
-  const entityOrder: Element = entity.getElementsByTagName('order')[0];
-  const linkOrder: Element = linkEntity.getElementsByTagName('order')[0];
+  const entityOrder: Element = entity?.getElementsByTagName('order')[0];
+  const linkOrder: Element = linkEntity?.getElementsByTagName('order')[0];
 
   if (entityOrder) {
     const parent: Element = linkOrder ? linkEntity : entity;

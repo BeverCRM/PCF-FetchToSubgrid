@@ -64,6 +64,7 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
   const selectItemsCount = React.useRef(0);
   const firstNumber = React.useRef(0);
   const lastNumber = React.useRef(0);
+  const errorMessage = React.useRef<any>('');
 
   const isDeleteBtnVisible = userParameters?.DeleteButtonVisibility || deleteButtonVisibility;
   const isNewBtnVisible = userParameters?.NewButtonVisibility || newButtonVisibility;
@@ -136,6 +137,8 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
     deleteBtnClassName.current = 'disableButton';
     (async () => {
       setIsLoading(true);
+      if (isDialogAccepted) return;
+
       try {
         const recordsCount: number = await getRecordsCount(fetchXml ?? '');
         totalRecords.current = recordsCount;
@@ -168,6 +171,8 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
       }
       catch (err) {
         console.log('Error', err);
+        errorMessage.current = err;
+        setColumns([]);
       }
       setIsLoading(false);
     })();
@@ -178,7 +183,7 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
   }
 
   if (columns.length === 0) {
-    return <InfoMessage fetchXml ={fetchXml}/>;
+    return <InfoMessage message={errorMessage.current.message}/>;
   }
 
   const onContextualMenuDismissed = (): void => {
