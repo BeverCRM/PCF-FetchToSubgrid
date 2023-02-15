@@ -15,9 +15,11 @@ export const LinkableItem: React.FC<ILinkableItemProps> = props => {
   const { item } = props;
 
   if (item.isLinkEntity) {
-    return <Link onClick={openLinkEntityRecord.bind(null, item.entity, item.fieldName)}>
-      {item.displayName}
-    </Link>;
+    return (
+      <Link onClick={openLinkEntityRecord.bind(null, item.entity, item.fieldName)}>
+        {item.displayName}
+      </Link>
+    );
   }
 
   if (item.attributeType === AttributeType.LookUp ||
@@ -28,7 +30,9 @@ export const LinkableItem: React.FC<ILinkableItemProps> = props => {
     </Link>;
   }
 
-  return <Link onClick={openPrimaryEntityForm.bind(null, item.entity, item.entityName)}>
-    {item.displayName}
-  </Link>;
+  return (
+    <Link onClick={openPrimaryEntityForm.bind(null, item.entity, item.entityName)}>
+      {item.displayName}
+    </Link>
+  );
 };

@@ -71,7 +71,10 @@ export const getTimeZoneDefinitions = async () => {
 };
 
 export const getWholeNumberFieldName = (
-  format: string, entity: Entity, fieldName: string, timeZoneDefinitions: any) => {
+  format: string,
+  entity: Entity,
+  fieldName: string,
+  timeZoneDefinitions: any) => {
   let fieldValue: number = entity[fieldName];
 
   if (format === '3') {
@@ -134,13 +137,20 @@ export const getRecordsCount = async (fetchXml: string): Promise<number> => {
   return allRecordsCount;
 };
 
-export const getEntityMetadata = async (entityName: string, attributesFieldNames: string[]):
-  Promise<EntityMetadata> => {
+export const getEntityMetadata = async (
+  entityName: string,
+  attributesFieldNames: string[]): Promise<EntityMetadata> => {
   const entityMetadata: EntityMetadata = await _context.utils.getEntityMetadata(
     entityName,
     [...attributesFieldNames]);
 
   return entityMetadata;
+};
+
+export const getRecords = async (fetchXml: string | null): Promise<RetriveRecords> => {
+  const entityName: string = getEntityName(fetchXml ?? '');
+  const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
+  return await _context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
 };
 
 export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> => {
@@ -219,12 +229,6 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
   return columns;
 };
 
-export const getRecords = async (fetchXml: string | null): Promise<RetriveRecords> => {
-  const entityName: string = getEntityName(fetchXml ?? '');
-  const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
-  return await _context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
-};
-
 export const openRecord = (entityName: string, entityId: string): void => {
   _context.navigation.openForm({
     entityName,
@@ -233,7 +237,7 @@ export const openRecord = (entityName: string, entityId: string): void => {
 };
 
 export const openLookupForm = (
-  entity: ComponentFramework.WebApi.Entity,
+  entity: Entity,
   fieldName: string): void => {
   const entityName: string = entity[`_${fieldName}_value@Microsoft.Dynamics.CRM.lookuplogicalname`];
   const entityId: string = entity[`_${fieldName}_value`];
@@ -241,14 +245,14 @@ export const openLookupForm = (
 };
 
 export const openLinkEntityRecord = (
-  entity: ComponentFramework.WebApi.Entity,
+  entity: Entity,
   fieldName: string): void => {
   const entityName: string = entity[`${fieldName}@Microsoft.Dynamics.CRM.lookuplogicalname`];
   openRecord(entityName, entity[fieldName]);
 };
 
 export const openPrimaryEntityForm = (
-  entity: ComponentFramework.WebApi.Entity,
+  entity: Entity,
   entityName: string): void => {
   openRecord(entityName, entity[`${entityName}id`]);
 };
