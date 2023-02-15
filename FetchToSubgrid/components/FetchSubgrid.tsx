@@ -68,7 +68,7 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
   const isDeleteBtnVisible = userParameters?.DeleteButtonVisibility || deleteButtonVisibility;
   const isNewBtnVisible = userParameters?.NewButtonVisibility || newButtonVisibility;
   const pageSize: number = defaultPageSize;
-
+ 
   const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = React.useCallback(
     (props: IDetailsFooterProps | undefined) => {
       const isMovePrevious = !(currentPage > 1);

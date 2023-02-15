@@ -113,7 +113,7 @@ export const getLinkEntitiesNames = (fetchXml: string): { [key: string]: EntityA
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
   const linkEntities: HTMLCollectionOf<Element> = xmlDoc.getElementsByTagName('link-entity');
-  const linkEntityData: { [key: string]: EntityAttribute[] } = {};
+  const linkEntityData: Dictionary<EntityAttribute[]> = {};
 
   Array.prototype.slice.call(linkEntities).forEach(linkentity => {
     const entityName: string = linkentity.attributes['name'].value;
@@ -121,18 +121,16 @@ export const getLinkEntitiesNames = (fetchXml: string): { [key: string]: EntityA
 
     const attributesSelector = `link-entity[name="${entityName}"] > attribute`;
     const attributes: NodeListOf<Element> = xmlDoc.querySelectorAll(attributesSelector);
-    const linkEntityAlias: string | undefined =
-     linkentity.attributes['alias'] && linkentity.attributes['alias'].value;
+    const linkEntityAlias: string | undefined = linkentity.attributes['alias']?.value;
 
     Array.prototype.slice.call(attributes).map(attr => {
-      const attributeAlias: string = attr.attributes['alias'] ? attr.attributes['alias'].value : '';
+      const attributeAlias: string = attr.attributes['alias']?.value ?? '';
 
-      entityAttributes.push(
-        {
-          linkEntityAlias,
-          name: attr.attributes.name.value,
-          attributeAlias,
-        });
+      entityAttributes.push({
+        linkEntityAlias,
+        name: attr.attributes.name.value,
+        attributeAlias,
+      });
     });
 
     linkEntityData[entityName] = entityAttributes;
@@ -185,7 +183,7 @@ export const isAggregate = (fetchXml: string): boolean => {
   return false;
 };
 
-const genereateItems = (props: IItemProps): Entity => {
+const genereateItems = (props: ItemProps): Entity => {
   const {
     timeZoneDefinitions,
     item,
@@ -195,7 +193,8 @@ const genereateItems = (props: IItemProps): Entity => {
     fieldName,
     entity,
     fetchXml,
-    index } = props;
+    index,
+  } = props;
 
   let displayName = '';
   let linkable = false;
@@ -204,7 +203,7 @@ const genereateItems = (props: IItemProps): Entity => {
   const entityName: string = getEntityName(fetchXml ?? '');
 
   if (hasAggregate) {
-    const aggregateAttrNames = getAliasNames(fetchXml ?? '');
+    const aggregateAttrNames: string[] = getAliasNames(fetchXml ?? '');
 
     return item[aggregateAttrNames[index]] = {
       displayName: entity[aggregateAttrNames[index]],
@@ -292,8 +291,9 @@ export const getItems = async (
   const records: RetriveRecords = await getRecords(pagingFetchData);
 
   const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
-  const linkEntityAttFieldNames: { [key: string]: EntityAttribute[] } =
-   getLinkEntitiesNames(fetchXml ?? '');
+  const linkEntityAttFieldNames: Dictionary<EntityAttribute[]> = getLinkEntitiesNames(
+    fetchXml ?? '');
+
   const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
   const linkEntityAttributes: EntityAttribute[][] = Object.values(linkEntityAttFieldNames);
 
@@ -313,9 +313,9 @@ export const getItems = async (
     };
 
     attributesFieldNames.forEach((fieldName, index) => {
-      const attributeType: number = entityMetadata.Attributes._collection[fieldName].AttributeType;
+      const attributeType: number = entityMetadata.Attributes.get(fieldName).AttributeType;
 
-      const attributes = {
+      const attributes: ItemProps = {
         timeZoneDefinitions,
         item,
         isLinkEntity: false,
@@ -341,10 +341,9 @@ export const getItems = async (
           fieldName = `${linkEntityName}${i + 1}.${attr.name}`;
         }
 
-        const attributeType: number =
-      linkentityMetadata[i].Attributes._collection[attr.name].AttributeType;
+        const attributeType: number = linkentityMetadata[i].Attributes.get(attr.name).AttributeType;
 
-        const attributes = {
+        const attributes: ItemProps = {
           timeZoneDefinitions,
           item,
           isLinkEntity: true,
@@ -355,6 +354,7 @@ export const getItems = async (
           fetchXml,
           index,
         };
+
         genereateItems(attributes);
       });
     });
