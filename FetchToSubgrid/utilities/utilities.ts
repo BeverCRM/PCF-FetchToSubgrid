@@ -6,7 +6,7 @@ import {
   getWholeNumberFieldName,
   getTimeZoneDefinitions } from '../services/crmService';
 import { AttributeType } from './enums';
-import { Entity, EntityMetadata, IItemProps, RetriveRecords } from './types';
+import { Entity, EntityMetadata, Dictionary, RetriveRecords, IItemProps } from './types';
 
 interface EntityAttribute {
   linkEntityAlias: string | undefined;
@@ -183,7 +183,7 @@ export const isAggregate = (fetchXml: string): boolean => {
   return false;
 };
 
-const genereateItems = (props: ItemProps): Entity => {
+const genereateItems = (props: IItemProps): Entity => {
   const {
     timeZoneDefinitions,
     item,
@@ -315,7 +315,7 @@ export const getItems = async (
     attributesFieldNames.forEach((fieldName, index) => {
       const attributeType: number = entityMetadata.Attributes.get(fieldName).AttributeType;
 
-      const attributes: ItemProps = {
+      const attributes: IItemProps = {
         timeZoneDefinitions,
         item,
         isLinkEntity: false,
@@ -343,7 +343,7 @@ export const getItems = async (
 
         const attributeType: number = linkentityMetadata[i].Attributes.get(attr.name).AttributeType;
 
-        const attributes: ItemProps = {
+        const attributes: IItemProps = {
           timeZoneDefinitions,
           item,
           isLinkEntity: true,

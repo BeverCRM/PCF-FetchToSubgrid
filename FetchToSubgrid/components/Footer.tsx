@@ -46,28 +46,30 @@ export const Footer: React.FC<IFooterProps> = props => {
   ${totalRecordsCount >= 5000 ? '5000+' : totalRecordsCount}
    ${selectedItems !== 0 ? `(${selectedItems} Selected)` : ''}`;
 
-  return <div className={footerStyles.content}>
-    <span > {selected} </span>
-    <div className='buttons'>
-      <IconButton
-        styles={footerButtonStyles}
-        iconProps={PreviousIcon}
-        onClick={moveToFirst}
-        disabled = {isMovePrevious}
-      />
-      <IconButton
-        styles={footerButtonStyles}
-        iconProps={BackIcon}
-        onClick={movePrevious}
-        disabled={isMovePrevious}
-      />
-      <span color='black'> Page {currentPage} </span>
-      <IconButton
-        styles={footerButtonStyles}
-        iconProps={ForwardIcon}
-        onClick={moveNext}
-        disabled={nextButtonDisable}
-      />
+  return (
+    <div className={footerStyles.content}>
+      <span > {selected} </span>
+      <div className='buttons'>
+        <IconButton
+          styles={footerButtonStyles}
+          iconProps={PreviousIcon}
+          onClick={moveToFirst}
+          disabled = {isMovePrevious}
+        />
+        <IconButton
+          styles={footerButtonStyles}
+          iconProps={BackIcon}
+          onClick={movePrevious}
+          disabled={isMovePrevious}
+        />
+        <span color='black'> Page {currentPage} </span>
+        <IconButton
+          styles={footerButtonStyles}
+          iconProps={ForwardIcon}
+          onClick={moveNext}
+          disabled={nextButtonDisable}
+        />
+      </div>
     </div>
   );
 };
