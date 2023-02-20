@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { ColumnActionsMode, IColumn } from '@fluentui/react';
-import { IFetchSubgridProps } from '../components/FetchSubgrid';
 import { IInputs } from '../generated/ManifestTypes';
 import {
   Dictionary,
   Entity,
   EntityAttribute,
   EntityMetadata,
+  IFetchSubgridProps,
   RetriveRecords } from '../utilities/types';
 import {
   getEntityName,
@@ -14,6 +14,7 @@ import {
   getAttributesFieldNames,
   isAggregate,
   getAliasNames } from '../utilities/utilities';
+import { WholeNumberType } from '../utilities/enums';
 
 let _context: ComponentFramework.Context<IInputs>;
 
@@ -21,35 +22,44 @@ export const setContext = (context: ComponentFramework.Context<IInputs>) => {
   _context = context;
 };
 
-export const getProps = () => {
-  const fetchXml = _context.parameters.fetchXmlProperty.raw;
-  let pageSize = _context.parameters.defaultPageSize.raw || 1;
-  if (pageSize && pageSize <= 0) {
-    pageSize = 1;
+const getPageSize = (jsonObj?: any) => {
+  const pageSizse = Number(jsonObj?.PageSize);
+  if (pageSizse) {
+    if (pageSizse < 1) return 1;
+    if (pageSizse > 250) return 250;
+    return pageSizse;
   }
 
+  const defaultPageSizse = _context.parameters.defaultPageSize.raw ?? 0;
+  if (defaultPageSizse < 1) return 1;
+  if (defaultPageSizse > 250) return 250;
+  return defaultPageSizse;
+};
+
+export const getProps = (): IFetchSubgridProps => {
+  const fetchXml = _context.parameters.fetchXmlProperty.raw;
+  let pageSize = _context.parameters.defaultPageSize.raw || 1;
+  if (pageSize <= 0) pageSize = 1;
+
   try {
-    const userParameters = JSON.parse(fetchXml ?? '');
+    const fieldValueJson = JSON.parse(fetchXml ?? '');
+
     const props: IFetchSubgridProps = {
-      fetchXml: userParameters.FetchXml || _context.parameters.defaultFetchXmlProperty.raw,
-      defaultPageSize: Number(userParameters.PageSize) >= 250
-        ? 250
-        : Number(userParameters.PageSize) || pageSize,
-      newButtonVisibility: userParameters.NewButtonVisibility ??
-       _context.parameters.newButtonVisibility.raw === '0',
-      deleteButtonVisibility: userParameters.DeleteButtonVisiblity ??
-       _context.parameters.deleteButtonVisibility.raw === '0',
-      userParameters,
+      fetchXml: fieldValueJson.FetchXml || _context.parameters.defaultFetchXmlProperty.raw,
+      defaultPageSize: getPageSize(fieldValueJson),
+      newButtonVisibility: fieldValueJson.NewButtonVisibility ??
+        _context.parameters.newButtonVisibility.raw === '0',
+      deleteButtonVisibility: fieldValueJson.DeleteButtonVisiblity ??
+       _context.parameters.deleteButtonVisibility.raw,
     };
     return props;
   }
   catch {
     const props: IFetchSubgridProps = {
       fetchXml: fetchXml ?? _context.parameters.defaultFetchXmlProperty.raw,
-      defaultPageSize: Number(pageSize) >= 250 ? 250 : Number(pageSize),
+      defaultPageSize: getPageSize(),
       newButtonVisibility: _context.parameters.newButtonVisibility.raw === '0',
-      deleteButtonVisibility: _context.parameters.deleteButtonVisibility.raw === '0',
-      userParameters: {},
+      deleteButtonVisibility: _context.parameters.deleteButtonVisibility.raw,
     };
     return props;
   }
@@ -77,14 +87,15 @@ export const getWholeNumberFieldName = (
   timeZoneDefinitions: any) => {
   let fieldValue: number = entity[fieldName];
 
-  if (format === '3') {
+  if (format === WholeNumberType.Language) {
     return _context.formatting.formatLanguage(fieldValue);
   }
-  else if (format === '2') {
-    return timeZoneDefinitions.value.find((e: any) =>
-      e.timezonecode === Number(fieldValue)).userinterfacename;
+  else if (format === WholeNumberType.Duration) {
+    for (const tz of timeZoneDefinitions.value) {
+      if (tz.timezonecode === Number(fieldValue)) return tz.userinterfacename;
+    }
   }
-  else if (format === '0') {
+  else if (format === WholeNumberType.Number) {
     return fieldValue;
   }
   else if (fieldValue) {
@@ -114,8 +125,9 @@ export const getRecordsCount = async (fetchXml: string): Promise<number> => {
   const entityName: string = getEntityName(fetchWithoutCount);
 
   const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchWithoutCount ?? '')}`;
-  const records: RetriveRecords =
-  await _context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
+  const records: RetriveRecords = await _context.webAPI.retrieveMultipleRecords(
+    `${entityName}`,
+    encodeFetchXml);
 
   let allRecordsCount = records.entities.length;
   let nextPage = 2;
@@ -147,39 +159,22 @@ export const getEntityMetadata = async (
   return entityMetadata;
 };
 
-export const getRecords = async (fetchXml: string | null): Promise<RetriveRecords> => {
+export const getCurrentPageRecords = async (fetchXml: string | null): Promise<RetriveRecords> => {
   const entityName: string = getEntityName(fetchXml ?? '');
   const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
   return await _context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
 };
 
-export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> => {
-  const attributesFieldNames: string[] = getAttributesFieldNames(fetchXml ?? '');
-  const entityName: string = getEntityName(fetchXml ?? '');
-
-  const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
-  const displayNameCollection: Dictionary<EntityMetadata> =
-   entityMetadata.Attributes._collection;
-
-  const columns: IColumn[] = [];
-
-  const linkEntityAttFieldNames: Dictionary<EntityAttribute[]> =
-   getLinkEntitiesNames(fetchXml ?? '');
-  const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
-
-  const linkEntityAttributes: EntityAttribute[][] = Object.values(linkEntityAttFieldNames);
-
-  const promises = linkEntityNames.map((linkEntityNames, i) => {
-    const attributeNames: string[] = linkEntityAttributes[i].map(attr => attr.name);
-    return getEntityMetadata(linkEntityNames, attributeNames);
-  });
-  const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
-
-  const hasAggregate: boolean = isAggregate(fetchXml ?? '');
-  const aggregateAttrNames: string[] | null = hasAggregate ? getAliasNames(fetchXml ?? '') : null;
-
+const createColumnsForEntity = (
+  columns: IColumn[],
+  attributesFieldNames: string[],
+  displayNameCollection: Dictionary<EntityMetadata>,
+  fetchXml: string | null,
+) => {
   attributesFieldNames.forEach((name, index) => {
     let displayName = displayNameCollection[name].DisplayName;
+    const hasAggregate: boolean = isAggregate(fetchXml ?? '');
+    const aggregateAttrNames: string[] | null = hasAggregate ? getAliasNames(fetchXml ?? '') : null;
 
     if (aggregateAttrNames?.length) {
       displayName = aggregateAttrNames[index];
@@ -197,7 +192,14 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
       columnActionsMode: ColumnActionsMode.hasDropdown,
     });
   });
+};
 
+const createColumnsForLinkEntity = (
+  columns: IColumn[],
+  linkEntityNames: string[],
+  linkEntityAttributes: EntityAttribute[][],
+  linkentityMetadata: EntityMetadata[],
+) => {
   linkEntityNames.forEach((linkEntityName, i) => {
     linkEntityAttributes[i].forEach((attr, index) => {
       let fieldName = attr.attributeAlias;
@@ -225,6 +227,29 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
       });
     });
   });
+};
+
+export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> => {
+  const attributesFieldNames: string[] = getAttributesFieldNames(fetchXml ?? '');
+  const entityName: string = getEntityName(fetchXml ?? '');
+  const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
+  const displayNameCollection: Dictionary<EntityMetadata> = entityMetadata.Attributes._collection;
+
+  const columns: IColumn[] = [];
+
+  const linkEntityAttFieldNames: Dictionary<EntityAttribute[]> = getLinkEntitiesNames(
+    fetchXml ?? '');
+  const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
+  const linkEntityAttributes: EntityAttribute[][] = Object.values(linkEntityAttFieldNames);
+
+  const promises = linkEntityNames.map((linkEntityNames, i) => {
+    const attributeNames: string[] = linkEntityAttributes[i].map(attr => attr.name);
+    return getEntityMetadata(linkEntityNames, attributeNames);
+  });
+  const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
+
+  createColumnsForEntity(columns, attributesFieldNames, displayNameCollection, fetchXml);
+  createColumnsForLinkEntity(columns, linkEntityNames, linkEntityAttributes, linkentityMetadata);
 
   return columns;
 };

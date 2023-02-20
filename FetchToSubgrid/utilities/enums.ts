@@ -9,3 +9,10 @@ export enum AttributeType {
   PickList = 11,
   MultiselectPickList = 17,
 }
+
+export enum WholeNumberType {
+  Number = '0',
+  TimeZone = '1',
+  Duration = '2',
+  Language = '3',
+}

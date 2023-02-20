@@ -1,29 +1,23 @@
 import { IInputs, IOutputs } from './generated/ManifestTypes';
-import { FetchSubgrid } from './components/FetchSubgrid';
+import { AppWrapper, IAppWrapperProps } from './components/AppWrapper';
 import * as React from 'react';
 import { getProps, setContext } from './services/crmService';
 
 export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, IOutputs> {
-    private notifyOutputChanged: () => void;
+  public init(context: ComponentFramework.Context<IInputs>): void {
+    setContext(context);
+  }
 
-    constructor() { }
+  public updateView(): React.ReactElement {
+    const props: IAppWrapperProps = { ...getProps() };
 
-    public init(
-      context: ComponentFramework.Context<IInputs>,
-      notifyOutputChanged: () => void,
-    ): void {
-      this.notifyOutputChanged = notifyOutputChanged;
-      setContext(context);
-    }
+    return React.createElement(AppWrapper, props);
+  }
 
-    public updateView(): React.ReactElement {
-      return React.createElement(FetchSubgrid, getProps());
-    }
+  public getOutputs(): IOutputs {
+    return {};
+  }
 
-    public getOutputs(): IOutputs {
-      return {};
-    }
-
-    public destroy(): void {
-    }
+  public destroy(): void {
+  }
 }

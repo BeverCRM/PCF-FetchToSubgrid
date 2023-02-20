@@ -1,232 +1,107 @@
 import * as React from 'react';
-import {
-  ColumnActionsMode,
-  ContextualMenu,
-  DetailsList,
-  DetailsListLayoutMode,
-  IColumn,
-  IDetailsFooterProps,
-  IDetailsListProps,
-  Stack,
-  Selection,
-} from '@fluentui/react';
-import { LinkableItem } from './LinkableItems';
-import {
-  getColumns,
-  getRecordsCount,
-  openRecord,
-  getEntityDisplayName } from '../services/crmService';
-import { Footer } from './Footer';
-import {
-  getEntityName,
-  getItems,
-  isAggregate,
-  getOrderInFetch } from '../utilities/utilities';
-import { Loader } from './Loader';
-import { InfoMessage } from './InfoMessage';
+import { ContextualMenu, IColumn, Stack, Selection, IObjectWithKey } from '@fluentui/react';
+import { getColumns, getEntityDisplayName } from '../services/crmService';
+import { getEntityName, getFilteredRecords, setFilteredColumns } from '../utilities/utilities';
+import { selectionChanged } from '../utilities/sortItems';
 import { dataSetStyles } from '../styles/comandBarStyles';
+import { LinkableItem } from './LinkableItems';
 import { CommandBar } from './ComandBar';
-import {
-  getContextualMenuProps,
-  onColumnClick,
-  onDialogClick,
-  selectionChanged } from '../utilities/sortItems';
+import { List } from './List';
+import { Entity } from '../utilities/types';
 
 export interface IFetchSubgridProps {
   fetchXml: string | null;
   defaultPageSize: number;
   deleteButtonVisibility: boolean;
   newButtonVisibility: boolean;
-  userParameters: any;
+  setIsLoading: (isLoading: boolean) => void;
+  setErrorMessage: (message: string | null) => void;
+  isVisible: boolean;
 }
 
 export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
   const {
-    userParameters,
     deleteButtonVisibility,
     newButtonVisibility,
     defaultPageSize,
-    fetchXml } = props;
+    fetchXml,
+    setErrorMessage,
+    setIsLoading,
+    isVisible,
+  } = props;
 
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [columns, setColumns] = React.useState<IColumn[]>([]);
-  const [Items, setItems] = React.useState<ComponentFramework.WebApi.Entity[]>([]);
+  const [Items, setItems] = React.useState<Entity[]>([]);
   const [menuProps, setMenuProps] = React.useState<any>({ contextualMenuProps: undefined });
-  const [selectedRecordIds, setSelectedRecordIds] = React.useState<any>([]);
+  const [selectedRecordIds, setSelectedRecordIds] = React.useState<string[]>([]);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [isDialogAccepted, setDialogAccepted] = React.useState(false);
+  const [columns, setColumns] = React.useState<IColumn[]>([]);
 
   const recordIds = React.useRef<string[]>([]);
-  const nextButtonDisable = React.useRef(true);
+  const nextButtonDisabled = React.useRef(true);
   const displayName = React.useRef('');
   const deleteBtnClassName = React.useRef('disableButton');
-  const totalRecords = React.useRef(0);
-  const selectItemsCount = React.useRef(0);
-  const firstNumber = React.useRef(0);
-  const lastNumber = React.useRef(0);
-  const errorMessage = React.useRef<any>('');
+  const totalRecordsCount = React.useRef(0);
+  const selectedItemsCount = React.useRef(0);
+  const firstItemIndex = React.useRef(0);
+  const lastItemIndex = React.useRef(0);
 
-  const isDeleteBtnVisible = userParameters?.DeleteButtonVisibility || deleteButtonVisibility;
-  const isNewBtnVisible = userParameters?.NewButtonVisibility || newButtonVisibility;
   const pageSize: number = defaultPageSize;
-
-  const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = React.useCallback(
-    (props: IDetailsFooterProps | undefined) => {
-      const isMovePrevious = !(currentPage > 1);
-      if (props) {
-        return (
-          <Footer
-            firstNumber={firstNumber.current}
-            lastNumber={lastNumber.current}
-            selectedItems = {selectItemsCount.current}
-            totalRecordsCount={totalRecords.current}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            nextButtonDisable={nextButtonDisable.current}
-            isMovePrevious={isMovePrevious}
-          />);
-      }
-      return null;
-    },
-    [currentPage, nextButtonDisable, selectItemsCount],
-  );
-
-  const onItemInvoked = React.useCallback((
-    record: ComponentFramework.WebApi.Entity,
-    index?: number | undefined) : void => {
-    const entityName: string = getEntityName(fetchXml ?? '');
-    const hasAggregate: boolean = isAggregate(fetchXml ?? '');
-
-    if (index !== undefined && !hasAggregate) {
-      openRecord(entityName, recordIds.current[index]);
-    }
-  }, [Items]);
+  const entityName = getEntityName(fetchXml ?? '');
 
   React.useEffect(() => {
     (async () => {
       setCurrentPage(1);
       try {
-        displayName.current = await getEntityDisplayName(getEntityName(fetchXml ?? ''));
-        const columns: IColumn[] = await getColumns(fetchXml);
-        const order = getOrderInFetch(fetchXml ?? '');
-
-        if (order) {
-          const filteredColumns = columns.map(col => {
-            if (col.ariaLabel === Object.values(order)[0] ||
-            col.fieldName === Object.values(order)[0]) {
-
-              col.isSorted = true;
-              col.isSortedDescending = Object.keys(order)[0] === 'true';
-              return col;
-            }
-            return col;
-          });
-          setColumns(filteredColumns);
-        }
-        else {
-          setColumns(columns);
-        }
+        setFilteredColumns(fetchXml, setColumns, getColumns);
+        displayName.current = await getEntityDisplayName(entityName);
       }
-      catch {
-        setColumns([]);
+      catch (err: any) {
+        setErrorMessage(err.message);
       }
     })();
-  }, [fetchXml, userParameters]);
+  }, [fetchXml, deleteButtonVisibility, newButtonVisibility, pageSize]);
 
   React.useEffect(() => {
     deleteBtnClassName.current = 'disableButton';
     (async () => {
-      setIsLoading(true);
       if (isDialogAccepted) return;
+      setIsLoading(true);
+      setErrorMessage(null);
 
       try {
-        const recordsCount: number = await getRecordsCount(fetchXml ?? '');
-        totalRecords.current = recordsCount;
-        if (Math.ceil(recordsCount / pageSize) > currentPage) {
-          nextButtonDisable.current = false;
-        }
-        else {
-          nextButtonDisable.current = true;
-        }
-
-        const records: ComponentFramework.WebApi.Entity[] = await getItems(
+        const records = await getFilteredRecords(
+          totalRecordsCount,
           fetchXml,
           pageSize,
           currentPage,
-          recordsCount);
+          nextButtonDisabled,
+          lastItemIndex,
+          firstItemIndex);
 
         records.forEach(record => {
           recordIds.current.push(record.id);
-
           Object.keys(record).forEach(key => {
             if (key !== 'id') {
               const value: any = record[key];
-              record[key] = value.linkable ? <LinkableItem item = {value} /> : value.displayName;
+              record[key] = value.linkable ? <LinkableItem item={value} /> : value.displayName;
             }
           });
         });
-        lastNumber.current = (currentPage - 1) * pageSize + records.length;
-        firstNumber.current = (currentPage - 1) * pageSize + 1;
         setItems(records);
       }
-      catch (err) {
-        console.log('Error', err);
-        errorMessage.current = err;
-        setColumns([]);
+      catch (err: any) {
+        setErrorMessage(err.message);
       }
       setIsLoading(false);
     })();
-  }, [props, currentPage, isDialogAccepted]);
+  }, [fetchXml, pageSize, currentPage, isDialogAccepted]);
 
-  if (isLoading) {
-    return <Loader/>;
-  }
-
-  if (columns.length === 0) {
-    return <InfoMessage message={errorMessage.current.message}/>;
-  }
-
-  const onContextualMenuDismissed = (): void => {
-    setMenuProps({
-      contextualMenuProps: undefined,
-    });
-  };
-
-  const onColumnContextMenu = (
-    column?: IColumn,
-    ev?: React.MouseEvent<HTMLElement, MouseEvent>): void => {
-    if (column?.columnActionsMode !== ColumnActionsMode.disabled) {
-      const onDialogClickParameters = {
-        fetchXml,
-        pageSize,
-        currentPage,
-        setItems,
-        setColumns,
-        recordIds,
-        columns,
-      };
-
-      setMenuProps({
-        contextualMenuProps: getContextualMenuProps(
-          ev,
-          column,
-          onContextualMenuDismissed,
-          onDialogClick,
-          onDialogClickParameters,
-        ),
-      });
-    }
-  };
-
-  const columnClick = (ev?: React.MouseEvent<HTMLElement, MouseEvent>, col?: IColumn) => {
-    onColumnClick(ev, col, columns, onColumnContextMenu, setColumns);
-  };
-
-  const selection = new Selection({
+  const selection: Selection<IObjectWithKey> = new Selection({
     onSelectionChanged: () => {
       selectionChanged(
         selection,
-        selectItemsCount,
+        selectedItemsCount,
         fetchXml,
         deleteBtnClassName,
         setSelectedRecordIds);
@@ -234,28 +109,38 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
   });
 
   return (
-    <div className='fetchSubgridControl'>
+    <div className='fetchSubgridControl' style={{ display: isVisible ? 'grid' : 'none' }}>
       <Stack horizontal horizontalAlign="end" className={dataSetStyles.buttons}>
         <CommandBar
-          entityName={getEntityName(fetchXml ?? '')}
+          entityName={entityName}
           selectedRecordIds={selectedRecordIds}
           displayName={displayName.current}
           setDialogAccepted={setDialogAccepted}
-          className = {deleteBtnClassName.current}
-          deleteButtonVisibility={isDeleteBtnVisible}
-          newButtonVisibility={isNewBtnVisible}
+          className={deleteBtnClassName.current}
+          deleteButtonVisibility={deleteButtonVisibility}
+          newButtonVisibility={newButtonVisibility}
         />
       </Stack>
-      <DetailsList
+
+      <List entityName={entityName}
+        recordIds={recordIds}
+        fetchXml={fetchXml}
         columns={columns}
-        items={Items}
-        layoutMode={DetailsListLayoutMode.fixedColumns}
-        onItemInvoked={onItemInvoked}
-        onRenderDetailsFooter={onRenderDetailsFooter}
-        onColumnHeaderClick={columnClick}
+        Items={Items}
         selection={selection}
+        pageSize={pageSize}
+        currentPage={currentPage}
+        setItems={setItems}
+        setColumns={setColumns}
+        setMenuProps={setMenuProps}
+        firstItemIndex={firstItemIndex}
+        lastItemIndex={lastItemIndex}
+        selectedItemsCount={selectedItemsCount}
+        totalRecordsCount={totalRecordsCount}
+        setCurrentPage={setCurrentPage}
+        nextButtonDisabled={nextButtonDisabled}
       />
-      {<ContextualMenu {...menuProps.contextualMenuProps} />}
+      <ContextualMenu {...menuProps.contextualMenuProps} />
     </div>
   );
 };

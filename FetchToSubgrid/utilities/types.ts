@@ -22,4 +22,11 @@ export type IItemProps = {
   index: number;
 };
 
+export interface IFetchSubgridProps {
+  fetchXml: string | null;
+  defaultPageSize: number;
+  deleteButtonVisibility: boolean;
+  newButtonVisibility: boolean;
+}
+
 export type Dictionary<T> = { [key: string]: T }

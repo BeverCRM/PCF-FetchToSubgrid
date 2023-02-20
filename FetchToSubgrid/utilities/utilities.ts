@@ -1,18 +1,20 @@
 /* global HTMLCollectionOf, NodeListOf */
+import * as React from 'react';
 import { IColumn } from '@fluentui/react';
+import { AttributeType } from './enums';
 import {
-  getRecords,
+  getCurrentPageRecords,
   getEntityMetadata,
   getWholeNumberFieldName,
-  getTimeZoneDefinitions } from '../services/crmService';
-import { AttributeType } from './enums';
-import { Entity, EntityMetadata, Dictionary, RetriveRecords, IItemProps } from './types';
-
-interface EntityAttribute {
-  linkEntityAlias: string | undefined;
-  name: string;
-  attributeAlias: string;
-}
+  getTimeZoneDefinitions,
+  getRecordsCount } from '../services/crmService';
+import {
+  Entity,
+  EntityMetadata,
+  Dictionary,
+  RetriveRecords,
+  IItemProps,
+  EntityAttribute } from './types';
 
 export const addPagingToFetchXml =
  (fetchXml: string, pageSize: number, currentPage :number, recordsCount: number): string => {
@@ -45,26 +47,19 @@ export const getEntityName = (fetchXml: string): string => {
 
 export const getOrderInFetch = (fetchXml: string) => {
   const parser: DOMParser = new DOMParser();
-  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
-  const order: any = xmlDoc.getElementsByTagName('order');
+  const xmlDoc: XMLDocument = parser.parseFromString(fetchXml, 'text/xml');
+  const entityOrder: any = xmlDoc.querySelector('entity > order');
+  const linkEntityOrder: any = xmlDoc.querySelectorAll('link-entity > order');
 
-  if (!order.length) return null;
+  if (entityOrder && linkEntityOrder.length > 0 || linkEntityOrder.length > 1) return null;
 
-  const entity: any = xmlDoc.getElementsByTagName('entity');
-  const linkEntiity: any = xmlDoc.getElementsByTagName('link-entity');
-  let isLinkEntity = false;
+  const order = entityOrder || linkEntityOrder[0];
+  if (!order) return null;
 
-  for (let i = 0; i < entity[0].childNodes.length; i++) {
-    if (entity.length && entity[0].childNodes[i].nodeName === 'order') {
-      isLinkEntity = false;
-    }
-    else if (linkEntiity.length && linkEntiity[0].childNodes[i].nodeName === 'order') {
-      isLinkEntity = true;
-    }
-  }
+  const isLinkEntity = linkEntityOrder[0] !== null;
 
-  const descending: string = order[0].attributes.descending.value;
-  const attribute: string = order[0].attributes.attribute.value;
+  const descending: string = order.attributes.descending.value;
+  const attribute: string = order.attributes.attribute.value;
 
   return {
     [descending]: attribute,
@@ -108,7 +103,7 @@ export const addOrderToFetch = (fetchXml: string,
   return new XMLSerializer().serializeToString(xmlDoc);
 };
 
-export const getLinkEntitiesNames = (fetchXml: string): { [key: string]: EntityAttribute[] } => {
+export const getLinkEntitiesNames = (fetchXml: string): Dictionary<EntityAttribute[]> => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
@@ -183,21 +178,64 @@ export const isAggregate = (fetchXml: string): boolean => {
   return false;
 };
 
-const genereateItems = (props: IItemProps): Entity => {
+const getEntityData = (props: IItemProps) => {
   const {
     timeZoneDefinitions,
-    item,
     isLinkEntity,
     entityMetadata,
+    attributeType,
+    fieldName,
+    entity,
+  } = props;
+
+  const needToGetFormattedValue1 = () =>
+    attributeType === AttributeType.Money ||
+    attributeType === AttributeType.PickList ||
+    attributeType === AttributeType.DateTime ||
+    attributeType === AttributeType.MultiselectPickList ||
+    attributeType === AttributeType.TwoOptions;
+
+  const needToGetFormattedValue2 = () =>
+    attributeType === AttributeType.LookUp ||
+    attributeType === AttributeType.Owner ||
+    attributeType === AttributeType.Customer ||
+    attributeType === AttributeType.TwoOptions;
+
+  const needToGetFormattedValue3 = () =>
+    attributeType === AttributeType.LookUp ||
+    attributeType === AttributeType.Owner ||
+    attributeType === AttributeType.Customer;
+
+  if (attributeType === AttributeType.WholeNumber) {
+    const format: string = entityMetadata.Attributes._collection[fieldName].Format;
+    const field: string = getWholeNumberFieldName(format, entity, fieldName, timeZoneDefinitions);
+    return [field, false];
+  }
+  else if (needToGetFormattedValue1()) {
+    return [entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`], false];
+  }
+  else if (isLinkEntity && needToGetFormattedValue2()) {
+    return [entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`], true];
+  }
+  else if (fieldName === entityMetadata._primaryNameAttribute) {
+    return [entity[fieldName], true];
+  }
+  else if (needToGetFormattedValue3()) {
+    return [entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`], true];
+  }
+  return [entity[fieldName], false];
+};
+
+const genereateItems = (props: IItemProps): Entity => {
+  const {
+    item,
+    isLinkEntity,
     attributeType,
     fieldName,
     entity,
     fetchXml,
     index,
   } = props;
-
-  let displayName = '';
-  let linkable = false;
 
   const hasAggregate: boolean = isAggregate(fetchXml ?? '');
   const entityName: string = getEntityName(fetchXml ?? '');
@@ -207,7 +245,7 @@ const genereateItems = (props: IItemProps): Entity => {
 
     return item[aggregateAttrNames[index]] = {
       displayName: entity[aggregateAttrNames[index]],
-      linkable: false,
+      isLinkable: false,
       entity,
       fieldName: aggregateAttrNames[index],
       attributeType,
@@ -217,48 +255,11 @@ const genereateItems = (props: IItemProps): Entity => {
     };
   }
 
-  if (attributeType === AttributeType.WholeNumber) {
-    const format: string = entityMetadata.Attributes._collection[fieldName].Format;
-    const field: string = getWholeNumberFieldName(format, entity, fieldName, timeZoneDefinitions);
-    displayName = field;
-  }
-  else if (attributeType === AttributeType.Money ||
-      attributeType === AttributeType.PickList ||
-      attributeType === AttributeType.DateTime ||
-      attributeType === AttributeType.MultiselectPickList ||
-      attributeType === AttributeType.TwoOptions) {
-
-    displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
-  }
-  else if (isLinkEntity) {
-    if (attributeType === AttributeType.LookUp ||
-        attributeType === AttributeType.Owner ||
-        attributeType === AttributeType.Customer ||
-        attributeType === AttributeType.TwoOptions) {
-      displayName = entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
-      linkable = true;
-    }
-    else if (fieldName in entity) {
-      displayName = entity[fieldName];
-    }
-  }
-  else if (fieldName === entityMetadata._primaryNameAttribute) {
-    displayName = entity[fieldName];
-    linkable = true;
-  }
-  else if (attributeType === AttributeType.LookUp ||
-    attributeType === AttributeType.Owner ||
-    attributeType === AttributeType.Customer) {
-    displayName = entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`];
-    linkable = true;
-  }
-  else if (fieldName in entity) {
-    displayName = entity[fieldName];
-  }
+  const [displayName, isLinkable] = getEntityData(props);
 
   return item[fieldName] = {
     displayName,
-    linkable,
+    isLinkable,
     entity,
     fieldName,
     attributeType,
@@ -284,11 +285,15 @@ export const getItems = async (
   currentPage: number,
   recordsCount: number): Promise<Entity[]> => {
 
-  const pagingFetchData: string =
-  addPagingToFetchXml(fetchXml ?? '', pageSize, currentPage, recordsCount);
+  const pagingFetchData: string = addPagingToFetchXml(
+    fetchXml ?? '',
+    pageSize,
+    currentPage,
+    recordsCount);
+
   const attributesFieldNames: string[] = getAttributesFieldNames(pagingFetchData);
   const entityName: string = getEntityName(fetchXml ?? '');
-  const records: RetriveRecords = await getRecords(pagingFetchData);
+  const records: RetriveRecords = await getCurrentPageRecords(pagingFetchData);
 
   const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
   const linkEntityAttFieldNames: Dictionary<EntityAttribute[]> = getLinkEntitiesNames(
@@ -308,9 +313,7 @@ export const getItems = async (
   const timeZoneDefinitions = await getTimeZoneDefinitions();
 
   records.entities.forEach(entity => {
-    const item: Entity = {
-      id: entity[`${entityName}id`],
-    };
+    const item: Entity = { id: entity[`${entityName}id`] };
 
     attributesFieldNames.forEach((fieldName, index) => {
       const attributeType: number = entityMetadata.Attributes.get(fieldName).AttributeType;
@@ -362,4 +365,55 @@ export const getItems = async (
   });
 
   return items;
+};
+
+export const setFilteredColumns = async (
+  fetchXml: string | null,
+  setColumns: React.Dispatch<React.SetStateAction<IColumn[]>>,
+  getColumns: (fetchXml: string | null)=> Promise<IColumn[]>): Promise<void> => {
+
+  const columns: IColumn[] = await getColumns(fetchXml);
+  const order = getOrderInFetch(fetchXml ?? '');
+
+  if (order) {
+    const filteredColumns = columns.map(col => {
+      if (col.ariaLabel === Object.values(order)[0] ||
+      col.fieldName === Object.values(order)[0]) {
+
+        col.isSorted = true;
+        col.isSortedDescending = Object.keys(order)[0] === 'true';
+        return col;
+      }
+      return col;
+    });
+    setColumns(filteredColumns);
+  }
+  else {
+    setColumns(columns);
+  }
+};
+
+export const getFilteredRecords = async (
+  totalRecordsCount: React.MutableRefObject<number>,
+  fetchXml: string | null,
+  pageSize: number,
+  currentPage: number,
+  nextButtonDisabled: React.MutableRefObject<boolean>,
+  lastItemIndex: React.MutableRefObject<number>,
+  firstItemIndex: React.MutableRefObject<number>): Promise<Entity[]> => {
+  const recordsCount: number = await getRecordsCount(fetchXml ?? '');
+
+  totalRecordsCount.current = recordsCount;
+  nextButtonDisabled.current = Math.ceil(recordsCount / pageSize) <= currentPage;
+
+  const records: Entity[] = await getItems(
+    fetchXml,
+    pageSize,
+    currentPage,
+    recordsCount);
+
+  lastItemIndex.current = (currentPage - 1) * pageSize + records.length;
+  firstItemIndex.current = (currentPage - 1) * pageSize + 1;
+
+  return records;
 };

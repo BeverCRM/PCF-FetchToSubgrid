@@ -1,9 +1,5 @@
-import {
-  DirectionalHint,
-  IColumn,
-  IContextualMenuItem,
-  IObjectWithKey } from '@fluentui/react';
 import * as React from 'react';
+import { DirectionalHint, IColumn, IContextualMenuItem, IObjectWithKey } from '@fluentui/react';
 import { LinkableItem } from '../components/LinkableItems';
 import { getRecordsCount } from '../services/crmService';
 import { addOrderToFetch, getItems, isAggregate } from './utilities';
@@ -45,7 +41,8 @@ export const onDialogClick = async (
     Object.keys(record).forEach(key => {
       if (key !== 'id') {
         const value: any = record[key];
-        record[key] = value.linkable ? <LinkableItem item = {value} /> : value.displayName;
+        // eslint-disable-next-line new-cap
+        record[key] = value.linkable ? LinkableItem({ item: value }) : value.displayName;
       }
     });
   });
@@ -72,10 +69,7 @@ export const getContextualMenuProps = (
   column?: IColumn,
   onContextualMenuDismissed?: any,
   onDialogClick?: any,
-  onDialogClickParameters?: any,
-
-): Object => {
-
+  onDialogClickParameters?: any): Object => {
   const items: IContextualMenuItem[] = [
     {
       key: 'aToZ',

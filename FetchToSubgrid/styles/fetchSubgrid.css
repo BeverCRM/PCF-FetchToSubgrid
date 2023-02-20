@@ -13,12 +13,9 @@
   text-align: center;
 }
 
-.fetchSubgridControl .infoMessage {
-  width: 100%;
-}
-
 .fetchSubgridControl .infoMessage .infoMessageText {
   text-align: center;
+  width: 100%;
 }
 
 .fetchSubgridControl .ms-DetailsList {
@@ -29,7 +26,7 @@
   width: 100%;
 }
 
-.fetchSubgridControl .ms-FocusZone, .ms-DetailsRow {
+.fetchSubgridControl .ms-FocusZone, .fetchSubgridControl .ms-DetailsRow {
   display: flex;
   padding-top: 0px;
 }
@@ -38,11 +35,11 @@
   border-bottom: 1px solid rgb(237, 235, 233);
 }
 
-.fetchSubgridControl, .ms-Button--commandBar:hover .ms-Button-icon {
+.fetchSubgridControl, .ms-Button--commandBar:hover .fetchSubgridControl .ms-Button-icon {
   color: rgb(161, 159, 157);
 }
 
-.fetchSubgridControl, .ms-DetailsHeader-cell, .ms-DetailsRow-fields {
+.fetchSubgridControl, .ms-DetailsHeader-cell, .fetchSubgridControl .ms-DetailsRow-fields {
   flex: 1 1 auto;
   font-size: 12px;
   font-weight: 400;
@@ -60,11 +57,11 @@
   font-size: 12px;
 }
 
-.fetchSubgridControl .ms-DetailsHeader-cellIsCheck, .ms-DetailsRow-cellCheck {
+.fetchSubgridControl .ms-DetailsHeader-cellIsCheck, .fetchSubgridControl .ms-DetailsRow-cellCheck {
   flex: none;
 }
 
-.ms-DetailsHeader-cell {
+.fetchSubgridControl .ms-DetailsHeader-cell {
   font-size: 13px;
 }
 

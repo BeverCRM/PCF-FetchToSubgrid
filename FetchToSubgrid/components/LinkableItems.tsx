@@ -11,9 +11,7 @@ interface ILinkableItemProps {
   item: ComponentFramework.WebApi.Entity
 }
 
-export const LinkableItem: React.FC<ILinkableItemProps> = props => {
-  const { item } = props;
-
+export const LinkableItem: React.FC<ILinkableItemProps> = ({ item }) => {
   if (item.isLinkEntity) {
     return (
       <Link onClick={openLinkEntityRecord.bind(null, item.entity, item.fieldName)}>

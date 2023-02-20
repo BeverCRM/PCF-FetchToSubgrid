@@ -9,26 +9,26 @@ import {
 } from '../styles/footerStyles';
 
 export interface IFooterProps {
-  firstNumber:any;
-  lastNumber:any;
+  firstItemIndex: number;
+  lastItemIndex: number;
   selectedItems: number;
   totalRecordsCount:number;
   currentPage: number;
   setCurrentPage: (page: number) => void;
   nextButtonDisable: boolean;
-  isMovePrevious: boolean;
+  movePreviousIsDisabled: boolean;
 }
 
 export const Footer: React.FC<IFooterProps> = props => {
   const {
-    firstNumber,
-    lastNumber,
+    firstItemIndex,
+    lastItemIndex,
     selectedItems,
     totalRecordsCount,
     currentPage,
     setCurrentPage,
     nextButtonDisable,
-    isMovePrevious } = props;
+    movePreviousIsDisabled } = props;
 
   function moveToFirst() {
     setCurrentPage(1);
@@ -42,8 +42,8 @@ export const Footer: React.FC<IFooterProps> = props => {
     setCurrentPage(currentPage + 1);
   }
 
-  const selected = `${firstNumber} - ${lastNumber} of 
-  ${totalRecordsCount >= 5000 ? '5000+' : totalRecordsCount}
+  const selected = `${firstItemIndex} - ${lastItemIndex} of 
+   ${totalRecordsCount >= 5000 ? '5000+' : totalRecordsCount}
    ${selectedItems !== 0 ? `(${selectedItems} Selected)` : ''}`;
 
   return (
@@ -54,13 +54,13 @@ export const Footer: React.FC<IFooterProps> = props => {
           styles={footerButtonStyles}
           iconProps={PreviousIcon}
           onClick={moveToFirst}
-          disabled = {isMovePrevious}
+          disabled = {movePreviousIsDisabled}
         />
         <IconButton
           styles={footerButtonStyles}
           iconProps={BackIcon}
           onClick={movePrevious}
-          disabled={isMovePrevious}
+          disabled={movePreviousIsDisabled}
         />
         <span color='black'> Page {currentPage} </span>
         <IconButton

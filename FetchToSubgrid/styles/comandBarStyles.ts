@@ -35,7 +35,6 @@ export const dataSetStyles = mergeStyleSets({
 });
 
 export const ContainerButtonStyles: Partial<IButtonStyles> = {
-
   root: {
     color: 'rgb(51, 51, 51)',
     backgroundColor: 'white',
@@ -47,7 +46,6 @@ export const ContainerButtonStyles: Partial<IButtonStyles> = {
 };
 
 export const CommandBarButtonStyles: Partial<IButtonStyles> = {
-
   root: {
     color: 'black',
     backgroundColor: 'white',
