@@ -8,13 +8,13 @@ import {
   EntityMetadata,
   IFetchSubgridProps,
   RetriveRecords } from '../utilities/types';
+import { WholeNumberType } from '../utilities/enums';
 import {
   getEntityName,
-  getLinkEntitiesNames,
-  getAttributesFieldNames,
   isAggregate,
-  getAliasNames } from '../utilities/utilities';
-import { WholeNumberType } from '../utilities/enums';
+  getAliasNames,
+  getAttributesFieldNames,
+  getLinkEntitiesNames } from '../utilities/fetchXmlUtils';
 
 let _context: ComponentFramework.Context<IInputs>;
 
@@ -59,7 +59,7 @@ export const getProps = (): IFetchSubgridProps => {
       fetchXml: fetchXml ?? _context.parameters.defaultFetchXmlProperty.raw,
       defaultPageSize: getPageSize(),
       newButtonVisibility: _context.parameters.newButtonVisibility.raw === '0',
-      deleteButtonVisibility: _context.parameters.deleteButtonVisibility.raw,
+      deleteButtonVisibility: _context.parameters.deleteButtonVisibility.raw === '0',
     };
     return props;
   }

@@ -6,32 +6,38 @@ import {
   IDetailsFooterProps,
   IDetailsListProps,
   IObjectWithKey,
-  Selection } from '@fluentui/react';
+  Selection,
+} from '@fluentui/react';
 import * as React from 'react';
 import { openRecord } from '../services/crmService';
-import { isAggregate } from '../utilities/utilities';
-import { getContextualMenuProps, onColumnClick, onDialogClick } from '../utilities/sortItems';
+import {
+  getContextualMenuProps,
+  onColumnClick,
+  onDialogClick,
+  selectionChanged } from '../utilities/sortingUtils';
 import { Footer } from './Footer';
 import { Entity } from '../utilities/types';
+import { isAggregate } from '../utilities/fetchXmlUtils';
 
 interface IListProps {
   entityName: string;
-  recordIds: React.MutableRefObject<string[]>;
   fetchXml: string | null;
-  columns: IColumn[];
-  Items: Entity[];
-  selection: Selection<IObjectWithKey>;
   pageSize: number;
   currentPage: number;
-  setItems: (items: Entity[]) => void;
-  setColumns: (columns: IColumn[]) => void;
+  recordIds: React.MutableRefObject<string[]>;
   setMenuProps: any;
+  columns: IColumn[];
+  items: Entity[];
+  deleteBtnClassName: any
   firstItemIndex: React.MutableRefObject<number>;
   lastItemIndex: React.MutableRefObject<number>;
   selectedItemsCount: React.MutableRefObject<number>;
   totalRecordsCount: React.MutableRefObject<number>;
-  setCurrentPage: (currentPage: number) => void;
   nextButtonDisabled: React.MutableRefObject<boolean>;
+  setItems: (items: Entity[]) => void;
+  setColumns: (columns: IColumn[]) => void;
+  setCurrentPage: (currentPage: number) => void;
+  setSelectedRecordIds: any
 }
 
 export const List: React.FC<IListProps> = props => {
@@ -40,19 +46,21 @@ export const List: React.FC<IListProps> = props => {
     recordIds,
     fetchXml,
     columns,
-    Items,
-    selection,
+    items,
+    // selection,
+    deleteBtnClassName,
     pageSize,
     currentPage,
-    setItems,
-    setColumns,
+    nextButtonDisabled,
     setMenuProps,
     firstItemIndex,
     lastItemIndex,
     selectedItemsCount,
     totalRecordsCount,
     setCurrentPage,
-    nextButtonDisabled,
+    setItems,
+    setColumns,
+    setSelectedRecordIds,
   } = props;
 
   const onContextualMenuDismissed = (): void => {
@@ -60,6 +68,17 @@ export const List: React.FC<IListProps> = props => {
       contextualMenuProps: undefined,
     });
   };
+
+  const selection: Selection<IObjectWithKey> = new Selection({
+    onSelectionChanged: () => {
+      selectionChanged(
+        selection,
+        selectedItemsCount,
+        fetchXml,
+        deleteBtnClassName,
+        setSelectedRecordIds);
+    },
+  });
 
   const onItemInvoked = React.useCallback((
     record: ComponentFramework.WebApi.Entity,
@@ -82,7 +101,6 @@ export const List: React.FC<IListProps> = props => {
         setColumns,
         recordIds,
         columns,
-
       };
 
       setMenuProps({
@@ -102,8 +120,8 @@ export const List: React.FC<IListProps> = props => {
   };
 
   const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = React.useCallback(
-    (props: IDetailsFooterProps | undefined) => {
-      const movePreviousIsDisabled = !(currentPage > 1);
+    (props?: IDetailsFooterProps) => {
+      const movePreviousIsDisabled = currentPage <= 1;
       if (props) {
         return (
           <Footer
@@ -115,7 +133,8 @@ export const List: React.FC<IListProps> = props => {
             setCurrentPage={setCurrentPage}
             nextButtonDisable={nextButtonDisabled.current}
             movePreviousIsDisabled={movePreviousIsDisabled}
-          />);
+          />
+        );
       }
       return null;
     },
@@ -124,7 +143,7 @@ export const List: React.FC<IListProps> = props => {
 
   return <DetailsList
     columns={columns}
-    items={Items}
+    items={items}
     layoutMode={DetailsListLayoutMode.fixedColumns}
     onItemInvoked={onItemInvoked}
     onRenderDetailsFooter={onRenderDetailsFooter}

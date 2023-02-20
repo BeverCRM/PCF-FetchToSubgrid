@@ -12,9 +12,9 @@
       <value name="true" display-name-key="true" description-key="Visible New Button">1</value>
       <value name="false" display-name-key="false" description-key="Invisible New Button">0</value>
     </property>
-    <property name="deleteButtonVisibility" display-name-key="Delete Button Visibility" description-key="Set true/false if you want to make Delete Button enable/disable" of-type="TwoOptions" required="true" default-value="1" usage="input">
-      <value name="true" display-name-key="true" description-key="Visible Delete Button">1</value>
-      <value name="false" display-name-key="false" description-key="Invisible Delete Button">0</value>
+    <property name="deleteButtonVisibility" display-name-key="Delete Button Visibility" description-key="Set true/false if you want to make Delete Button enable/disable" of-type="Enum" required="true" default-value="1" usage="input">
+       <value name="true" display-name-key="true" description-key="Visible Delete Button">1</value>
+      <value name="false" display-name-key="false" description-key="Invisible Delete Button">0</value> 
     </property>
 
     <resources>

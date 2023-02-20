@@ -14,9 +14,9 @@ export interface IFooterProps {
   selectedItems: number;
   totalRecordsCount:number;
   currentPage: number;
-  setCurrentPage: (page: number) => void;
   nextButtonDisable: boolean;
   movePreviousIsDisabled: boolean;
+  setCurrentPage: (page: number) => void;
 }
 
 export const Footer: React.FC<IFooterProps> = props => {
@@ -26,9 +26,9 @@ export const Footer: React.FC<IFooterProps> = props => {
     selectedItems,
     totalRecordsCount,
     currentPage,
-    setCurrentPage,
     nextButtonDisable,
-    movePreviousIsDisabled } = props;
+    movePreviousIsDisabled,
+    setCurrentPage } = props;
 
   function moveToFirst() {
     setCurrentPage(1);

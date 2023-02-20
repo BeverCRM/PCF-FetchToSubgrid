@@ -10,7 +10,6 @@ export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, 
 
   public updateView(): React.ReactElement {
     const props: IAppWrapperProps = { ...getProps() };
-
     return React.createElement(AppWrapper, props);
   }
 

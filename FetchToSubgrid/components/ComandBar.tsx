@@ -8,9 +8,9 @@ export interface ICommandBarProps {
   entityName: string;
   selectedRecordIds: string[];
   displayName: string;
-  setDialogAccepted: React.Dispatch<React.SetStateAction<boolean>>;
   newButtonVisibility: boolean;
-  deleteButtonVisibility: boolean;
+  deleteButtonVisibility: boolean | string;
+  setDialogAccepted: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const stackStyles: Partial<IStackStyles> = { root: { height: 44, marginLeft: 100 } };
@@ -22,9 +22,9 @@ export const CommandBar = ({
   entityName,
   selectedRecordIds,
   displayName,
-  setDialogAccepted,
   newButtonVisibility,
-  deleteButtonVisibility } : ICommandBarProps) =>
+  deleteButtonVisibility,
+  setDialogAccepted } : ICommandBarProps) =>
   <div className='containerButtons'>
     <CommandBarButton
       maxLength={1}

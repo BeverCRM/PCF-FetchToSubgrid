@@ -2,7 +2,8 @@ import * as React from 'react';
 import { DirectionalHint, IColumn, IContextualMenuItem, IObjectWithKey } from '@fluentui/react';
 import { LinkableItem } from '../components/LinkableItems';
 import { getRecordsCount } from '../services/crmService';
-import { addOrderToFetch, getItems, isAggregate } from './utilities';
+import { getItems } from './d365Utils';
+import { addOrderToFetch, isAggregate } from './fetchXmlUtils';
 
 export const onDialogClick = async (
   column?: IColumn,
@@ -108,9 +109,9 @@ export const selectionChanged = (selection: any,
   const currentSelection: IObjectWithKey[] = selection.getSelection();
   selectItemsCount.current = currentSelection.length;
 
-  currentSelection.length && !isAggregate(fetchXml ?? '')
-    ? deleteBtnClassName.current = 'ms-Button'
-    : deleteBtnClassName.current = 'disableButton';
+  deleteBtnClassName.current = currentSelection.length && !isAggregate(fetchXml ?? '')
+    ? 'ms-Button'
+    : 'disableButton';
   const recordIds: string[] = currentSelection.map((record: any) => record.id);
   setSelectedRecordIds(recordIds);
 };

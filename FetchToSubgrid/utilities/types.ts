@@ -4,11 +4,7 @@ export type RetriveRecords = ComponentFramework.WebApi.RetrieveMultipleResponse;
 
 export type Entity = ComponentFramework.WebApi.Entity;
 
-export interface EntityAttribute {
-  linkEntityAlias?: string;
-  name: string;
-  attributeAlias: string;
-}
+export type Dictionary<T> = { [key: string]: T };
 
 export type IItemProps = {
   timeZoneDefinitions: any;
@@ -29,4 +25,8 @@ export interface IFetchSubgridProps {
   newButtonVisibility: boolean;
 }
 
-export type Dictionary<T> = { [key: string]: T }
+export interface EntityAttribute {
+  linkEntityAlias?: string;
+  name: string;
+  attributeAlias: string;
+}

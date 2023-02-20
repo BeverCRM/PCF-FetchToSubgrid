@@ -1,13 +1,13 @@
 import * as React from 'react';
-import { ContextualMenu, IColumn, Stack, Selection, IObjectWithKey } from '@fluentui/react';
+import { ContextualMenu, IColumn, Stack } from '@fluentui/react';
 import { getColumns, getEntityDisplayName } from '../services/crmService';
-import { getEntityName, getFilteredRecords, setFilteredColumns } from '../utilities/utilities';
-import { selectionChanged } from '../utilities/sortItems';
 import { dataSetStyles } from '../styles/comandBarStyles';
 import { LinkableItem } from './LinkableItems';
 import { CommandBar } from './ComandBar';
 import { List } from './List';
 import { Entity } from '../utilities/types';
+import { getEntityName } from '../utilities/fetchXmlUtils';
+import { getFilteredRecords, setFilteredColumns } from '../utilities/d365Utils';
 
 export interface IFetchSubgridProps {
   fetchXml: string | null;
@@ -15,7 +15,7 @@ export interface IFetchSubgridProps {
   deleteButtonVisibility: boolean;
   newButtonVisibility: boolean;
   setIsLoading: (isLoading: boolean) => void;
-  setErrorMessage: (message: string | null) => void;
+  setErrorMessage: (message?: string) => void;
   isVisible: boolean;
 }
 
@@ -30,8 +30,8 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
     isVisible,
   } = props;
 
-  const [Items, setItems] = React.useState<Entity[]>([]);
-  const [menuProps, setMenuProps] = React.useState<any>({ contextualMenuProps: undefined });
+  const [items, setItems] = React.useState<Entity[]>([]);
+  const [menuProps, setMenuProps] = React.useState<any>();
   const [selectedRecordIds, setSelectedRecordIds] = React.useState<string[]>([]);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [isDialogAccepted, setDialogAccepted] = React.useState(false);
@@ -51,8 +51,8 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
 
   React.useEffect(() => {
     (async () => {
-      setCurrentPage(1);
       try {
+        setCurrentPage(1);
         setFilteredColumns(fetchXml, setColumns, getColumns);
         displayName.current = await getEntityDisplayName(entityName);
       }
@@ -67,8 +67,7 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
     (async () => {
       if (isDialogAccepted) return;
       setIsLoading(true);
-      setErrorMessage(null);
-
+      setErrorMessage();
       try {
         const records = await getFilteredRecords(
           totalRecordsCount,
@@ -97,17 +96,6 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
     })();
   }, [fetchXml, pageSize, currentPage, isDialogAccepted]);
 
-  const selection: Selection<IObjectWithKey> = new Selection({
-    onSelectionChanged: () => {
-      selectionChanged(
-        selection,
-        selectedItemsCount,
-        fetchXml,
-        deleteBtnClassName,
-        setSelectedRecordIds);
-    },
-  });
-
   return (
     <div className='fetchSubgridControl' style={{ display: isVisible ? 'grid' : 'none' }}>
       <Stack horizontal horizontalAlign="end" className={dataSetStyles.buttons}>
@@ -126,8 +114,9 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
         recordIds={recordIds}
         fetchXml={fetchXml}
         columns={columns}
-        Items={Items}
-        selection={selection}
+        items={items}
+        deleteBtnClassName={deleteBtnClassName}
+        setSelectedRecordIds={setSelectedRecordIds}
         pageSize={pageSize}
         currentPage={currentPage}
         setItems={setItems}

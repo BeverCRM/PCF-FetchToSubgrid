@@ -1,11 +1,11 @@
 import { Link } from '@fluentui/react';
 import * as React from 'react';
-import { AttributeType } from '../utilities/enums';
 import {
   openLinkEntityRecord,
   openLookupForm,
   openPrimaryEntityForm,
 } from '../services/crmService';
+import { checkIfAttributeIsEntityReferance } from '../utilities/utils';
 
 interface ILinkableItemProps {
   item: ComponentFramework.WebApi.Entity
@@ -20,12 +20,12 @@ export const LinkableItem: React.FC<ILinkableItemProps> = ({ item }) => {
     );
   }
 
-  if (item.attributeType === AttributeType.LookUp ||
-      item.attributeType === AttributeType.Owner ||
-      item.attributeType === AttributeType.Customer) {
-    return <Link onClick={openLookupForm.bind(null, item.entity, item.fieldName)}>
-      {item.displayName}
-    </Link>;
+  if (checkIfAttributeIsEntityReferance(item.AttributeType)) {
+    return (
+      <Link onClick={openLookupForm.bind(null, item.entity, item.fieldName)}>
+        {item.displayName}
+      </Link>
+    );
   }
 
   return (
