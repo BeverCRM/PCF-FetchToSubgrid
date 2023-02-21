@@ -1,6 +1,6 @@
 import { CommandBarButton, IIconProps, IStackStyles } from '@fluentui/react';
 import * as React from 'react';
-import { openRecord, openRecordDeleteDialog } from '../services/crmService';
+import { openRecord, openRecordDeleteDialog } from '../services/dataverseService';
 import { ContainerButtonStyles } from '../styles/comandBarStyles';
 
 export interface ICommandBarProps {
@@ -32,7 +32,7 @@ export const CommandBar = ({
       iconProps={addIcon}
       styles={ContainerButtonStyles}
       text={`New ${displayName}`}
-      onClick={() => openRecord(entityName, '')}
+      onClick={openRecord.bind(null, entityName, '')}
     />
 
     <CommandBarButton
@@ -41,6 +41,6 @@ export const CommandBar = ({
       iconProps={deleteIcon}
       styles={ContainerButtonStyles}
       text="Delete"
-      onClick={() => openRecordDeleteDialog(selectedRecordIds, entityName, setDialogAccepted) }
+      onClick={openRecordDeleteDialog.bind(null, selectedRecordIds, entityName, setDialogAccepted)}
     />
   </div>;

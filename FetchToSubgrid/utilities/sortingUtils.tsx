@@ -1,9 +1,16 @@
 import * as React from 'react';
-import { DirectionalHint, IColumn, IContextualMenuItem, IObjectWithKey } from '@fluentui/react';
+import {
+  DirectionalHint,
+  IColumn,
+  IContextualMenuItem,
+  IObjectWithKey,
+  Selection,
+} from '@fluentui/react';
 import { LinkableItem } from '../components/LinkableItems';
-import { getRecordsCount } from '../services/crmService';
+import { getRecordsCount } from '../services/dataverseService';
 import { getItems } from './d365Utils';
 import { addOrderToFetch, isAggregate } from './fetchXmlUtils';
+import { Entity } from './types';
 
 export const onDialogClick = async (
   column?: IColumn,
@@ -21,7 +28,6 @@ export const onDialogClick = async (
   } = onDialogClickParameters;
 
   const fieldName = column?.className === 'linkEntity' ? column?.ariaLabel : column?.fieldName;
-
   const newFetchXml = addOrderToFetch(
     fetchXml ?? '',
     fieldName ?? '',
@@ -30,7 +36,7 @@ export const onDialogClick = async (
   );
 
   const recordsCount: number = await getRecordsCount(fetchXml ?? '');
-  const records: ComponentFramework.WebApi.Entity[] = await getItems(
+  const records: Entity[] = await getItems(
     newFetchXml,
     pageSize,
     currentPage,
@@ -43,7 +49,7 @@ export const onDialogClick = async (
       if (key !== 'id') {
         const value: any = record[key];
         // eslint-disable-next-line new-cap
-        record[key] = value.linkable ? LinkableItem({ item: value }) : value.displayName;
+        record[key] = value.isLinkable ? <LinkableItem item={value}/> : value.displayName;
       }
     });
   });
@@ -70,14 +76,14 @@ export const getContextualMenuProps = (
   column?: IColumn,
   onContextualMenuDismissed?: any,
   onDialogClick?: any,
-  onDialogClickParameters?: any): Object => {
+  onDialogClickParameters?: any): any => {
   const items: IContextualMenuItem[] = [
     {
       key: 'aToZ',
       name: 'Sort A to Z',
       iconProps: { iconName: 'SortUp' },
       checked: true,
-      canCheck:  column?.isSorted && !column?.isSortedDescending,
+      canCheck: column?.isSorted && !column?.isSortedDescending,
     },
     {
       key: 'zToA',
@@ -101,13 +107,15 @@ export const getContextualMenuProps = (
   };
 };
 
-export const selectionChanged = (selection: any,
-  selectItemsCount: any,
-  fetchXml: any,
-  deleteBtnClassName: any,
-  setSelectedRecordIds:any) => {
+export const selectionChanged = (
+  selection: Selection<IObjectWithKey>,
+  selectedItemsCount: React.MutableRefObject<number>,
+  fetchXml: string | null,
+  deleteBtnClassName: React.MutableRefObject<string>,
+  setSelectedRecordIds: React.Dispatch<React.SetStateAction<string[]>>,
+) => {
   const currentSelection: IObjectWithKey[] = selection.getSelection();
-  selectItemsCount.current = currentSelection.length;
+  selectedItemsCount.current = currentSelection.length;
 
   deleteBtnClassName.current = currentSelection.length && !isAggregate(fetchXml ?? '')
     ? 'ms-Button'
@@ -119,12 +127,12 @@ export const selectionChanged = (selection: any,
 export const onColumnClick = (
   ev: any,
   col?: IColumn,
-  columns?: any,
+  columns?: IColumn[],
   onColumnContextMenu?: any,
   setColumns?: any,
 ) => {
   const key = col?.key;
-  const filteredColumns = columns.map((column: IColumn) => {
+  const filteredColumns = columns?.map((column: IColumn) => {
     if (column.key === key) {
       onColumnContextMenu(col, ev);
       column.onColumnClick = (ev, columnContex) => {

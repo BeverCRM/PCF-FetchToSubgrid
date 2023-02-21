@@ -84,21 +84,24 @@ export const getWholeNumberFieldName = (
   format: string,
   entity: Entity,
   fieldName: string,
-  timeZoneDefinitions: any) => {
+  timeZoneDefinitions: any) : string => {
   let fieldValue: number = entity[fieldName];
 
   if (format === WholeNumberType.Language) {
     return _context.formatting.formatLanguage(fieldValue);
   }
-  else if (format === WholeNumberType.Duration) {
+
+  if (format === WholeNumberType.Duration) {
     for (const tz of timeZoneDefinitions.value) {
       if (tz.timezonecode === Number(fieldValue)) return tz.userinterfacename;
     }
   }
-  else if (format === WholeNumberType.Number) {
-    return fieldValue;
+
+  if (format === WholeNumberType.Number) {
+    return `${fieldValue}`;
   }
-  else if (fieldValue) {
+
+  if (fieldValue) {
     let unit: string;
     if (fieldValue < 60) { unit = 'minute'; }
     else if (fieldValue < 1440) {
@@ -111,6 +114,7 @@ export const getWholeNumberFieldName = (
     }
     return `${fieldValue} ${unit}${fieldValue === 1 ? '' : 's'}`;
   }
+  return '0';
 };
 
 export const getRecordsCount = async (fetchXml: string): Promise<number> => {

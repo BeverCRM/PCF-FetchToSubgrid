@@ -4,11 +4,12 @@ import {
   openLinkEntityRecord,
   openLookupForm,
   openPrimaryEntityForm,
-} from '../services/crmService';
+} from '../services/dataverseService';
+import { Entity } from '../utilities/types';
 import { checkIfAttributeIsEntityReferance } from '../utilities/utils';
 
 interface ILinkableItemProps {
-  item: ComponentFramework.WebApi.Entity
+  item: Entity
 }
 
 export const LinkableItem: React.FC<ILinkableItemProps> = ({ item }) => {

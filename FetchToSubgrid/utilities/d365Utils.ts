@@ -6,7 +6,7 @@ import {
   getRecordsCount,
   getTimeZoneDefinitions,
   getWholeNumberFieldName,
-} from '../services/crmService';
+} from '../services/dataverseService';
 import { AttributeType } from './enums';
 import {
   addPagingToFetchXml,
@@ -23,9 +23,9 @@ import {
   IItemProps,
   RetriveRecords } from './types';
 import {
-  needToGetFormattedValue1,
-  needToGetFormattedValue2,
-  needToGetFormattedValue3 } from './utils';
+  needToGetFormattedValue,
+  checkIfAttributeIsEntityReferance,
+} from './utils';
 
 export const getEntityData = (props: IItemProps) => {
   const {
@@ -37,21 +37,22 @@ export const getEntityData = (props: IItemProps) => {
     entity,
   } = props;
 
-  if (attributeType === AttributeType.WholeNumber) {
+  if (attributeType === AttributeType.Number) {
     const format: string = entityMetadata.Attributes._collection[fieldName].Format;
     const field: string = getWholeNumberFieldName(format, entity, fieldName, timeZoneDefinitions);
     return [field, false];
   }
-  else if (needToGetFormattedValue1(attributeType)) {
+  else if (needToGetFormattedValue(attributeType)) {
     return [entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`], false];
   }
-  else if (isLinkEntity && needToGetFormattedValue2(attributeType)) {
+  else if (isLinkEntity && checkIfAttributeIsEntityReferance(attributeType)) {
     return [entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`], true];
   }
   else if (fieldName === entityMetadata._primaryNameAttribute) {
+
     return [entity[fieldName], true];
   }
-  else if (needToGetFormattedValue3(attributeType)) {
+  else if (checkIfAttributeIsEntityReferance(attributeType)) {
     return [entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`], true];
   }
   return [entity[fieldName], false];
@@ -181,6 +182,7 @@ export const getItems = async (
         genereateItems(attributes);
       });
     });
+
     items.push(item);
   });
 

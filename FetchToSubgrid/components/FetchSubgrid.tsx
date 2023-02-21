@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { ContextualMenu, IColumn, Stack } from '@fluentui/react';
-import { getColumns, getEntityDisplayName } from '../services/crmService';
+import { ContextualMenu, IColumn, IContextualMenuProps, Stack } from '@fluentui/react';
+import { getColumns, getEntityDisplayName } from '../services/dataverseService';
 import { dataSetStyles } from '../styles/comandBarStyles';
 import { LinkableItem } from './LinkableItems';
 import { CommandBar } from './ComandBar';
@@ -31,7 +31,7 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
   } = props;
 
   const [items, setItems] = React.useState<Entity[]>([]);
-  const [menuProps, setMenuProps] = React.useState<any>();
+  const [contextualMenuProps, setContextualMenuProps] = React.useState<IContextualMenuProps>();
   const [selectedRecordIds, setSelectedRecordIds] = React.useState<string[]>([]);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [isDialogAccepted, setDialogAccepted] = React.useState(false);
@@ -66,9 +66,10 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
     deleteBtnClassName.current = 'disableButton';
     (async () => {
       if (isDialogAccepted) return;
-      setIsLoading(true);
-      setErrorMessage();
+
       try {
+        setIsLoading(true);
+        setErrorMessage();
         const records = await getFilteredRecords(
           totalRecordsCount,
           fetchXml,
@@ -83,7 +84,7 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
           Object.keys(record).forEach(key => {
             if (key !== 'id') {
               const value: any = record[key];
-              record[key] = value.linkable ? <LinkableItem item={value} /> : value.displayName;
+              record[key] = value.isLinkable ? <LinkableItem item={value} /> : value.displayName;
             }
           });
         });
@@ -92,12 +93,13 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
       catch (err: any) {
         setErrorMessage(err.message);
       }
+
       setIsLoading(false);
     })();
   }, [fetchXml, pageSize, currentPage, isDialogAccepted]);
 
   return (
-    <div className='fetchSubgridControl' style={{ display: isVisible ? 'grid' : 'none' }}>
+    <div className='FetchSubgridControl' style={{ display: isVisible ? 'grid' : 'none' }}>
       <Stack horizontal horizontalAlign="end" className={dataSetStyles.buttons}>
         <CommandBar
           entityName={entityName}
@@ -121,7 +123,7 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
         currentPage={currentPage}
         setItems={setItems}
         setColumns={setColumns}
-        setMenuProps={setMenuProps}
+        setContextualMenuProps={setContextualMenuProps}
         firstItemIndex={firstItemIndex}
         lastItemIndex={lastItemIndex}
         selectedItemsCount={selectedItemsCount}
@@ -129,7 +131,7 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
         setCurrentPage={setCurrentPage}
         nextButtonDisabled={nextButtonDisabled}
       />
-      <ContextualMenu {...menuProps.contextualMenuProps} />
+      <ContextualMenu {...contextualMenuProps!} />
     </div>
   );
 };

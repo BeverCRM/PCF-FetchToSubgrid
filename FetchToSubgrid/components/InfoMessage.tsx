@@ -5,7 +5,7 @@ interface IInfoMessageProps {
 }
 
 export const InfoMessage: React.FC<IInfoMessageProps> = ({ message }) =>
-  <div className='fetchSubgridControl'>
+  <div className='FetchSubgridControl'>
     <div className='infoMessage'>
       <h1 className='infoMessageText'>
         {message || 'No data available'}

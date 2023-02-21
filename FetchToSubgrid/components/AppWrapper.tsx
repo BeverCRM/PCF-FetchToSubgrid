@@ -1,4 +1,4 @@
-import React = require('react');
+import * as React from 'react';
 import { FetchSubgrid } from './FetchSubgrid';
 import { InfoMessage } from './InfoMessage';
 import { Loader } from './Loader';

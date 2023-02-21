@@ -53,7 +53,8 @@ export const getOrderInFetch = (fetchXml: string) => {
   };
 };
 
-export const addOrderToFetch = (fetchXml: string,
+export const addOrderToFetch = (
+  fetchXml: string,
   fieldName: string,
   dialogEvent: any,
   column?: IColumn,

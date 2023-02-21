@@ -1,75 +1,68 @@
- .fetchSubgridControl {
+ .FetchSubgridControl {
   width: 100%;
 } 
 
-.fetchSubgridControl .fetchLoading {
+.FetchSubgridControl .fetchLoading {
   width: 100%;
   justify-content: center;
 }
 
-.fetchSubgridControl .fetchLoading .loadingText {
+.FetchSubgridControl .fetchLoading .loadingText {
   width: 100%;
   margin-top: 5px;
   text-align: center;
 }
 
-.fetchSubgridControl .infoMessage .infoMessageText {
+.FetchSubgridControl .infoMessage .infoMessageText {
   text-align: center;
   width: 100%;
 }
 
-.fetchSubgridControl .ms-DetailsList {
+.FetchSubgridControl .ms-DetailsList {
   overflow: inherit;
 } 
 
-.fetchSubgridControl .ms-List {
+.FetchSubgridControl .ms-List {
   width: 100%;
 }
 
-.fetchSubgridControl .ms-FocusZone, .fetchSubgridControl .ms-DetailsRow {
+.FetchSubgridControl .ms-FocusZone, .FetchSubgridControl .ms-DetailsRow {
   display: flex;
   padding-top: 0px;
 }
 
-.fetchSubgridControl .ms-Stack {
+.FetchSubgridControl .ms-Stack {
   border-bottom: 1px solid rgb(237, 235, 233);
 }
 
-.fetchSubgridControl, .ms-Button--commandBar:hover .fetchSubgridControl .ms-Button-icon {
+.FetchSubgridControl .ms-Button--commandBar:hover .FetchSubgridControl .ms-Button-icon {
   color: rgb(161, 159, 157);
 }
 
-.fetchSubgridControl, .ms-DetailsHeader-cell, .fetchSubgridControl .ms-DetailsRow-fields {
+.FetchSubgridControl .ms-DetailsHeader-cell, .FetchSubgridControl .ms-DetailsRow-fields, .FetchSubgridControl .ms-DetailsRow-cell {
   flex: 1 1 auto;
   font-size: 12px;
   font-weight: 400;
   cursor: pointer;
 }
 
-.fetchSubgridControl, .ms-DetailsRow-cell {
-  flex: 1 1 auto;
-  font-size: 14px;
-  font-weight: 400;
-  cursor: pointer;
-}
-
-.fetchSubgridControl .ms-DetailsHeader-cellName {
+.FetchSubgridControl .ms-DetailsHeader-cellName {
   font-size: 12px;
 }
 
-.fetchSubgridControl .ms-DetailsHeader-cellIsCheck, .fetchSubgridControl .ms-DetailsRow-cellCheck {
+.FetchSubgridControl .ms-DetailsHeader-cellIsCheck, .FetchSubgridControl .ms-DetailsRow-cellCheck {
   flex: none;
 }
 
-.fetchSubgridControl .ms-DetailsHeader-cell {
+.FetchSubgridControl .ms-DetailsHeader-cell {
   font-size: 13px;
 }
 
-.fetchSubgridControl .disableButton {
+.FetchSubgridControl .disableButton {
   display: none;
 }
 
-.fetchSubgridControl .ms-DetailsHeader-filterChevron {
+.FetchSubgridControl .ms-DetailsHeader-filterChevron {
   font-size: 8px;
   display: inline-block;
   -webkit-font-smoothing: antialiased;
@@ -79,6 +72,6 @@
   color: rgb(96, 94, 92);
 }
 
-.fetchSubgridControl .ms-DetailsHeader-check {
+.FetchSubgridControl .ms-DetailsHeader-check {
   opacity: 1;
 }

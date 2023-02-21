@@ -1,23 +1,23 @@
+import * as React from 'react';
+import { openRecord } from '../services/dataverseService';
+import { Footer } from './Footer';
+import { Entity } from '../utilities/types';
+import { isAggregate } from '../utilities/fetchXmlUtils';
 import {
   ColumnActionsMode,
   DetailsList,
   DetailsListLayoutMode,
   IColumn,
+  IContextualMenuProps,
   IDetailsFooterProps,
   IDetailsListProps,
   IObjectWithKey,
-  Selection,
-} from '@fluentui/react';
-import * as React from 'react';
-import { openRecord } from '../services/crmService';
+  Selection } from '@fluentui/react';
 import {
   getContextualMenuProps,
   onColumnClick,
   onDialogClick,
   selectionChanged } from '../utilities/sortingUtils';
-import { Footer } from './Footer';
-import { Entity } from '../utilities/types';
-import { isAggregate } from '../utilities/fetchXmlUtils';
 
 interface IListProps {
   entityName: string;
@@ -25,10 +25,9 @@ interface IListProps {
   pageSize: number;
   currentPage: number;
   recordIds: React.MutableRefObject<string[]>;
-  setMenuProps: any;
   columns: IColumn[];
   items: Entity[];
-  deleteBtnClassName: any
+  deleteBtnClassName: React.MutableRefObject<string>
   firstItemIndex: React.MutableRefObject<number>;
   lastItemIndex: React.MutableRefObject<number>;
   selectedItemsCount: React.MutableRefObject<number>;
@@ -37,7 +36,8 @@ interface IListProps {
   setItems: (items: Entity[]) => void;
   setColumns: (columns: IColumn[]) => void;
   setCurrentPage: (currentPage: number) => void;
-  setSelectedRecordIds: any
+  setSelectedRecordIds: React.Dispatch<React.SetStateAction<string[]>>
+  setContextualMenuProps: React.Dispatch<React.SetStateAction<IContextualMenuProps | undefined>>;
 }
 
 export const List: React.FC<IListProps> = props => {
@@ -47,12 +47,10 @@ export const List: React.FC<IListProps> = props => {
     fetchXml,
     columns,
     items,
-    // selection,
     deleteBtnClassName,
     pageSize,
     currentPage,
     nextButtonDisabled,
-    setMenuProps,
     firstItemIndex,
     lastItemIndex,
     selectedItemsCount,
@@ -61,13 +59,8 @@ export const List: React.FC<IListProps> = props => {
     setItems,
     setColumns,
     setSelectedRecordIds,
+    setContextualMenuProps,
   } = props;
-
-  const onContextualMenuDismissed = (): void => {
-    setMenuProps({
-      contextualMenuProps: undefined,
-    });
-  };
 
   const selection: Selection<IObjectWithKey> = new Selection({
     onSelectionChanged: () => {
@@ -81,7 +74,7 @@ export const List: React.FC<IListProps> = props => {
   });
 
   const onItemInvoked = React.useCallback((
-    record: ComponentFramework.WebApi.Entity,
+    record: Entity,
     index?: number | undefined) : void => {
     const hasAggregate: boolean = isAggregate(fetchXml ?? '');
     if (index !== undefined && !hasAggregate) {
@@ -103,15 +96,15 @@ export const List: React.FC<IListProps> = props => {
         columns,
       };
 
-      setMenuProps({
-        contextualMenuProps: getContextualMenuProps(
-          ev,
-          column,
-          onContextualMenuDismissed,
-          onDialogClick,
-          onDialogClickParameters,
-        ),
-      });
+      const onContextualMenuDismissed = (): void => setContextualMenuProps(undefined);
+
+      setContextualMenuProps(getContextualMenuProps(
+        ev,
+        column,
+        onContextualMenuDismissed,
+        onDialogClick,
+        onDialogClickParameters,
+      ));
     }
   };
 

@@ -6,7 +6,7 @@ export type Entity = ComponentFramework.WebApi.Entity;
 
 export type Dictionary<T> = { [key: string]: T };
 
-export type IItemProps = {
+export interface IItemProps {
   timeZoneDefinitions: any;
   item: Entity;
   isLinkEntity: boolean;
@@ -16,7 +16,7 @@ export type IItemProps = {
   entity: Entity;
   fetchXml: string | null;
   index: number;
-};
+}
 
 export interface IFetchSubgridProps {
   fetchXml: string | null;
