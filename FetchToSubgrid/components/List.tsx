@@ -61,17 +61,15 @@ export const List: React.FC<IListProps> = props => {
       undefined,
       columns) ?? [];
 
-    const recordsCount: number = await dataverseService.getRecordsCount(newFetchXml ?? '');
     const sortedRecords: Entity[] = await getItems(
       newFetchXml,
       pageSize,
       currentPage,
-      recordsCount,
+      totalRecordsCount.current,
       dataverseService);
 
     calculateFilteredRecordsData(
-      totalRecordsCount,
-      recordsCount,
+      totalRecordsCount.current,
       sortedRecords,
       pageSize,
       currentPage,

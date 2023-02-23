@@ -58,16 +58,14 @@ export const getSortedColumns = async (
 };
 
 export const calculateFilteredRecordsData = (
-  totalRecordsCount: React.MutableRefObject<number>,
-  recordsCount: number,
+  totalRecordsCount: number,
   records: Entity[],
   pageSize: number,
   currentPage: number,
   nextButtonDisabled: React.MutableRefObject<boolean>,
   lastItemIndex: React.MutableRefObject<number>,
   firstItemIndex: React.MutableRefObject<number>): void => {
-  totalRecordsCount.current = recordsCount;
-  nextButtonDisabled.current = Math.ceil(recordsCount / pageSize) <= currentPage;
+  nextButtonDisabled.current = Math.ceil(totalRecordsCount / pageSize) <= currentPage;
 
   lastItemIndex.current = (currentPage - 1) * pageSize + records.length;
   firstItemIndex.current = (currentPage - 1) * pageSize + 1;

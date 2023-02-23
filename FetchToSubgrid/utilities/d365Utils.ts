@@ -1,4 +1,4 @@
-import { ColumnActionsMode, IColumn } from '@fluentui/react';
+import { IColumn } from '@fluentui/react';
 import { AttributeType } from './enums';
 import { needToGetFormattedValue, checkIfAttributeIsEntityReferance } from './utils';
 import {
@@ -47,7 +47,6 @@ const createColumnsForLinkEntity = (
         minWidth: 10,
         isResizable: true,
         isMultiline: false,
-        columnActionsMode: ColumnActionsMode.hasDropdown,
       });
     });
   });
@@ -78,7 +77,6 @@ const createColumnsForEntity = (
       minWidth: 10,
       isResizable: true,
       isMultiline: false,
-      columnActionsMode: ColumnActionsMode.hasDropdown,
     });
   });
   return columns;

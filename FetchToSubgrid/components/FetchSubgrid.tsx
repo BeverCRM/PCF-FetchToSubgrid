@@ -62,17 +62,16 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
       setErrorMessage();
 
       try {
-        const recordsCount: number = await dataverseService.getRecordsCount(fetchXml ?? '');
+        totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
         const records: Entity[] = await getItems(
           fetchXml,
           pageSize,
           currentPage,
-          recordsCount,
+          totalRecordsCount.current,
           dataverseService);
 
         calculateFilteredRecordsData(
-          totalRecordsCount,
-          recordsCount,
+          totalRecordsCount.current,
           records,
           pageSize,
           currentPage,
