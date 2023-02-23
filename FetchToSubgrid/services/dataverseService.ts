@@ -110,15 +110,19 @@ export class DataverseService implements IDataverseService {
 
     if (format === WholeNumberType.Duration) {
       let unit: string;
-      if (fieldValue < 60) { unit = 'minute'; }
+
+      if (fieldValue < 60) {
+        unit = 'minute';
+      }
       else if (fieldValue < 1440) {
-        fieldValue /= 60;
+        fieldValue = Math.round(fieldValue / 60 * 100) / 100;
         unit = 'hour';
       }
       else {
-        fieldValue /= 1440;
+        Math.round(fieldValue / 1440 * 100) / 100;
         unit = 'day';
       }
+
       return `${fieldValue} ${unit}${fieldValue === 1 ? '' : 's'}`;
     }
 
