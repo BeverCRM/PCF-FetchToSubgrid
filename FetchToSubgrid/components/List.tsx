@@ -55,14 +55,14 @@ export const List: React.FC<IListProps> = props => {
       dialogEvent,
       column);
 
-    const filteredColumns: IColumn[] = sortColumns(
+    const sortedColumns: IColumn[] = sortColumns(
       column?.fieldName,
       column?.ariaLabel,
       undefined,
       columns) ?? [];
 
     const recordsCount: number = await dataverseService.getRecordsCount(newFetchXml ?? '');
-    const filteredRecords: Entity[] = await getItems(
+    const sortedRecords: Entity[] = await getItems(
       newFetchXml,
       pageSize,
       currentPage,
@@ -72,14 +72,14 @@ export const List: React.FC<IListProps> = props => {
     calculateFilteredRecordsData(
       totalRecordsCount,
       recordsCount,
-      filteredRecords,
+      sortedRecords,
       pageSize,
       currentPage,
       nextButtonDisabled,
       lastItemIndex,
       firstItemIndex);
 
-    filteredRecords.forEach(record => {
+    sortedRecords.forEach(record => {
       recordIds.current.push(record.id);
       Object.keys(record).forEach(key => {
         if (key !== 'id') {
@@ -96,8 +96,8 @@ export const List: React.FC<IListProps> = props => {
       });
     });
 
-    setColumns(filteredColumns);
-    setItems(filteredRecords);
+    setColumns(sortedColumns);
+    setItems(sortedRecords);
   };
 
   const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = React.useCallback(
