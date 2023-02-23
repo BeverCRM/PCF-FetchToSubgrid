@@ -1,16 +1,17 @@
 import * as React from 'react';
 import { IColumn, Stack } from '@fluentui/react';
-import { getEntityDisplayName } from '../services/dataverseService';
+import { Entity, IFetchSubgridProps } from '../utilities/types';
+import { getSortedColumns, calculateFilteredRecordsData } from '../utilities/utils';
+import { getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
 import { dataSetStyles } from '../styles/comandBarStyles';
 import { LinkableItem } from './LinkableItems';
 import { CommandBar } from './ComandBar';
 import { List } from './List';
-import { Entity, IFetchSubgridProps } from '../utilities/types';
-import { getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
-import { getFilteredRecords, getFilteredColumns } from '../utilities/utils';
+import { getItems } from '../utilities/d365Utils';
 
 export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
   const {
+    _service: dataverseService,
     deleteButtonVisibility,
     newButtonVisibility,
     defaultPageSize,
@@ -42,9 +43,9 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
     (async () => {
       try {
         setCurrentPage(1);
-        const filteredColumns = await getFilteredColumns(fetchXml);
+        const filteredColumns = await getSortedColumns(fetchXml, dataverseService);
         setColumns(filteredColumns);
-        displayName.current = await getEntityDisplayName(entityName);
+        displayName.current = await dataverseService.getEntityDisplayName(entityName);
       }
       catch (err: any) {
         setErrorMessage(err.message);
@@ -61,9 +62,18 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
       setErrorMessage();
 
       try {
-        const records = await getFilteredRecords(
-          totalRecordsCount,
+        const recordsCount: number = await dataverseService.getRecordsCount(fetchXml ?? '');
+        const records: Entity[] = await getItems(
           fetchXml,
+          pageSize,
+          currentPage,
+          recordsCount,
+          dataverseService);
+
+        calculateFilteredRecordsData(
+          totalRecordsCount,
+          recordsCount,
+          records,
           pageSize,
           currentPage,
           nextButtonDisabled,
@@ -75,7 +85,14 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
           Object.keys(record).forEach(key => {
             if (key !== 'id') {
               const value: any = record[key];
-              record[key] = value.isLinkable ? <LinkableItem item={value} /> : value.displayName;
+
+              // eslint-disable-next-line no-extra-parens
+              record[key] = value.isLinkable ? (
+                <LinkableItem
+                  _service={dataverseService}
+                  item={value}
+                />
+              ) : value.displayName;
             }
           });
         });
@@ -94,6 +111,7 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
     <div className='FetchSubgridControl' style={{ display: isVisible ? 'grid' : 'none' }}>
       <Stack horizontal horizontalAlign="end" className={dataSetStyles.buttons}>
         <CommandBar
+          _service={dataverseService}
           entityName={entityName}
           selectedRecordIds={selectedRecordIds}
           displayName={displayName.current}
@@ -105,6 +123,7 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
       </Stack>
 
       <List entityName={entityName}
+        _service={dataverseService}
         deleteBtnClassName={deleteBtnClassName}
         pageSize={pageSize}
         firstItemIndex={firstItemIndex}

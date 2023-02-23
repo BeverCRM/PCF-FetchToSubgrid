@@ -18,7 +18,8 @@ export const Footer: React.FC<IFooterProps> = props => {
     currentPage,
     nextButtonDisable,
     movePreviousIsDisabled,
-    setCurrentPage } = props;
+    setCurrentPage,
+  } = props;
 
   function moveToFirst() {
     setCurrentPage(1);

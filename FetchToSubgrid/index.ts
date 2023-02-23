@@ -1,16 +1,18 @@
 import * as React from 'react';
 import { IInputs, IOutputs } from './generated/ManifestTypes';
-import { IAppWrapperProps } from './utilities/types';
+import { IAppWrapperProps, IDataverseService } from './utilities/types';
 import { AppWrapper } from './components/AppWrapper';
-import { getProps, setContext } from './services/dataverseService';
+import { DataverseService } from './services/dataverseService';
 
 export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, IOutputs> {
+  private _dataverseService: IDataverseService;
+
   public init(context: ComponentFramework.Context<IInputs>): void {
-    setContext(context);
+    this._dataverseService = new DataverseService(context);
   }
 
   public updateView(): React.ReactElement {
-    const props: IAppWrapperProps = { ...getProps() };
+    const props: IAppWrapperProps = this._dataverseService.getProps();
     return React.createElement(AppWrapper, props);
   }
 

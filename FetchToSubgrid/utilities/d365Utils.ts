@@ -1,25 +1,22 @@
 import { ColumnActionsMode, IColumn } from '@fluentui/react';
-import {
-  getCurrentPageRecords,
-  getEntityMetadata,
-  getTimeZoneDefinitions,
-  getWholeNumberFieldName,
-} from '../services/dataverseService';
 import { AttributeType } from './enums';
+import { needToGetFormattedValue, checkIfAttributeIsEntityReferance } from './utils';
 import {
   addPagingToFetchXml,
   getAliasNames,
   getAttributesFieldNamesFromFetchXml,
   getEntityNameFromFetchXml,
   getLinkEntitiesNamesFromFetchXml,
-  isAggregate } from './fetchXmlUtils';
+  isAggregate,
+} from './fetchXmlUtils';
 import {
   Dictionary,
   Entity, EntityAttribute,
   EntityMetadata,
+  IDataverseService,
   IItemProps,
-  RetriveRecords } from './types';
-import { needToGetFormattedValue, checkIfAttributeIsEntityReferance } from './utils';
+  RetriveRecords,
+} from './types';
 
 const createColumnsForLinkEntity = (
   linkEntityNames: string[],
@@ -87,7 +84,7 @@ const createColumnsForEntity = (
   return columns;
 };
 
-export const getEntityData = (props: IItemProps) => {
+export const getEntityData = (props: IItemProps, dataverseService: IDataverseService) => {
   const {
     timeZoneDefinitions,
     isLinkEntity,
@@ -99,7 +96,12 @@ export const getEntityData = (props: IItemProps) => {
 
   if (attributeType === AttributeType.Number) {
     const format: string = entityMetadata.Attributes._collection[fieldName].Format;
-    const field: string = getWholeNumberFieldName(format, entity, fieldName, timeZoneDefinitions);
+    const field: string = dataverseService.getWholeNumberFieldName(
+      format,
+      entity,
+      fieldName,
+      timeZoneDefinitions);
+
     return [field, false];
   }
   else if (needToGetFormattedValue(attributeType)) {
@@ -118,7 +120,7 @@ export const getEntityData = (props: IItemProps) => {
   return [entity[fieldName], false];
 };
 
-export const genereateItems = (props: IItemProps): Entity => {
+export const genereateItems = (props: IItemProps, dataverseService: IDataverseService): Entity => {
   const {
     item,
     isLinkEntity,
@@ -147,7 +149,7 @@ export const genereateItems = (props: IItemProps): Entity => {
     };
   }
 
-  const [displayName, isLinkable] = getEntityData(props);
+  const [displayName, isLinkable] = getEntityData(props, dataverseService);
 
   return item[fieldName] = {
     displayName,
@@ -164,7 +166,8 @@ export const getItems = async (
   fetchXml: string | null,
   pageSize: number,
   currentPage: number,
-  recordsCount: number): Promise<Entity[]> => {
+  recordsCount: number,
+  dataverseService: IDataverseService): Promise<Entity[]> => {
 
   const pagingFetchData: string = addPagingToFetchXml(
     fetchXml ?? '',
@@ -174,9 +177,10 @@ export const getItems = async (
 
   const attributesFieldNames: string[] = getAttributesFieldNamesFromFetchXml(pagingFetchData);
   const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
-  const records: RetriveRecords = await getCurrentPageRecords(pagingFetchData);
+  const records: RetriveRecords = await dataverseService.getCurrentPageRecords(pagingFetchData);
 
-  const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
+  const entityMetadata: EntityMetadata = await dataverseService.getEntityMetadata(
+    entityName, attributesFieldNames);
   const linkEntityAttFieldNames: Dictionary<EntityAttribute[]> = getLinkEntitiesNamesFromFetchXml(
     fetchXml ?? '');
 
@@ -185,13 +189,13 @@ export const getItems = async (
 
   const promises = linkEntityNames.map((linkEntityNames, i) => {
     const attributeNames: string[] = linkEntityAttributes[i].map(attr => attr.name);
-    return getEntityMetadata(linkEntityNames, attributeNames);
+    return dataverseService.getEntityMetadata(linkEntityNames, attributeNames);
   });
 
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
 
   const items: Entity[] = [];
-  const timeZoneDefinitions = await getTimeZoneDefinitions();
+  const timeZoneDefinitions = await dataverseService.getTimeZoneDefinitions();
 
   records.entities.forEach(entity => {
     const item: Entity = { id: entity[`${entityName}id`] };
@@ -211,7 +215,7 @@ export const getItems = async (
         index,
       };
 
-      genereateItems(attributes);
+      genereateItems(attributes, dataverseService);
     });
 
     linkEntityNames.forEach((linkEntityName, i) => {
@@ -239,7 +243,7 @@ export const getItems = async (
           index,
         };
 
-        genereateItems(attributes);
+        genereateItems(attributes, dataverseService);
       });
     });
 
@@ -249,10 +253,15 @@ export const getItems = async (
   return items;
 };
 
-export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> => {
+export const getColumns = async (
+  fetchXml: string | null,
+  dataverseService: IDataverseService): Promise<IColumn[]> => {
   const attributesFieldNames: string[] = getAttributesFieldNamesFromFetchXml(fetchXml ?? '');
   const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
-  const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
+  const entityMetadata: EntityMetadata = await dataverseService.getEntityMetadata(
+    entityName,
+    attributesFieldNames);
+
   const displayNameCollection: Dictionary<EntityMetadata> = entityMetadata.Attributes._collection;
 
   const linkEntityAttFieldNames: Dictionary<EntityAttribute[]> = getLinkEntitiesNamesFromFetchXml(
@@ -262,7 +271,7 @@ export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> =>
 
   const promises = linkEntityNames.map((linkEntityNames, i) => {
     const attributeNames: string[] = linkEntityAttributes[i].map(attr => attr.name);
-    return getEntityMetadata(linkEntityNames, attributeNames);
+    return dataverseService.getEntityMetadata(linkEntityNames, attributeNames);
   });
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
 

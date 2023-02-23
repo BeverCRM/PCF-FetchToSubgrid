@@ -9,6 +9,32 @@ export type Entity = ComponentFramework.WebApi.Entity;
 
 export type Dictionary<T> = { [key: string]: T };
 
+export interface IService<T> {
+  _service: T;
+}
+
+export interface IDataverseService {
+  getProps(): IAppWrapperProps;
+  getEntityDisplayName(entityName: string): Promise<string>;
+  getTimeZoneDefinitions(): Promise<void>;
+  getWholeNumberFieldName(
+    format: string,
+    entity: Entity,
+    fieldName: string,
+    timeZoneDefinitions: any): string;
+  getRecordsCount(fetchXml: string): Promise<number>;
+  getEntityMetadata(entityName: string, attributesFieldNames: string[]): Promise<EntityMetadata>;
+  getCurrentPageRecords(fetchXml: string | null): Promise<RetriveRecords>;
+  openRecord(entityName: string, entityId: string): void;
+  openLookupForm(entity: Entity, fieldName: string): void;
+  openLinkEntityRecord(entity: Entity, fieldName: string): void;
+  openPrimaryEntityForm(entity: Entity, entityName: string): void;
+  openRecordDeleteDialog(
+    selectedRecordIds: string[],
+    entityName: string,
+    setDialogAccepted: (value: any) => void): Promise<void>;
+}
+
 export interface EntityAttribute {
   linkEntityAlias?: string;
   name: string;
@@ -27,24 +53,20 @@ export interface IItemProps {
   index: number;
 }
 
-export interface IAppWrapperProps {
+export interface IAppWrapperProps extends IService<IDataverseService> {
   fetchXml: string | null;
   defaultPageSize: number;
   deleteButtonVisibility: boolean;
   newButtonVisibility: boolean;
 }
 
-export interface IFetchSubgridProps {
-  fetchXml: string | null;
-  defaultPageSize: number;
-  deleteButtonVisibility: boolean;
-  newButtonVisibility: boolean;
+export interface IFetchSubgridProps extends IAppWrapperProps {
   setIsLoading: (isLoading: boolean) => void;
   setErrorMessage: (message?: string) => void;
   isVisible: boolean;
 }
 
-export interface IListProps {
+export interface IListProps extends IService<IDataverseService> {
   entityName: string;
   fetchXml: string | null;
   pageSize: number;
@@ -64,7 +86,7 @@ export interface IListProps {
   setSelectedRecordIds: React.Dispatch<React.SetStateAction<string[]>>
 }
 
-export interface ICommandBarProps {
+export interface ICommandBarProps extends IService<IDataverseService> {
   className: string;
   entityName: string;
   selectedRecordIds: string[];
@@ -89,6 +111,13 @@ export interface IInfoMessageProps {
   message?: string;
 }
 
-export interface ILinkableItemProps {
+export interface ILinkableItemProps extends IService<IDataverseService> {
   item: Entity
+}
+
+export interface JsonProps {
+  newButtonVisibility?: boolean;
+  deleteButtonVisiblity?: boolean;
+  pageSize?: number;
+  fetchXml?: string;
 }

@@ -8,7 +8,8 @@
     "plugin:react/recommended"
   ],
   "globals": {
-    "ComponentFramework": true
+    "ComponentFramework": true,
+    "JSX": true
   },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {

@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { openRecord } from '../services/dataverseService';
-import { Footer } from './Footer';
 import { Entity, IListProps } from '../utilities/types';
 import { addOrderToFetch, isAggregate } from '../utilities/fetchXmlUtils';
-import { filterColumns, getFilteredRecords } from '../utilities/utils';
+import { calculateFilteredRecordsData, sortColumns } from '../utilities/utils';
+import { Footer } from './Footer';
+import { LinkableItem } from './LinkableItems';
 import {
   DetailsList,
   DetailsListLayoutMode,
@@ -13,10 +13,11 @@ import {
   IObjectWithKey,
   Selection,
 } from '@fluentui/react';
-import { LinkableItem } from './LinkableItems';
+import { getItems } from '../utilities/d365Utils';
 
 export const List: React.FC<IListProps> = props => {
   const {
+    _service: dataverseService,
     entityName,
     recordIds,
     fetchXml,
@@ -39,13 +40,13 @@ export const List: React.FC<IListProps> = props => {
   const onItemInvoked = React.useCallback((record?: Entity, index?: number | undefined): void => {
     const hasAggregate: boolean = isAggregate(fetchXml ?? '');
     if (index !== undefined && !hasAggregate) {
-      openRecord(entityName, recordIds.current[index]);
+      dataverseService.openRecord(entityName, recordIds.current[index]);
     }
   }, [fetchXml]);
 
   const onColumnHeaderClick = async (
     dialogEvent?: React.MouseEvent<HTMLElement, MouseEvent>,
-    column?: IColumn) => {
+    column?: IColumn): Promise<void> => {
     const fieldName = column?.className === 'linkEntity' ? column?.ariaLabel : column?.fieldName;
 
     const newFetchXml = addOrderToFetch(
@@ -54,15 +55,24 @@ export const List: React.FC<IListProps> = props => {
       dialogEvent,
       column);
 
-    const filteredColumns: IColumn[] = filterColumns(
+    const filteredColumns: IColumn[] = sortColumns(
       column?.fieldName,
       column?.ariaLabel,
       undefined,
       columns) ?? [];
 
-    const filteredRecords = await getFilteredRecords(
-      totalRecordsCount,
+    const recordsCount: number = await dataverseService.getRecordsCount(newFetchXml ?? '');
+    const filteredRecords: Entity[] = await getItems(
       newFetchXml,
+      pageSize,
+      currentPage,
+      recordsCount,
+      dataverseService);
+
+    calculateFilteredRecordsData(
+      totalRecordsCount,
+      recordsCount,
+      filteredRecords,
       pageSize,
       currentPage,
       nextButtonDisabled,
@@ -74,7 +84,14 @@ export const List: React.FC<IListProps> = props => {
       Object.keys(record).forEach(key => {
         if (key !== 'id') {
           const value: any = record[key];
-          record[key] = value.isLinkable ? <LinkableItem item={value} /> : value.displayName;
+
+          // eslint-disable-next-line no-extra-parens
+          record[key] = value.isLinkable ? (
+            <LinkableItem
+              _service={dataverseService}
+              item={value}
+            />
+          ) : value.displayName;
         }
       });
     });
@@ -84,7 +101,7 @@ export const List: React.FC<IListProps> = props => {
   };
 
   const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = React.useCallback(
-    (props?: IDetailsFooterProps) => {
+    (props?: IDetailsFooterProps): JSX.Element | null => {
       const movePreviousIsDisabled = currentPage <= 1;
       if (!props) return null;
 

@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { IColumn } from '@fluentui/react';
-import { getRecordsCount } from '../services/dataverseService';
-import { getColumns, getItems } from './d365Utils';
+import { getColumns } from './d365Utils';
 import { AttributeType } from './enums';
 import { getOrderInFetch } from './fetchXmlUtils';
-import { Entity } from './types';
+import { Entity, IDataverseService } from './types';
 
 export const checkIfAttributeIsEntityReferance = (attributeType: AttributeType): boolean =>
   attributeType === AttributeType.Lookup ||
@@ -18,7 +17,7 @@ export const needToGetFormattedValue = (attributeType: AttributeType) =>
   attributeType === AttributeType.MultiselectPickList ||
   attributeType === AttributeType.TwoOptions;
 
-export const filterColumns = (
+export const sortColumns = (
   fieldName?: string,
   ariaLabel?: string,
   descending? : boolean,
@@ -41,13 +40,15 @@ export const filterColumns = (
   return filteredColumns;
 };
 
-export const getFilteredColumns = async (fetchXml: string | null): Promise<IColumn[]> => {
-  const columns: IColumn[] = await getColumns(fetchXml);
+export const getSortedColumns = async (
+  fetchXml: string | null,
+  dataverseService: IDataverseService): Promise<IColumn[]> => {
+  const columns: IColumn[] = await getColumns(fetchXml, dataverseService);
   const order = getOrderInFetch(fetchXml ?? '');
 
   if (!order) return columns;
 
-  const filteredColumns: IColumn[] = filterColumns(
+  const filteredColumns: IColumn[] = sortColumns(
     Object.keys(order)[0],
     Object.keys(order)[0],
     Object.values(order)[0],
@@ -56,27 +57,18 @@ export const getFilteredColumns = async (fetchXml: string | null): Promise<IColu
   return filteredColumns;
 };
 
-export const getFilteredRecords = async (
+export const calculateFilteredRecordsData = (
   totalRecordsCount: React.MutableRefObject<number>,
-  fetchXml: string | null,
+  recordsCount: number,
+  records: Entity[],
   pageSize: number,
   currentPage: number,
   nextButtonDisabled: React.MutableRefObject<boolean>,
   lastItemIndex: React.MutableRefObject<number>,
-  firstItemIndex: React.MutableRefObject<number>): Promise<Entity[]> => {
-  const recordsCount: number = await getRecordsCount(fetchXml ?? '');
-
+  firstItemIndex: React.MutableRefObject<number>): void => {
   totalRecordsCount.current = recordsCount;
   nextButtonDisabled.current = Math.ceil(recordsCount / pageSize) <= currentPage;
 
-  const records: Entity[] = await getItems(
-    fetchXml,
-    pageSize,
-    currentPage,
-    recordsCount);
-
   lastItemIndex.current = (currentPage - 1) * pageSize + records.length;
   firstItemIndex.current = (currentPage - 1) * pageSize + 1;
-
-  return records;
 };
