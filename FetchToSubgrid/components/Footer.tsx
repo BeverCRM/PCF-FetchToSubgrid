@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { IFooterProps } from '../utilities/types';
 import { IconButton } from '@fluentui/react/lib/Button';
 import {
   BackIcon,
@@ -8,15 +9,17 @@ import {
   PreviousIcon,
 } from '../styles/footerStyles';
 
-export interface IGridFooterProps {
-  currentPage: number;
-  setCurrentPage: (page: number) => void;
-  nextButtonDisable: boolean;
-  isMovePrevious: boolean;
-}
-
-export const Footer: React.FunctionComponent<IGridFooterProps> = props => {
-  const { currentPage, setCurrentPage, nextButtonDisable, isMovePrevious } = props;
+export const Footer: React.FC<IFooterProps> = props => {
+  const {
+    firstItemIndex,
+    lastItemIndex,
+    selectedItems,
+    totalRecordsCount,
+    currentPage,
+    nextButtonDisable,
+    movePreviousIsDisabled,
+    setCurrentPage,
+  } = props;
 
   function moveToFirst() {
     setCurrentPage(1);
@@ -30,20 +33,25 @@ export const Footer: React.FunctionComponent<IGridFooterProps> = props => {
     setCurrentPage(currentPage + 1);
   }
 
+  const selected = `${firstItemIndex} - ${lastItemIndex} of 
+   ${totalRecordsCount >= 5000 ? '5000+' : totalRecordsCount}
+   ${selectedItems !== 0 ? `(${selectedItems} Selected)` : ''}`;
+
   return (
     <div className={footerStyles.content}>
+      <span > {selected} </span>
       <div className='buttons'>
         <IconButton
           styles={footerButtonStyles}
           iconProps={PreviousIcon}
           onClick={moveToFirst}
-          disabled = {isMovePrevious}
+          disabled = {movePreviousIsDisabled}
         />
         <IconButton
           styles={footerButtonStyles}
           iconProps={BackIcon}
           onClick={movePrevious}
-          disabled={isMovePrevious}
+          disabled={movePreviousIsDisabled}
         />
         <span color='black'> Page {currentPage} </span>
         <IconButton

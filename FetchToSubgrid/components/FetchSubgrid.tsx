@@ -1,130 +1,144 @@
 import * as React from 'react';
-import {
-  DetailsList,
-  DetailsListLayoutMode,
-  IColumn,
-  IDetailsFooterProps,
-  IDetailsListProps,
-} from '@fluentui/react';
+import { IColumn, Stack } from '@fluentui/react';
+import { Entity, IFetchSubgridProps } from '../utilities/types';
+import { getSortedColumns, calculateFilteredRecordsData } from '../utilities/utils';
+import { getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
+import { dataSetStyles } from '../styles/comandBarStyles';
 import { LinkableItem } from './LinkableItems';
-import { getPagingLimit, getColumns, getRecordsCount, openRecord } from '../services/crmService';
-import { Footer } from './Footer';
-import { getCountInFetchXml, getEntityName, getItems, isAggregate } from '../utilities/utilities';
-import { Loader } from './Loader';
-import { InfoMessage } from './InfoMessage';
+import { CommandBar } from './ComandBar';
+import { List } from './List';
+import { getItems } from '../utilities/d365Utils';
 
-export interface IFetchSubgridProps {
-  fetchXml: string | null;
-  numberOfRows: number | null;
-}
+export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
+  const {
+    _service: dataverseService,
+    deleteButtonVisibility,
+    newButtonVisibility,
+    defaultPageSize,
+    fetchXml,
+    isVisible,
+    setErrorMessage,
+    setIsLoading,
+  } = props;
 
-export const FetchSubgrid: React.FunctionComponent<IFetchSubgridProps> = props => {
-  const { numberOfRows, fetchXml } = props;
-
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [columns, setColumns] = React.useState<IColumn[]>([]);
+  const [items, setItems] = React.useState<Entity[]>([]);
+  const [selectedRecordIds, setSelectedRecordIds] = React.useState<string[]>([]);
   const [currentPage, setCurrentPage] = React.useState(1);
-  const [items, setItems] = React.useState<ComponentFramework.WebApi.Entity[]>([]);
+  const [isDialogAccepted, setDialogAccepted] = React.useState(false);
+  const [columns, setColumns] = React.useState<IColumn[]>([]);
 
   const recordIds = React.useRef<string[]>([]);
-  const nextButtonDisable = React.useRef(true);
-  const countOfRecordsInFetch: number = getCountInFetchXml(fetchXml);
-  const recordsPerPage: number = countOfRecordsInFetch || numberOfRows || getPagingLimit();
+  const nextButtonDisabled = React.useRef(true);
+  const displayName = React.useRef('');
+  const deleteBtnClassName = React.useRef('disableButton');
+  const totalRecordsCount = React.useRef(0);
+  const selectedItemsCount = React.useRef(0);
+  const firstItemIndex = React.useRef(0);
+  const lastItemIndex = React.useRef(0);
 
-  const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = React.useCallback(
-    (props: IDetailsFooterProps | undefined) => {
-      const isMovePrevious = !(currentPage > 1);
-      if (props) {
-        return (
-          <Footer
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            nextButtonDisable={nextButtonDisable.current}
-            isMovePrevious={isMovePrevious}
-          />);
-      }
-      return null;
-    },
-    [currentPage, nextButtonDisable],
-  );
-
-  const onItemInvoked = React.useCallback((
-    record: ComponentFramework.WebApi.Entity,
-    index?: number | undefined) : void => {
-    const entityName: string = getEntityName(fetchXml ?? '');
-    const hasAggregate: boolean = isAggregate(fetchXml ?? '');
-
-    if (index !== undefined && !hasAggregate) {
-      openRecord(entityName, recordIds.current[index]);
-    }
-  }, [items]);
+  const pageSize: number = defaultPageSize;
+  const entityName = getEntityNameFromFetchXml(fetchXml ?? '');
 
   React.useEffect(() => {
     (async () => {
-      setCurrentPage(1);
       try {
-        const columns: IColumn[] = await getColumns(fetchXml);
-        setColumns(columns);
+        setCurrentPage(1);
+        const filteredColumns = await getSortedColumns(fetchXml, dataverseService);
+        setColumns(filteredColumns);
+        displayName.current = await dataverseService.getEntityDisplayName(entityName);
       }
-      catch {
-        setColumns([]);
+      catch (err: any) {
+        setErrorMessage(err.message);
       }
     })();
-  }, [fetchXml]);
+  }, [fetchXml, deleteButtonVisibility, newButtonVisibility, pageSize]);
 
   React.useEffect(() => {
+    deleteBtnClassName.current = 'disableButton';
     (async () => {
-      setIsLoading(true);
-      try {
-        const recordsCount: number = await getRecordsCount(fetchXml ?? '');
-        if (Math.ceil(recordsCount / recordsPerPage) > currentPage) {
-          nextButtonDisable.current = false;
-        }
-        else {
-          nextButtonDisable.current = true;
-        }
+      if (isDialogAccepted) return;
 
-        const records: ComponentFramework.WebApi.Entity[] = await getItems(
+      setIsLoading(true);
+      setErrorMessage();
+
+      try {
+        totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
+        const records: Entity[] = await getItems(
           fetchXml,
-          recordsPerPage,
-          currentPage);
+          pageSize,
+          currentPage,
+          totalRecordsCount.current,
+          dataverseService);
+
+        calculateFilteredRecordsData(
+          totalRecordsCount.current,
+          records,
+          pageSize,
+          currentPage,
+          nextButtonDisabled,
+          lastItemIndex,
+          firstItemIndex);
 
         records.forEach(record => {
           recordIds.current.push(record.id);
-
           Object.keys(record).forEach(key => {
             if (key !== 'id') {
               const value: any = record[key];
-              record[key] = value.linkable ? <LinkableItem item = {value} /> : value.displayName;
+
+              // eslint-disable-next-line no-extra-parens
+              record[key] = value.isLinkable ? (
+                <LinkableItem
+                  _service={dataverseService}
+                  item={value}
+                />
+              ) : value.displayName;
             }
           });
         });
 
         setItems(records);
       }
-      catch (err) {
-        console.log('Error', err);
+      catch (err: any) {
+        setErrorMessage(err.message);
       }
+
       setIsLoading(false);
     })();
-  }, [props, currentPage]);
-
-  if (isLoading) {
-    return <Loader/>;
-  }
-
-  if (columns.length === 0) {
-    return <InfoMessage fetchXml ={fetchXml}/>;
-  }
+  }, [fetchXml, pageSize, currentPage, isDialogAccepted]);
 
   return (
-    <div className='fetchSubgridControl'>
-      <DetailsList
+    <div className='FetchSubgridControl' style={{ display: isVisible ? 'grid' : 'none' }}>
+      <Stack horizontal horizontalAlign="end" className={dataSetStyles.buttons}>
+        <CommandBar
+          _service={dataverseService}
+          entityName={entityName}
+          selectedRecordIds={selectedRecordIds}
+          displayName={displayName.current}
+          setDialogAccepted={setDialogAccepted}
+          className={deleteBtnClassName.current}
+          deleteButtonVisibility={deleteButtonVisibility}
+          newButtonVisibility={newButtonVisibility}
+        />
+      </Stack>
+
+      <List entityName={entityName}
+        _service={dataverseService}
+        deleteBtnClassName={deleteBtnClassName}
+        pageSize={pageSize}
+        firstItemIndex={firstItemIndex}
+        lastItemIndex={lastItemIndex}
+        selectedItemsCount={selectedItemsCount}
+        totalRecordsCount={totalRecordsCount}
+        nextButtonDisabled={nextButtonDisabled}
+        fetchXml={fetchXml}
+        recordIds={recordIds}
+        setSelectedRecordIds={setSelectedRecordIds}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
         columns={columns}
+        setColumns={setColumns}
         items={items}
-        layoutMode={DetailsListLayoutMode.fixedColumns}
-        onItemInvoked={onItemInvoked}
-        onRenderDetailsFooter={onRenderDetailsFooter}
+        setItems={setItems}
       />
     </div>
   );

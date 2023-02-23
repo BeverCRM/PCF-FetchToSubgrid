@@ -8,7 +8,7 @@ export const ForwardIcon: IIconProps = { iconName: 'Forward' };
 
 export const footerStyles = mergeStyleSets({
   content: {
-    justifyContent: 'end !important',
+    justifyContent: 'space-between',
     display: 'flex',
     flex: '1 1 auto',
     placeContent: 'stretch space-between',

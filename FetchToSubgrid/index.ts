@@ -1,37 +1,25 @@
-import { IInputs, IOutputs } from './generated/ManifestTypes';
-import { FetchSubgrid, IFetchSubgridProps } from './components/FetchSubgrid';
 import * as React from 'react';
-import { setContext } from './services/crmService';
+import { IInputs, IOutputs } from './generated/ManifestTypes';
+import { IAppWrapperProps, IDataverseService } from './utilities/types';
+import { AppWrapper } from './components/AppWrapper';
+import { DataverseService } from './services/dataverseService';
 
 export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, IOutputs> {
-    private Component: ComponentFramework.ReactControl<IInputs, IOutputs>;
-    private notifyOutputChanged: () => void;
-    private context: ComponentFramework.Context<IInputs>;
+  private _dataverseService: IDataverseService;
 
-    constructor() { }
+  public init(context: ComponentFramework.Context<IInputs>): void {
+    this._dataverseService = new DataverseService(context);
+  }
 
-    public init(
-      context: ComponentFramework.Context<IInputs>,
-      notifyOutputChanged: () => void,
-    ): void {
-      this.notifyOutputChanged = notifyOutputChanged;
-      setContext(context);
-    }
+  public updateView(): React.ReactElement {
+    const props: IAppWrapperProps = this._dataverseService.getProps();
+    return React.createElement(AppWrapper, props);
+  }
 
-    public updateView(context: ComponentFramework.Context<IInputs>): React.ReactElement {
-      const props: IFetchSubgridProps = {
-        numberOfRows: context.parameters.numberOfRows.raw,
-        fetchXml: context.parameters.fetchXmlProperty.raw ??
-          context.parameters.defaultFetchXmlProperty.raw,
-      };
+  public getOutputs(): IOutputs {
+    return {};
+  }
 
-      return React.createElement(FetchSubgrid, props);
-    }
-
-    public getOutputs(): IOutputs {
-      return {};
-    }
-
-    public destroy(): void {
-    }
+  public destroy(): void {
+  }
 }
