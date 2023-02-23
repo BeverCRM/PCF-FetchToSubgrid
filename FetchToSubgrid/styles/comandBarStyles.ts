@@ -16,16 +16,13 @@ export const dataSetStyles = mergeStyleSets({
     position: 'relative',
     height: '40px',
   },
-
   buttons: {
     height: '44px',
     paddingRight: '20px',
   },
-
   detailsList: {
     paddingTop: '0px',
   },
-
   commandBarButton: {
     root: {
       color: 'black',
@@ -42,7 +39,6 @@ export const ContainerButtonStyles: Partial<IButtonStyles> = {
     backgroundColor: 'white',
     height: 43,
   },
-
   icon: {
     color: 'rgb(51, 51, 51);',
   },
@@ -53,7 +49,6 @@ export const CommandBarButtonStyles: Partial<IButtonStyles> = {
     color: 'black',
     backgroundColor: 'white',
   },
-
   icon: {
     color: 'black',
   },

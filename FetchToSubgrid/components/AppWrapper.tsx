@@ -1,14 +1,8 @@
 import * as React from 'react';
+import { IAppWrapperProps } from '../utilities/types';
 import { FetchSubgrid } from './FetchSubgrid';
 import { InfoMessage } from './InfoMessage';
 import { Loader } from './Loader';
-
-export interface IAppWrapperProps {
-  fetchXml: string | null;
-  defaultPageSize: number;
-  deleteButtonVisibility: boolean;
-  newButtonVisibility: boolean;
-}
 
 export const AppWrapper: React.FC<IAppWrapperProps> = props => {
   const [isLoading, setIsLoading] = React.useState(false);

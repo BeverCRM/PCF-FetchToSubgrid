@@ -1,23 +1,13 @@
 import * as React from 'react';
-import { ContextualMenu, IColumn, IContextualMenuProps, Stack } from '@fluentui/react';
-import { getColumns, getEntityDisplayName } from '../services/dataverseService';
+import { IColumn, Stack } from '@fluentui/react';
+import { getEntityDisplayName } from '../services/dataverseService';
 import { dataSetStyles } from '../styles/comandBarStyles';
 import { LinkableItem } from './LinkableItems';
 import { CommandBar } from './ComandBar';
 import { List } from './List';
-import { Entity } from '../utilities/types';
-import { getEntityName } from '../utilities/fetchXmlUtils';
-import { getFilteredRecords, setFilteredColumns } from '../utilities/d365Utils';
-
-export interface IFetchSubgridProps {
-  fetchXml: string | null;
-  defaultPageSize: number;
-  deleteButtonVisibility: boolean;
-  newButtonVisibility: boolean;
-  setIsLoading: (isLoading: boolean) => void;
-  setErrorMessage: (message?: string) => void;
-  isVisible: boolean;
-}
+import { Entity, IFetchSubgridProps } from '../utilities/types';
+import { getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
+import { getFilteredRecords, getFilteredColumns } from '../utilities/utils';
 
 export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
   const {
@@ -25,13 +15,12 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
     newButtonVisibility,
     defaultPageSize,
     fetchXml,
+    isVisible,
     setErrorMessage,
     setIsLoading,
-    isVisible,
   } = props;
 
   const [items, setItems] = React.useState<Entity[]>([]);
-  const [contextualMenuProps, setContextualMenuProps] = React.useState<IContextualMenuProps>();
   const [selectedRecordIds, setSelectedRecordIds] = React.useState<string[]>([]);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [isDialogAccepted, setDialogAccepted] = React.useState(false);
@@ -47,13 +36,14 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
   const lastItemIndex = React.useRef(0);
 
   const pageSize: number = defaultPageSize;
-  const entityName = getEntityName(fetchXml ?? '');
+  const entityName = getEntityNameFromFetchXml(fetchXml ?? '');
 
   React.useEffect(() => {
     (async () => {
       try {
         setCurrentPage(1);
-        setFilteredColumns(fetchXml, setColumns, getColumns);
+        const filteredColumns = await getFilteredColumns(fetchXml);
+        setColumns(filteredColumns);
         displayName.current = await getEntityDisplayName(entityName);
       }
       catch (err: any) {
@@ -67,9 +57,10 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
     (async () => {
       if (isDialogAccepted) return;
 
+      setIsLoading(true);
+      setErrorMessage();
+
       try {
-        setIsLoading(true);
-        setErrorMessage();
         const records = await getFilteredRecords(
           totalRecordsCount,
           fetchXml,
@@ -88,6 +79,7 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
             }
           });
         });
+
         setItems(records);
       }
       catch (err: any) {
@@ -113,25 +105,23 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
       </Stack>
 
       <List entityName={entityName}
-        recordIds={recordIds}
-        fetchXml={fetchXml}
-        columns={columns}
-        items={items}
         deleteBtnClassName={deleteBtnClassName}
-        setSelectedRecordIds={setSelectedRecordIds}
         pageSize={pageSize}
-        currentPage={currentPage}
-        setItems={setItems}
-        setColumns={setColumns}
-        setContextualMenuProps={setContextualMenuProps}
         firstItemIndex={firstItemIndex}
         lastItemIndex={lastItemIndex}
         selectedItemsCount={selectedItemsCount}
         totalRecordsCount={totalRecordsCount}
-        setCurrentPage={setCurrentPage}
         nextButtonDisabled={nextButtonDisabled}
+        fetchXml={fetchXml}
+        recordIds={recordIds}
+        setSelectedRecordIds={setSelectedRecordIds}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        columns={columns}
+        setColumns={setColumns}
+        items={items}
+        setItems={setItems}
       />
-      <ContextualMenu {...contextualMenuProps!} />
     </div>
   );
 };

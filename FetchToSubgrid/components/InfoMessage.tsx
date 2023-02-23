@@ -1,8 +1,5 @@
 import * as React from 'react';
-
-interface IInfoMessageProps {
-  message?: string;
-}
+import { IInfoMessageProps } from '../utilities/types';
 
 export const InfoMessage: React.FC<IInfoMessageProps> = ({ message }) =>
   <div className='FetchSubgridControl'>

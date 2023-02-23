@@ -1,9 +1,7 @@
-import * as React from 'react';
-import { IColumn } from '@fluentui/react';
+import { ColumnActionsMode, IColumn } from '@fluentui/react';
 import {
   getCurrentPageRecords,
   getEntityMetadata,
-  getRecordsCount,
   getTimeZoneDefinitions,
   getWholeNumberFieldName,
 } from '../services/dataverseService';
@@ -11,10 +9,9 @@ import { AttributeType } from './enums';
 import {
   addPagingToFetchXml,
   getAliasNames,
-  getAttributesFieldNames,
-  getEntityName,
-  getLinkEntitiesNames,
-  getOrderInFetch,
+  getAttributesFieldNamesFromFetchXml,
+  getEntityNameFromFetchXml,
+  getLinkEntitiesNamesFromFetchXml,
   isAggregate } from './fetchXmlUtils';
 import {
   Dictionary,
@@ -22,10 +19,73 @@ import {
   EntityMetadata,
   IItemProps,
   RetriveRecords } from './types';
-import {
-  needToGetFormattedValue,
-  checkIfAttributeIsEntityReferance,
-} from './utils';
+import { needToGetFormattedValue, checkIfAttributeIsEntityReferance } from './utils';
+
+const createColumnsForLinkEntity = (
+  linkEntityNames: string[],
+  linkEntityAttributes: EntityAttribute[][],
+  linkentityMetadata: EntityMetadata[],
+): IColumn[] => {
+  const columns: IColumn[] = [];
+  linkEntityNames.forEach((linkEntityName, i) => {
+    linkEntityAttributes[i].forEach((attr, index) => {
+      let fieldName = attr.attributeAlias;
+
+      if (!fieldName && attr.linkEntityAlias) {
+        fieldName = `${attr.linkEntityAlias}.${attr.name}`;
+      }
+      else if (!fieldName) {
+        fieldName = `${linkEntityName}${i + 1}.${attr.name}`;
+      }
+
+      const columnName: string = attr.attributeAlias ||
+      linkentityMetadata[i].Attributes._collection[attr.name].DisplayName;
+
+      columns.push({
+        className: 'linkEntity',
+        ariaLabel: attr.name,
+        name: columnName,
+        fieldName,
+        key: `col-el-${index}`,
+        minWidth: 10,
+        isResizable: true,
+        isMultiline: false,
+        columnActionsMode: ColumnActionsMode.hasDropdown,
+      });
+    });
+  });
+  return columns;
+};
+
+const createColumnsForEntity = (
+  attributesFieldNames: string[],
+  displayNameCollection: Dictionary<EntityMetadata>,
+  fetchXml: string | null,
+): IColumn[] => {
+  const columns: IColumn[] = [];
+  attributesFieldNames.forEach((name, index) => {
+    let displayName = displayNameCollection[name].DisplayName;
+    const hasAggregate: boolean = isAggregate(fetchXml ?? '');
+    const aggregateAttrNames: string[] | null = hasAggregate ? getAliasNames(fetchXml ?? '') : null;
+
+    if (aggregateAttrNames?.length) {
+      displayName = aggregateAttrNames[index];
+      name = aggregateAttrNames[index];
+    }
+
+    columns.push({
+      className: 'entity',
+      name: displayName,
+      fieldName: name,
+      key: `col-${index}`,
+      minWidth: 10,
+      isResizable: true,
+      isMultiline: false,
+      columnActionsMode: ColumnActionsMode.hasDropdown,
+    });
+  });
+  return columns;
+};
 
 export const getEntityData = (props: IItemProps) => {
   const {
@@ -70,7 +130,7 @@ export const genereateItems = (props: IItemProps): Entity => {
   } = props;
 
   const hasAggregate: boolean = isAggregate(fetchXml ?? '');
-  const entityName: string = getEntityName(fetchXml ?? '');
+  const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
 
   if (hasAggregate) {
     const aggregateAttrNames: string[] = getAliasNames(fetchXml ?? '');
@@ -112,12 +172,12 @@ export const getItems = async (
     currentPage,
     recordsCount);
 
-  const attributesFieldNames: string[] = getAttributesFieldNames(pagingFetchData);
-  const entityName: string = getEntityName(fetchXml ?? '');
+  const attributesFieldNames: string[] = getAttributesFieldNamesFromFetchXml(pagingFetchData);
+  const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
   const records: RetriveRecords = await getCurrentPageRecords(pagingFetchData);
 
   const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
-  const linkEntityAttFieldNames: Dictionary<EntityAttribute[]> = getLinkEntitiesNames(
+  const linkEntityAttFieldNames: Dictionary<EntityAttribute[]> = getLinkEntitiesNamesFromFetchXml(
     fetchXml ?? '');
 
   const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
@@ -189,53 +249,34 @@ export const getItems = async (
   return items;
 };
 
-export const setFilteredColumns = async (
-  fetchXml: string | null,
-  setColumns: React.Dispatch<React.SetStateAction<IColumn[]>>,
-  getColumns: (fetchXml: string | null) => Promise<IColumn[]>): Promise<void> => {
+export const getColumns = async (fetchXml: string | null): Promise<IColumn[]> => {
+  const attributesFieldNames: string[] = getAttributesFieldNamesFromFetchXml(fetchXml ?? '');
+  const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
+  const entityMetadata: EntityMetadata = await getEntityMetadata(entityName, attributesFieldNames);
+  const displayNameCollection: Dictionary<EntityMetadata> = entityMetadata.Attributes._collection;
 
-  const columns: IColumn[] = await getColumns(fetchXml);
-  const order = getOrderInFetch(fetchXml ?? '');
+  const linkEntityAttFieldNames: Dictionary<EntityAttribute[]> = getLinkEntitiesNamesFromFetchXml(
+    fetchXml ?? '');
+  const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
+  const linkEntityAttributes: EntityAttribute[][] = Object.values(linkEntityAttFieldNames);
 
-  if (order) {
-    const filteredColumns = columns.map(col => {
-      if (col.ariaLabel === Object.values(order)[0] ||
-        col.fieldName === Object.values(order)[0]) {
+  const promises = linkEntityNames.map((linkEntityNames, i) => {
+    const attributeNames: string[] = linkEntityAttributes[i].map(attr => attr.name);
+    return getEntityMetadata(linkEntityNames, attributeNames);
+  });
+  const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
 
-        col.isSorted = true;
-        col.isSortedDescending = Object.keys(order)[0] === 'true';
-        return col;
-      }
-      return col;
-    });
-    setColumns(filteredColumns);
-  }
-  else {
-    setColumns(columns);
-  }
-};
-
-export const getFilteredRecords = async (
-  totalRecordsCount: React.MutableRefObject<number>,
-  fetchXml: string | null,
-  pageSize: number,
-  currentPage: number,
-  nextButtonDisabled: React.MutableRefObject<boolean>,
-  lastItemIndex: React.MutableRefObject<number>,
-  firstItemIndex: React.MutableRefObject<number>): Promise<Entity[]> => {
-  const recordsCount: number = await getRecordsCount(fetchXml ?? '');
-
-  totalRecordsCount.current = recordsCount;
-  nextButtonDisabled.current = Math.ceil(recordsCount / pageSize) <= currentPage;
-
-  const records: Entity[] = await getItems(
+  const entityColumns = createColumnsForEntity(
+    attributesFieldNames,
+    displayNameCollection,
     fetchXml,
-    pageSize,
-    currentPage,
-    recordsCount);
+  );
 
-  lastItemIndex.current = (currentPage - 1) * pageSize + records.length;
-  firstItemIndex.current = (currentPage - 1) * pageSize + 1;
+  const linkEntityColumns = createColumnsForLinkEntity(
+    linkEntityNames,
+    linkEntityAttributes,
+    linkentityMetadata,
+  );
 
-  return records;
+  return entityColumns.concat(linkEntityColumns);
 };

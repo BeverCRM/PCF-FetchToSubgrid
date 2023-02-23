@@ -2,16 +2,7 @@ import { CommandBarButton, IIconProps, IStackStyles } from '@fluentui/react';
 import * as React from 'react';
 import { openRecord, openRecordDeleteDialog } from '../services/dataverseService';
 import { ContainerButtonStyles } from '../styles/comandBarStyles';
-
-export interface ICommandBarProps {
-  className: string;
-  entityName: string;
-  selectedRecordIds: string[];
-  displayName: string;
-  newButtonVisibility: boolean;
-  deleteButtonVisibility: boolean | string;
-  setDialogAccepted: React.Dispatch<React.SetStateAction<boolean>>;
-}
+import { ICommandBarProps } from '../utilities/types';
 
 export const stackStyles: Partial<IStackStyles> = { root: { height: 44, marginLeft: 100 } };
 const deleteIcon: IIconProps = { iconName: 'Delete' };

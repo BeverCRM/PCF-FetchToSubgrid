@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { IFooterProps } from '../utilities/types';
 import { IconButton } from '@fluentui/react/lib/Button';
 import {
   BackIcon,
@@ -7,17 +8,6 @@ import {
   ForwardIcon,
   PreviousIcon,
 } from '../styles/footerStyles';
-
-export interface IFooterProps {
-  firstItemIndex: number;
-  lastItemIndex: number;
-  selectedItems: number;
-  totalRecordsCount:number;
-  currentPage: number;
-  nextButtonDisable: boolean;
-  movePreviousIsDisabled: boolean;
-  setCurrentPage: (page: number) => void;
-}
 
 export const Footer: React.FC<IFooterProps> = props => {
   const {

@@ -35,8 +35,8 @@
   border-bottom: 1px solid rgb(237, 235, 233);
 }
 
-.FetchSubgridControl .ms-Button--commandBar:hover .FetchSubgridControl .ms-Button-icon {
-  color: rgb(161, 159, 157);
+.FetchSubgridControl .ms-Button--commandBar:hover .ms-Button-icon{
+  color: black;
 }
 
 .FetchSubgridControl .ms-DetailsHeader-cell, .FetchSubgridControl .ms-DetailsRow-fields, .FetchSubgridControl .ms-DetailsRow-cell {

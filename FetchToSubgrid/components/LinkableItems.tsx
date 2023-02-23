@@ -1,16 +1,12 @@
 import { Link } from '@fluentui/react';
 import * as React from 'react';
+import { ILinkableItemProps } from '../utilities/types';
+import { checkIfAttributeIsEntityReferance } from '../utilities/utils';
 import {
   openLinkEntityRecord,
   openLookupForm,
   openPrimaryEntityForm,
 } from '../services/dataverseService';
-import { Entity } from '../utilities/types';
-import { checkIfAttributeIsEntityReferance } from '../utilities/utils';
-
-interface ILinkableItemProps {
-  item: Entity
-}
 
 export const LinkableItem: React.FC<ILinkableItemProps> = ({ item }) => {
   if (item.isLinkEntity) {

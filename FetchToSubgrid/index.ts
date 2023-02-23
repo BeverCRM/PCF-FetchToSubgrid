@@ -1,6 +1,7 @@
-import { IInputs, IOutputs } from './generated/ManifestTypes';
-import { AppWrapper, IAppWrapperProps } from './components/AppWrapper';
 import * as React from 'react';
+import { IInputs, IOutputs } from './generated/ManifestTypes';
+import { IAppWrapperProps } from './utilities/types';
+import { AppWrapper } from './components/AppWrapper';
 import { getProps, setContext } from './services/dataverseService';
 
 export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, IOutputs> {

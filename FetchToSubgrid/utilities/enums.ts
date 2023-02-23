@@ -12,7 +12,7 @@ export enum AttributeType {
 
 export enum WholeNumberType {
   Number = '0',
-  TimeZone = '1',
-  Duration = '2',
+  Duration = '1',
+  TimeZone = '2',
   Language = '3',
 }

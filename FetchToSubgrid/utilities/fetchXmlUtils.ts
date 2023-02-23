@@ -24,7 +24,7 @@ export const addPagingToFetchXml =
    return new XMLSerializer().serializeToString(xmlDoc);
  };
 
-export const getEntityName = (fetchXml: string): string => {
+export const getEntityNameFromFetchXml = (fetchXml: string): string => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
@@ -44,11 +44,11 @@ export const getOrderInFetch = (fetchXml: string) => {
 
   const isLinkEntity = linkEntityOrder[0] !== null;
 
-  const descending: string = order.attributes.descending.value;
+  const descending: boolean = order.attributes.descending.value === 'true';
   const attribute: string = order.attributes.attribute.value;
 
   return {
-    [descending]: attribute,
+    [attribute]: descending,
     isLinkEntity,
   };
 };
@@ -77,20 +77,21 @@ export const addOrderToFetch = (
   if (column?.className === 'linkEntity') {
     const newOrder: HTMLElement = xmlDoc.createElement('order');
     newOrder.setAttribute('attribute', `${fieldName}`);
-    newOrder.setAttribute('descending', `${dialogEvent.key === 'zToA'}`);
+    newOrder.setAttribute('descending', `${!column.isSortedDescending}`);
     linkEntity.appendChild(newOrder);
   }
   else {
     const newOrder: HTMLElement = xmlDoc.createElement('order');
     newOrder.setAttribute('attribute', `${fieldName}`);
-    newOrder.setAttribute('descending', `${dialogEvent.key === 'zToA'}`);
+    newOrder.setAttribute('descending', `${!column?.isSortedDescending}`);
     entity.appendChild(newOrder);
   }
 
   return new XMLSerializer().serializeToString(xmlDoc);
 };
 
-export const getLinkEntitiesNames = (fetchXml: string): Dictionary<EntityAttribute[]> => {
+export const getLinkEntitiesNamesFromFetchXml = (
+  fetchXml: string): Dictionary<EntityAttribute[]> => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
@@ -121,7 +122,7 @@ export const getLinkEntitiesNames = (fetchXml: string): Dictionary<EntityAttribu
   return linkEntityData;
 };
 
-export const getAttributesFieldNames = (fetchXml: string): string[] => {
+export const getAttributesFieldNamesFromFetchXml = (fetchXml: string): string[] => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
