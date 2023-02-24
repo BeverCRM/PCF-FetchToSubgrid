@@ -8,7 +8,7 @@ export const LinkableItem: React.FC<ILinkableItemProps> = ({
   item }): JSX.Element => {
   if (item.isLinkEntity) {
     return (
-      <Link onClick={dataverseService.openLinkEntityRecord.bind(null, item.entity, item.fieldName)}>
+      <Link onClick={() => dataverseService.openLinkEntityRecord(item.entity, item.fieldName)}>
         {item.displayName}
       </Link>
     );
@@ -16,14 +16,14 @@ export const LinkableItem: React.FC<ILinkableItemProps> = ({
 
   if (checkIfAttributeIsEntityReferance(item.AttributeType)) {
     return (
-      <Link onClick={dataverseService.openLookupForm.bind(null, item.entity, item.fieldName)}>
+      <Link onClick={() => dataverseService.openLookupForm(item.entity, item.fieldName)}>
         {item.displayName}
       </Link>
     );
   }
 
   return (
-    <Link onClick={dataverseService.openPrimaryEntityForm.bind(null, item.entity, item.entityName)}>
+    <Link onClick={() => dataverseService.openPrimaryEntityForm(item.entity, item.entityName)}>
       {item.displayName}
     </Link>
   );

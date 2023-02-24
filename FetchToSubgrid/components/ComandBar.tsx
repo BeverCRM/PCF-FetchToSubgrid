@@ -23,7 +23,7 @@ export const CommandBar = ({
       iconProps={addIcon}
       styles={ContainerButtonStyles}
       text={`New ${displayName}`}
-      onClick={dataverseService.openRecord.bind(null, entityName, '')}
+      onClick={() => dataverseService.openRecord(entityName, '')}
     />
 
     <CommandBarButton
@@ -32,8 +32,7 @@ export const CommandBar = ({
       iconProps={deleteIcon}
       styles={ContainerButtonStyles}
       text="Delete"
-      onClick={dataverseService.openRecordDeleteDialog.bind(
-        null,
+      onClick={() => dataverseService.openRecordDeleteDialog(
         selectedRecordIds,
         entityName,
         setDialogAccepted)}

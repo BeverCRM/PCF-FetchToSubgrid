@@ -93,7 +93,8 @@ export class DataverseService implements IDataverseService {
     format: string,
     entity: Entity,
     fieldName: string,
-    timeZoneDefinitions: any): string {
+    timeZoneDefinitions: any,
+  ): string {
     let fieldValue: number = entity[fieldName];
 
     if (!fieldValue) return '';
@@ -171,7 +172,8 @@ export class DataverseService implements IDataverseService {
 
   public async getEntityMetadata(
     entityName: string,
-    attributesFieldNames: string[]): Promise<EntityMetadata> {
+    attributesFieldNames: string[],
+  ): Promise<EntityMetadata> {
     const entityMetadata: EntityMetadata = await this._context.utils.getEntityMetadata(
       entityName,
       [...attributesFieldNames]);
@@ -212,7 +214,8 @@ export class DataverseService implements IDataverseService {
   public async openRecordDeleteDialog(
     selectedRecordIds: string[],
     entityName: string,
-    setDialogAccepted: (value: any) => void): Promise<void> {
+    setDialogAccepted: (value: any) => void,
+  ): Promise<void> {
     const entityMetadata = await this._context.utils.getEntityMetadata(entityName);
 
     const confirmOptions = { height: 200, width: 450 };

@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="BeverControls" constructor="FetchToSubgrid" version="0.0.1" display-name-key="FetchToSubgrid" description-key="FetchToSubgrid description" control-type="virtual" >
-
-    <external-service-usage enabled="false">
-    </external-service-usage>
-
+  <control namespace="BeverControls" constructor="FetchToSubgrid" version="1.0.0" display-name-key="BeverControls.FetchToSubgrid" description-key="This control converts a FetchXml string into a subgrid." control-type="virtual" >
+    <external-service-usage enabled="false" />
+    
     <property name="fetchXmlProperty" display-name-key="Property_Display_Key" description-key="Property_Desc_Key" of-type="Multiple" usage="bound" required="true" />
     <property name="defaultFetchXmlProperty" display-name-key="Default fetchXml" description-key="Default FetchXml" of-type="Multiple" usage="input" required="true"/>
     <property name="defaultPageSize" display-name-key="Default number of rows" description-key="Default number of rows" of-type="Whole.None" usage="input" required="true"/>
