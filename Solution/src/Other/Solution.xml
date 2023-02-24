@@ -2,18 +2,18 @@
 <ImportExportXml version="9.1.0.643" SolutionPackageVersion="9.1" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <SolutionManifest>
     <!-- Unique Name of Cds Solution-->
-    <UniqueName>FetchToSubgrid</UniqueName>
+    <UniqueName>Solution</UniqueName>
     <LocalizedNames>
       <!-- Localized Solution Name in language code -->
-      <LocalizedName description="FetchToSubgrid" languagecode="1033" />
+      <LocalizedName description="Solution" languagecode="1033" />
     </LocalizedNames>
     <Descriptions />
-    <Version>1.0.0.4</Version>
+    <Version>1.0.0</Version>
     <!-- Solution Package Type: Unmanaged(0)/Managed(1)/Both(2)-->
     <Managed>2</Managed>
     <Publisher>
       <!-- Unique Publisher Name of Cds Solution -->
-      <UniqueName>ArthurControls</UniqueName>
+      <UniqueName>Bever</UniqueName>
       <LocalizedNames>
         <!-- Localized Cds Publisher Name in language code-->
         <LocalizedName description="Bever" languagecode="1033" />
@@ -25,7 +25,7 @@
       <EMailAddress xsi:nil="true"></EMailAddress>
       <SupportingWebsiteUrl xsi:nil="true"></SupportingWebsiteUrl>
       <!-- Customization Prefix for the Cds Publisher-->
-      <CustomizationPrefix>art</CustomizationPrefix>
+      <CustomizationPrefix>bvr</CustomizationPrefix>
       <!-- Derived Option Value Prefix for the Customization Prefix of Cds Publisher -->
       <CustomizationOptionValuePrefix>55180</CustomizationOptionValuePrefix>
       <Addresses>
