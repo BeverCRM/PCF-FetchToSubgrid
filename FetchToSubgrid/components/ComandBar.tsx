@@ -19,18 +19,16 @@ export const CommandBar = ({
   <div className='containerButtons'>
     <CommandBarButton
       maxLength={1}
-      disabled={!newButtonVisibility}
       iconProps={addIcon}
-      styles={ContainerButtonStyles}
+      styles={!newButtonVisibility ? { root: { display: 'none' } } : ContainerButtonStyles}
       text={`New ${displayName}`}
       onClick={() => dataverseService.openRecord(entityName, '')}
     />
 
     <CommandBarButton
       className={className}
-      disabled={!deleteButtonVisibility}
       iconProps={deleteIcon}
-      styles={ContainerButtonStyles}
+      styles={!deleteButtonVisibility ? { root: { display: 'none' } } : ContainerButtonStyles}
       text="Delete"
       onClick={() => dataverseService.openRecordDeleteDialog(
         selectedRecordIds,

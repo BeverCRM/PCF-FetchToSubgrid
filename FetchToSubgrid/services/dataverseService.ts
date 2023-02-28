@@ -1,6 +1,6 @@
 import { IInputs } from '../generated/ManifestTypes';
 import { WholeNumberType } from '../utilities/enums';
-import { getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
+import { changeAliasNames, getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
 import {
   Entity,
   EntityMetadata,
@@ -143,9 +143,10 @@ export class DataverseService implements IDataverseService {
     fetch?.removeAttribute('page');
 
     const fetchWithoutCount: string = new XMLSerializer().serializeToString(xmlDoc);
-    const entityName: string = getEntityNameFromFetchXml(fetchWithoutCount);
+    const changedAliasNames: string = changeAliasNames(fetchWithoutCount);
+    const entityName: string = getEntityNameFromFetchXml(changedAliasNames);
 
-    const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchWithoutCount ?? '')}`;
+    const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(changedAliasNames ?? '')}`;
     const records: RetriveRecords = await this._context.webAPI.retrieveMultipleRecords(
       `${entityName}`,
       encodeFetchXml);
@@ -233,5 +234,11 @@ export class DataverseService implements IDataverseService {
       await this.deleteSelectedRecords(selectedRecordIds, entityName);
       setDialogAccepted(false);
     }
+  }
+
+  public async showNotificationPopup(message: string): Promise<void> {
+    await this._context.navigation.openErrorDialog(
+      { message: 'An error has occurred!', details: message },
+    );
   }
 }

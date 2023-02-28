@@ -1,10 +1,20 @@
  .FetchSubgridControl {
   width: 100%;
+  position: relative;
 } 
 
 .FetchSubgridControl .fetchLoading {
-  width: 100%;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  z-index: 1;
+  background-color: #6666664a;
+  display: flex;
   justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
 
 .FetchSubgridControl .fetchLoading .loadingText {
@@ -43,7 +53,6 @@
   flex: 1 1 auto;
   font-size: 12px;
   font-weight: 400;
-  cursor: pointer;
 }
 
 .FetchSubgridControl .ms-DetailsHeader-cellName {

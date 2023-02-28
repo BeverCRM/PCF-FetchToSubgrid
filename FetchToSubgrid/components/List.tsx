@@ -47,19 +47,21 @@ export const List: React.FC<IListProps> = props => {
   const onColumnHeaderClick = async (
     dialogEvent?: React.MouseEvent<HTMLElement, MouseEvent>,
     column?: IColumn): Promise<void> => {
-    const fieldName = column?.className === 'linkEntity' ? column?.ariaLabel : column?.fieldName;
+    if (column?.className === 'colIsnotSortable') return;
 
-    const newFetchXml = addOrderToFetch(
-      fetchXml ?? '',
-      fieldName ?? '',
-      dialogEvent,
-      column);
+    const fieldName = column?.className === 'linkEntity' ? column?.ariaLabel : column?.fieldName;
 
     const sortedColumns: IColumn[] = sortColumns(
       column?.fieldName,
       column?.ariaLabel,
       undefined,
       columns) ?? [];
+
+    const newFetchXml = addOrderToFetch(
+      fetchXml ?? '',
+      fieldName ?? '',
+      dialogEvent,
+      column);
 
     const sortedRecords: Entity[] = await getItems(
       newFetchXml,

@@ -2,6 +2,24 @@
 import { IColumn } from '@fluentui/react';
 import { Dictionary, EntityAttribute } from './types';
 
+export const changeAliasNames = (fetchXml: string) => {
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+
+  const attributeElements = xmlDoc.getElementsByTagName('attribute');
+
+  for (let i = 0; i < attributeElements.length; i++) {
+    const alias = attributeElements[i].getAttribute('alias');
+
+    if (alias) {
+      const newAliasValue = `alias${i}`;
+      attributeElements[i].setAttribute('alias', newAliasValue);
+    }
+  }
+
+  return xmlDoc.documentElement.outerHTML;
+};
+
 export const addPagingToFetchXml =
  (fetchXml: string, pageSize: number, currentPage :number, recordsCount: number): string => {
    const parser: DOMParser = new DOMParser();
@@ -21,7 +39,9 @@ export const addPagingToFetchXml =
    fetch.setAttribute('page', `${currentPage}`);
    fetch.setAttribute('count', `${recordsPerPage}`);
 
-   return new XMLSerializer().serializeToString(xmlDoc);
+   const newFetchChangedAliases = changeAliasNames(new XMLSerializer().serializeToString(xmlDoc));
+
+   return newFetchChangedAliases;
  };
 
 export const getEntityNameFromFetchXml = (fetchXml: string): string => {
@@ -139,7 +159,7 @@ export const getAttributesFieldNamesFromFetchXml = (fetchXml: string): string[] 
   return attributesFieldNames;
 };
 
-export const getAliasNames = (fetchXml: string): string[] => {
+export const getEntityAliasNames = (fetchXml: string): string[] => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
@@ -147,6 +167,23 @@ export const getAliasNames = (fetchXml: string): string[] => {
 
   const entityName = xmlDoc.getElementsByTagName('entity')?.[0]?.getAttribute('name') ?? '';
   const attributeSelector = `entity[name="${entityName}"] > attribute`;
+  const attributes: NodeListOf<Element> = xmlDoc.querySelectorAll(attributeSelector);
+
+  Array.prototype.slice.call(attributes).map(attr => {
+    aggregateAttrNames.push(attr.attributes.alias.value);
+  });
+
+  return aggregateAttrNames;
+};
+
+export const getLinkEntityAliasNames = (fetchXml: string): string[] => {
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+
+  const aggregateAttrNames: string[] = [];
+
+  const entityName = xmlDoc.getElementsByTagName('link-entity')?.[0]?.getAttribute('name') ?? '';
+  const attributeSelector = `link-entity[name="${entityName}"] > attribute`;
   const attributes: NodeListOf<Element> = xmlDoc.querySelectorAll(attributeSelector);
 
   Array.prototype.slice.call(attributes).map(attr => {

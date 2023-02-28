@@ -3,11 +3,13 @@ import { AttributeType } from './enums';
 import { needToGetFormattedValue, checkIfAttributeIsEntityReferance } from './utils';
 import {
   addPagingToFetchXml,
-  getAliasNames,
+  getEntityAliasNames,
   getAttributesFieldNamesFromFetchXml,
   getEntityNameFromFetchXml,
   getLinkEntitiesNamesFromFetchXml,
   isAggregate,
+  getLinkEntityAliasNames,
+  changeAliasNames,
 } from './fetchXmlUtils';
 import {
   Dictionary,
@@ -22,24 +24,32 @@ const createColumnsForLinkEntity = (
   linkEntityNames: string[],
   linkEntityAttributes: EntityAttribute[][],
   linkentityMetadata: EntityMetadata[],
+  fetchXml: string | null,
 ): IColumn[] => {
   const columns: IColumn[] = [];
   linkEntityNames.forEach((linkEntityName, i) => {
     linkEntityAttributes[i].forEach((attr, index) => {
       let fieldName = attr.attributeAlias;
 
-      if (!fieldName && attr.linkEntityAlias) {
-        fieldName = `${attr.linkEntityAlias}.${attr.name}`;
-      }
-      else if (!fieldName) {
-        fieldName = `${linkEntityName}${i + 1}.${attr.name}`;
-      }
+      const changeAliasNameInFetch = changeAliasNames(fetchXml ?? '');
+      const changedAliasNames: string[] | null =
+       getLinkEntityAliasNames(changeAliasNameInFetch ?? '');
 
+      if (changedAliasNames?.length) {
+        fieldName = changedAliasNames[index];
+      }
       const columnName: string = attr.attributeAlias ||
-      linkentityMetadata[i].Attributes._collection[attr.name].DisplayName;
+        linkentityMetadata[i].Attributes._collection[attr.name].DisplayName;
+
+      const attributeType = linkentityMetadata[i].Attributes._collection[attr.name].AttributeType;
 
       columns.push({
-        className: 'linkEntity',
+        styles: attributeType === AttributeType.MultiselectPickList
+          ? { root: { '&:hover': { color: 'red' } } }
+          : { root: { '&:hover': { cursor: 'pointer' } } },
+        className: attributeType === AttributeType.MultiselectPickList
+          ? 'colIsnotSortable'
+          : 'linkEntity',
         ariaLabel: attr.name,
         name: columnName,
         fieldName,
@@ -57,20 +67,38 @@ const createColumnsForEntity = (
   attributesFieldNames: string[],
   displayNameCollection: Dictionary<EntityMetadata>,
   fetchXml: string | null,
+  entityName: string,
 ): IColumn[] => {
   const columns: IColumn[] = [];
-  attributesFieldNames.forEach((name, index) => {
-    let displayName = displayNameCollection[name].DisplayName;
-    const hasAggregate: boolean = isAggregate(fetchXml ?? '');
-    const aggregateAttrNames: string[] | null = hasAggregate ? getAliasNames(fetchXml ?? '') : null;
 
-    if (aggregateAttrNames?.length) {
+  attributesFieldNames.forEach((name, index) => {
+    let displayName = name === `${entityName}id`
+      ? 'Primary Key'
+      : displayNameCollection[name].DisplayName;
+
+    const attributeType: number = displayNameCollection[name].AttributeType;
+
+    const hasAggregate: boolean = isAggregate(fetchXml ?? '');
+
+    const aggregateAttrNames: string[] | null = hasAggregate
+      ? getEntityAliasNames(fetchXml ?? '') : null;
+
+    const changeAliasNameInFetch = changeAliasNames(fetchXml ?? '');
+    const changedAliasNames: string[] | null = hasAggregate
+      ? getEntityAliasNames(changeAliasNameInFetch) : null;
+
+    if (aggregateAttrNames?.length && changedAliasNames?.length) {
       displayName = aggregateAttrNames[index];
-      name = aggregateAttrNames[index];
+      name = changedAliasNames[index];
     }
 
     columns.push({
-      className: 'entity',
+      styles: attributeType === AttributeType.MultiselectPickList
+        ? { root: { '&:hover': { cursor: 'default' } } }
+        : { root: { '&:hover': { cursor: 'pointer' } } },
+      className: attributeType === AttributeType.MultiselectPickList
+        ? 'colIsnotSortable'
+        : 'entity',
       name: displayName,
       fieldName: name,
       key: `col-${index}`,
@@ -79,6 +107,7 @@ const createColumnsForEntity = (
       isMultiline: false,
     });
   });
+
   return columns;
 };
 
@@ -125,21 +154,23 @@ export const genereateItems = (props: IItemProps, dataverseService: IDataverseSe
     attributeType,
     fieldName,
     entity,
-    fetchXml,
+    pagingFetchData,
     index,
   } = props;
 
-  const hasAggregate: boolean = isAggregate(fetchXml ?? '');
-  const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
+  const hasAggregate: boolean = isAggregate(pagingFetchData ?? '');
+  const entityName: string = getEntityNameFromFetchXml(pagingFetchData ?? '');
 
   if (hasAggregate) {
-    const aggregateAttrNames: string[] = getAliasNames(fetchXml ?? '');
+    const entityAggregateAttrNames: string[] = isLinkEntity
+      ? getLinkEntityAliasNames(pagingFetchData ?? '')
+      : getEntityAliasNames(pagingFetchData ?? '');
 
-    return item[aggregateAttrNames[index]] = {
-      displayName: entity[aggregateAttrNames[index]],
+    return item[entityAggregateAttrNames[index]] = {
+      displayName: entity[entityAggregateAttrNames[index]],
       isLinkable: false,
       entity,
-      fieldName: aggregateAttrNames[index],
+      fieldName,
       attributeType,
       entityName,
       isLinkEntity,
@@ -166,7 +197,6 @@ export const getItems = async (
   currentPage: number,
   recordsCount: number,
   dataverseService: IDataverseService): Promise<Entity[]> => {
-
   const pagingFetchData: string = addPagingToFetchXml(
     fetchXml ?? '',
     pageSize,
@@ -180,7 +210,7 @@ export const getItems = async (
   const entityMetadata: EntityMetadata = await dataverseService.getEntityMetadata(
     entityName, attributesFieldNames);
   const linkEntityAttFieldNames: Dictionary<EntityAttribute[]> = getLinkEntitiesNamesFromFetchXml(
-    fetchXml ?? '');
+    pagingFetchData ?? '');
 
   const linkEntityNames: string[] = Object.keys(linkEntityAttFieldNames);
   const linkEntityAttributes: EntityAttribute[][] = Object.values(linkEntityAttFieldNames);
@@ -196,7 +226,7 @@ export const getItems = async (
   const timeZoneDefinitions = await dataverseService.getTimeZoneDefinitions();
 
   records.entities.forEach(entity => {
-    const item: Entity = { id: entity[`${entityName}id`] };
+    const item: Entity = isAggregate(fetchXml ?? '') ? {} : { id: entity[`${entityName}id`] };
 
     attributesFieldNames.forEach((fieldName, index) => {
       const attributeType: number = entityMetadata.Attributes.get(fieldName).AttributeType;
@@ -209,7 +239,7 @@ export const getItems = async (
         attributeType,
         fieldName,
         entity,
-        fetchXml,
+        pagingFetchData,
         index,
       };
 
@@ -218,15 +248,6 @@ export const getItems = async (
 
     linkEntityNames.forEach((linkEntityName, i) => {
       linkEntityAttributes[i].forEach((attr, index) => {
-        let fieldName = attr.attributeAlias;
-
-        if (!fieldName && attr.linkEntityAlias) {
-          fieldName = `${attr.linkEntityAlias}.${attr.name}`;
-        }
-        else if (!fieldName) {
-          fieldName = `${linkEntityName}${i + 1}.${attr.name}`;
-        }
-
         const attributeType: number = linkentityMetadata[i].Attributes.get(attr.name).AttributeType;
 
         const attributes: IItemProps = {
@@ -235,9 +256,9 @@ export const getItems = async (
           isLinkEntity: true,
           entityMetadata: linkentityMetadata[i],
           attributeType,
-          fieldName,
+          fieldName: attr.attributeAlias,
           entity,
-          fetchXml,
+          pagingFetchData,
           index,
         };
 
@@ -277,12 +298,14 @@ export const getColumns = async (
     attributesFieldNames,
     displayNameCollection,
     fetchXml,
+    entityName,
   );
 
   const linkEntityColumns = createColumnsForLinkEntity(
     linkEntityNames,
     linkEntityAttributes,
     linkentityMetadata,
+    fetchXml,
   );
 
   return entityColumns.concat(linkEntityColumns);
