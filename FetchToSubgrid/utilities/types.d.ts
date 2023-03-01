@@ -29,6 +29,7 @@ export interface IDataverseService {
   openLookupForm(entity: Entity, fieldName: string): void;
   openLinkEntityRecord(entity: Entity, fieldName: string): void;
   openPrimaryEntityForm(entity: Entity, entityName: string): void;
+  showNotificationPopup(message: string): Promise<void>;
   openRecordDeleteDialog(
     selectedRecordIds: string[],
     entityName: string,
@@ -49,7 +50,7 @@ export interface IItemProps {
   attributeType: number;
   fieldName: string;
   entity: Entity;
-  fetchXml: string | null;
+  pagingFetchData: string;
   index: number;
 }
 
@@ -60,10 +61,8 @@ export interface IAppWrapperProps extends IService<IDataverseService> {
   newButtonVisibility: boolean;
 }
 
-export interface IFetchSubgridProps extends IAppWrapperProps {
+export interface IFetchToSubgridProps extends IAppWrapperProps {
   setIsLoading: (isLoading: boolean) => void;
-  setErrorMessage: (message?: string) => void;
-  isVisible: boolean;
 }
 
 export interface IListProps extends IService<IDataverseService> {

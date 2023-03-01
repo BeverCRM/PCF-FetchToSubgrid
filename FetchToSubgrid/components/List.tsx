@@ -47,19 +47,21 @@ export const List: React.FC<IListProps> = props => {
   const onColumnHeaderClick = async (
     dialogEvent?: React.MouseEvent<HTMLElement, MouseEvent>,
     column?: IColumn): Promise<void> => {
-    const fieldName = column?.className === 'linkEntity' ? column?.ariaLabel : column?.fieldName;
+    if (column?.className === 'colIsNotSortable') return;
 
-    const newFetchXml = addOrderToFetch(
-      fetchXml ?? '',
-      fieldName ?? '',
-      dialogEvent,
-      column);
+    const fieldName = column?.className === 'linkEntity' ? column?.ariaLabel : column?.fieldName;
 
     const sortedColumns: IColumn[] = sortColumns(
       column?.fieldName,
       column?.ariaLabel,
       undefined,
       columns) ?? [];
+
+    const newFetchXml = addOrderToFetch(
+      fetchXml ?? '',
+      fieldName ?? '',
+      dialogEvent,
+      column);
 
     const sortedRecords: Entity[] = await getItems(
       newFetchXml,
@@ -119,20 +121,18 @@ export const List: React.FC<IListProps> = props => {
     [currentPage, nextButtonDisabled, selectedItemsCount],
   );
 
-  const selectionChangeHandler = (selection: Selection<IObjectWithKey>) => {
-    const currentSelection: IObjectWithKey[] = selection.getSelection();
-    selectedItemsCount.current = currentSelection.length;
-
-    deleteBtnClassName.current = currentSelection.length && !isAggregate(fetchXml ?? '')
-      ? 'ms-Button'
-      : 'disableButton';
-
-    const recordIds: string[] = currentSelection.map((record: any) => record.id);
-    setSelectedRecordIds(recordIds);
-  };
-
   const selection = new Selection({
-    onSelectionChanged: (): void => selectionChangeHandler(selection),
+    onSelectionChanged: (): void => {
+      const currentSelection: IObjectWithKey[] = selection.getSelection();
+      selectedItemsCount.current = currentSelection.length;
+
+      deleteBtnClassName.current = currentSelection.length && !isAggregate(fetchXml ?? '')
+        ? 'ms-Button'
+        : 'disableButton';
+
+      const recordIds: string[] = currentSelection.map((record: any) => record.id);
+      setSelectedRecordIds(recordIds);
+    },
   });
 
   return <DetailsList

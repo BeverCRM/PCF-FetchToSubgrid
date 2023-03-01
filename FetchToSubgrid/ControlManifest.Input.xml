@@ -19,7 +19,7 @@
       <code path="index.ts" order="1"/>
       <platform-library name="React" version="16.8.6" />
       <platform-library name="Fluent" version="8.29.0" />
-      <css path="Styles/fetchSubgrid.css" order="1" />
+      <css path="Styles/fetchToSubgrid.css" order="1" />
     </resources>
     <feature-usage>
       <uses-feature name="Utility" required="true" /> 

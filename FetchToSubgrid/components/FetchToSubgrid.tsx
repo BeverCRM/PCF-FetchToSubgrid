@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { IColumn, Stack } from '@fluentui/react';
-import { Entity, IFetchSubgridProps } from '../utilities/types';
+import { Entity, IFetchToSubgridProps } from '../utilities/types';
 import { getSortedColumns, calculateFilteredRecordsData } from '../utilities/utils';
 import { getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
 import { dataSetStyles } from '../styles/comandBarStyles';
@@ -9,15 +9,13 @@ import { CommandBar } from './ComandBar';
 import { List } from './List';
 import { getItems } from '../utilities/d365Utils';
 
-export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
+export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   const {
     _service: dataverseService,
     deleteButtonVisibility,
     newButtonVisibility,
     defaultPageSize,
     fetchXml,
-    isVisible,
-    setErrorMessage,
     setIsLoading,
   } = props;
 
@@ -48,7 +46,7 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
         displayName.current = await dataverseService.getEntityDisplayName(entityName);
       }
       catch (err: any) {
-        setErrorMessage(err.message);
+        dataverseService.showNotificationPopup(err.message);
       }
     })();
   }, [fetchXml, deleteButtonVisibility, newButtonVisibility, pageSize]);
@@ -57,9 +55,7 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
     deleteBtnClassName.current = 'disableButton';
     (async () => {
       if (isDialogAccepted) return;
-
       setIsLoading(true);
-      setErrorMessage();
 
       try {
         totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
@@ -95,51 +91,49 @@ export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
             }
           });
         });
-
         setItems(records);
       }
       catch (err: any) {
-        setErrorMessage(err.message);
+        dataverseService.showNotificationPopup(err.message);
       }
 
       setIsLoading(false);
     })();
   }, [fetchXml, pageSize, currentPage, isDialogAccepted]);
 
-  return (
-    <div className='FetchSubgridControl' style={{ display: isVisible ? 'grid' : 'none' }}>
-      <Stack horizontal horizontalAlign="end" className={dataSetStyles.buttons}>
-        <CommandBar
-          _service={dataverseService}
-          entityName={entityName}
-          selectedRecordIds={selectedRecordIds}
-          displayName={displayName.current}
-          setDialogAccepted={setDialogAccepted}
-          className={deleteBtnClassName.current}
-          deleteButtonVisibility={deleteButtonVisibility}
-          newButtonVisibility={newButtonVisibility}
-        />
-      </Stack>
-
-      <List entityName={entityName}
+  return <>
+    <Stack horizontal horizontalAlign="end" className={dataSetStyles.buttons}>
+      <CommandBar
         _service={dataverseService}
-        deleteBtnClassName={deleteBtnClassName}
-        pageSize={pageSize}
-        firstItemIndex={firstItemIndex}
-        lastItemIndex={lastItemIndex}
-        selectedItemsCount={selectedItemsCount}
-        totalRecordsCount={totalRecordsCount}
-        nextButtonDisabled={nextButtonDisabled}
-        fetchXml={fetchXml}
-        recordIds={recordIds}
-        setSelectedRecordIds={setSelectedRecordIds}
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        columns={columns}
-        setColumns={setColumns}
-        items={items}
-        setItems={setItems}
+        entityName={entityName}
+        selectedRecordIds={selectedRecordIds}
+        displayName={displayName.current}
+        setDialogAccepted={setDialogAccepted}
+        className={deleteBtnClassName.current}
+        deleteButtonVisibility={deleteButtonVisibility}
+        newButtonVisibility={newButtonVisibility}
       />
-    </div>
-  );
+    </Stack>
+
+    <List _service={dataverseService}
+      entityName={entityName}
+      deleteBtnClassName={deleteBtnClassName}
+      pageSize={pageSize}
+      firstItemIndex={firstItemIndex}
+      lastItemIndex={lastItemIndex}
+      selectedItemsCount={selectedItemsCount}
+      totalRecordsCount={totalRecordsCount}
+      nextButtonDisabled={nextButtonDisabled}
+      fetchXml={fetchXml}
+      recordIds={recordIds}
+      setSelectedRecordIds={setSelectedRecordIds}
+      currentPage={currentPage}
+      setCurrentPage={setCurrentPage}
+      columns={columns}
+      setColumns={setColumns}
+      items={items}
+      setItems={setItems}
+    />
+  </>
+  ;
 };
