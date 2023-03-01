@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { IAppWrapperProps } from '../utilities/types';
-import { FetchSubgrid } from './FetchSubgrid';
+import { FetchToSubgrid } from './FetchToSubgrid';
 import { Loader } from './Loader';
 
 export const AppWrapper: React.FC<IAppWrapperProps> = props => {
   const [isLoading, setIsLoading] = React.useState(false);
 
-  return <div className='FetchSubgridControl'>
+  return <div className='FetchToSubgridControl'>
     { isLoading && <Loader /> }
-    <FetchSubgrid
+    <FetchToSubgrid
       {...props}
       setIsLoading={setIsLoading}
     />

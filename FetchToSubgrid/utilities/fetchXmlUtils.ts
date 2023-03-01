@@ -3,19 +3,15 @@ import { IColumn } from '@fluentui/react';
 import { Dictionary, EntityAttribute } from './types';
 
 export const changeAliasNames = (fetchXml: string) => {
-  const parser: DOMParser = new DOMParser();
-  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(fetchXml, 'text/xml');
 
-  const attributeElements = xmlDoc.getElementsByTagName('attribute');
+  const attributeElements = xmlDoc.querySelectorAll('attribute[alias]');
 
-  for (let i = 0; i < attributeElements.length; i++) {
-    const alias = attributeElements[i].getAttribute('alias');
-
-    if (alias) {
-      const newAliasValue = `alias${i}`;
-      attributeElements[i].setAttribute('alias', newAliasValue);
-    }
-  }
+  attributeElements.forEach((attributeElement, index) => {
+    const newAliasValue = `alias${index}`;
+    attributeElement.setAttribute('alias', newAliasValue);
+  });
 
   return xmlDoc.documentElement.outerHTML;
 };
@@ -64,8 +60,8 @@ export const getOrderInFetch = (fetchXml: string) => {
 
   const isLinkEntity = linkEntityOrder[0] !== null;
 
-  const descending: boolean = order.attributes.descending.value === 'true';
-  const attribute: string = order.attributes.attribute.value;
+  const descending: boolean = order.attributes.descending?.value === 'true';
+  const attribute: string = order.attributes.attribute?.value;
 
   return {
     [attribute]: descending,
@@ -170,24 +166,24 @@ export const getEntityAliasNames = (fetchXml: string): string[] => {
   const attributes: NodeListOf<Element> = xmlDoc.querySelectorAll(attributeSelector);
 
   Array.prototype.slice.call(attributes).map(attr => {
-    aggregateAttrNames.push(attr.attributes.alias.value);
+    aggregateAttrNames.push(attr.attributes.alias?.value);
   });
 
   return aggregateAttrNames;
 };
 
-export const getLinkEntityAliasNames = (fetchXml: string): string[] => {
+export const getLinkEntityAliasNames = (fetchXml: string, i: number): string[] => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
   const aggregateAttrNames: string[] = [];
 
-  const entityName = xmlDoc.getElementsByTagName('link-entity')?.[0]?.getAttribute('name') ?? '';
+  const entityName = xmlDoc.getElementsByTagName('link-entity')?.[i]?.getAttribute('name') ?? '';
   const attributeSelector = `link-entity[name="${entityName}"] > attribute`;
   const attributes: NodeListOf<Element> = xmlDoc.querySelectorAll(attributeSelector);
 
   Array.prototype.slice.call(attributes).map(attr => {
-    aggregateAttrNames.push(attr.attributes.alias.value);
+    aggregateAttrNames.push(attr.attributes.alias?.value);
   });
 
   return aggregateAttrNames;

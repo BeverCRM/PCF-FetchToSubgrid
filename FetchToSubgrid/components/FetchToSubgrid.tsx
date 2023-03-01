@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { IColumn, Stack } from '@fluentui/react';
-import { Entity, IFetchSubgridProps } from '../utilities/types';
+import { Entity, IFetchToSubgridProps } from '../utilities/types';
 import { getSortedColumns, calculateFilteredRecordsData } from '../utilities/utils';
 import { getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
 import { dataSetStyles } from '../styles/comandBarStyles';
@@ -9,7 +9,7 @@ import { CommandBar } from './ComandBar';
 import { List } from './List';
 import { getItems } from '../utilities/d365Utils';
 
-export const FetchSubgrid: React.FC<IFetchSubgridProps> = props => {
+export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   const {
     _service: dataverseService,
     deleteButtonVisibility,

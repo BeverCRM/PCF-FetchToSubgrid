@@ -61,7 +61,7 @@ export interface IAppWrapperProps extends IService<IDataverseService> {
   newButtonVisibility: boolean;
 }
 
-export interface IFetchSubgridProps extends IAppWrapperProps {
+export interface IFetchToSubgridProps extends IAppWrapperProps {
   setIsLoading: (isLoading: boolean) => void;
 }
 

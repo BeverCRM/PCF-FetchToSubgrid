@@ -26,6 +26,7 @@ const createColumnsForLinkEntity = (
   linkentityMetadata: EntityMetadata[],
   fetchXml: string | null,
 ): IColumn[] => {
+  const hasAggregate = isAggregate(fetchXml ?? '');
   const columns: IColumn[] = [];
   linkEntityNames.forEach((linkEntityName, i) => {
     linkEntityAttributes[i].forEach((attr, index) => {
@@ -33,10 +34,16 @@ const createColumnsForLinkEntity = (
 
       const changeAliasNameInFetch = changeAliasNames(fetchXml ?? '');
       const changedAliasNames: string[] | null =
-       getLinkEntityAliasNames(changeAliasNameInFetch ?? '');
+        getLinkEntityAliasNames(changeAliasNameInFetch ?? '', i);
 
-      if (changedAliasNames?.length) {
+      if (changedAliasNames[index]) {
         fieldName = changedAliasNames[index];
+      }
+      else if (!fieldName && attr.linkEntityAlias) {
+        fieldName = `${attr.linkEntityAlias}.${attr.name}`;
+      }
+      else if (!fieldName) {
+        fieldName = `${linkEntityName}${i + 1}.${attr.name}`;
       }
       const columnName: string = attr.attributeAlias ||
         linkentityMetadata[i].Attributes._collection[attr.name].DisplayName;
@@ -44,11 +51,11 @@ const createColumnsForLinkEntity = (
       const attributeType = linkentityMetadata[i].Attributes._collection[attr.name].AttributeType;
 
       columns.push({
-        styles: attributeType === AttributeType.MultiselectPickList
-          ? { root: { '&:hover': { color: 'red' } } }
+        styles: attributeType === AttributeType.MultiselectPickList || hasAggregate
+          ? { root: { '&:hover': { cursor: 'default' } } }
           : { root: { '&:hover': { cursor: 'pointer' } } },
-        className: attributeType === AttributeType.MultiselectPickList
-          ? 'colIsnotSortable'
+        className: attributeType === AttributeType.MultiselectPickList || hasAggregate
+          ? 'colIsNotSortable'
           : 'linkEntity',
         ariaLabel: attr.name,
         name: columnName,
@@ -60,6 +67,7 @@ const createColumnsForLinkEntity = (
       });
     });
   });
+
   return columns;
 };
 
@@ -93,11 +101,11 @@ const createColumnsForEntity = (
     }
 
     columns.push({
-      styles: attributeType === AttributeType.MultiselectPickList
+      styles: attributeType === AttributeType.MultiselectPickList || hasAggregate
         ? { root: { '&:hover': { cursor: 'default' } } }
         : { root: { '&:hover': { cursor: 'pointer' } } },
-      className: attributeType === AttributeType.MultiselectPickList
-        ? 'colIsnotSortable'
+      className: attributeType === AttributeType.MultiselectPickList || hasAggregate
+        ? 'colIsNotSortable'
         : 'entity',
       name: displayName,
       fieldName: name,
@@ -131,19 +139,24 @@ export const getEntityData = (props: IItemProps, dataverseService: IDataverseSer
 
     return [field, false];
   }
-  else if (needToGetFormattedValue(attributeType)) {
+
+  if (needToGetFormattedValue(attributeType)) {
     return [entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`], false];
   }
-  else if (isLinkEntity && checkIfAttributeIsEntityReferance(attributeType)) {
+
+  if (isLinkEntity && checkIfAttributeIsEntityReferance(attributeType)) {
     return [entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`], true];
   }
-  else if (fieldName === entityMetadata._primaryNameAttribute) {
+
+  if (fieldName === entityMetadata._primaryNameAttribute) {
 
     return [entity[fieldName], true];
   }
-  else if (checkIfAttributeIsEntityReferance(attributeType)) {
+
+  if (checkIfAttributeIsEntityReferance(attributeType)) {
     return [entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`], true];
   }
+
   return [entity[fieldName], false];
 };
 
@@ -163,7 +176,7 @@ export const genereateItems = (props: IItemProps, dataverseService: IDataverseSe
 
   if (hasAggregate) {
     const entityAggregateAttrNames: string[] = isLinkEntity
-      ? getLinkEntityAliasNames(pagingFetchData ?? '')
+      ? getLinkEntityAliasNames(pagingFetchData ?? '', index)
       : getEntityAliasNames(pagingFetchData ?? '');
 
     return item[entityAggregateAttrNames[index]] = {
@@ -249,6 +262,14 @@ export const getItems = async (
     linkEntityNames.forEach((linkEntityName, i) => {
       linkEntityAttributes[i].forEach((attr, index) => {
         const attributeType: number = linkentityMetadata[i].Attributes.get(attr.name).AttributeType;
+        let fieldName = attr.attributeAlias;
+
+        if (!fieldName && attr.linkEntityAlias) {
+          fieldName = `${attr.linkEntityAlias}.${attr.name}`;
+        }
+        else if (!fieldName) {
+          fieldName = `${linkEntityName}${i + 1}.${attr.name}`;
+        }
 
         const attributes: IItemProps = {
           timeZoneDefinitions,
@@ -256,7 +277,7 @@ export const getItems = async (
           isLinkEntity: true,
           entityMetadata: linkentityMetadata[i],
           attributeType,
-          fieldName: attr.attributeAlias,
+          fieldName,
           entity,
           pagingFetchData,
           index,
