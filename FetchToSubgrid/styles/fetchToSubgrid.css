@@ -17,7 +17,7 @@
   flex-direction: column;
 }
 
-.FetchToSubgrid .fetchLoading .loadingText {
+.FetchToSubgridControl .fetchLoading .loadingText {
   width: 100%;
   margin-top: 5px;
   text-align: center;
