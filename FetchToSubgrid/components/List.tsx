@@ -37,6 +37,9 @@ export const List: React.FC<IListProps> = props => {
     setSelectedRecordIds,
   } = props;
 
+  const updatedFetchXml = React.useRef(fetchXml);
+  React.useEffect(() => { updatedFetchXml.current = fetchXml; }, [fetchXml]);
+
   const onItemInvoked = React.useCallback((record?: Entity, index?: number | undefined): void => {
     const hasAggregate: boolean = isAggregate(fetchXml ?? '');
     if (index !== undefined && !hasAggregate) {
@@ -126,7 +129,8 @@ export const List: React.FC<IListProps> = props => {
       const currentSelection: IObjectWithKey[] = selection.getSelection();
       selectedItemsCount.current = currentSelection.length;
 
-      deleteBtnClassName.current = currentSelection.length && !isAggregate(fetchXml ?? '')
+      deleteBtnClassName.current = currentSelection.length &&
+       !isAggregate(updatedFetchXml.current ?? '')
         ? 'ms-Button'
         : 'disableButton';
 

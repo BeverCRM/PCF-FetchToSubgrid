@@ -236,10 +236,10 @@ export class DataverseService implements IDataverseService {
     }
   }
 
-  public async showNotificationPopup(message: string): Promise<void> {
+  public async showNotificationPopup(error: any): Promise<void> {
     await this._context.navigation.openErrorDialog({
-      message: 'An error has occurred!',
-      details: message,
+      message: error.message,
+      details: error.stack,
     });
   }
 }

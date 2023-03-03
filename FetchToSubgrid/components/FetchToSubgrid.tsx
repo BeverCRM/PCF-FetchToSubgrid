@@ -17,6 +17,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
     defaultPageSize,
     fetchXml,
     setIsLoading,
+    setError,
   } = props;
 
   const [items, setItems] = React.useState<Entity[]>([]);
@@ -46,7 +47,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
         displayName.current = await dataverseService.getEntityDisplayName(entityName);
       }
       catch (err: any) {
-        dataverseService.showNotificationPopup(err.message);
+        setError(err);
       }
     })();
   }, [fetchXml, deleteButtonVisibility, newButtonVisibility, pageSize]);
@@ -54,8 +55,9 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   React.useEffect(() => {
     deleteBtnClassName.current = 'disableButton';
     (async () => {
-      if (isDialogAccepted) return;
+      setError();
       setIsLoading(true);
+      if (isDialogAccepted) return;
 
       try {
         totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
@@ -94,7 +96,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
         setItems(records);
       }
       catch (err: any) {
-        dataverseService.showNotificationPopup(err.message);
+        setError(err);
       }
 
       setIsLoading(false);

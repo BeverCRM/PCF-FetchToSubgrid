@@ -10,15 +10,22 @@
   bottom: 0px;
   left: 0px;
   z-index: 1;
-  background-color: #6666664a;
+  background-color: #e2e2e24d;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
 }
 
-.FetchToSubgridControl .fetchLoading .loadingText {
+.FetchToSubgridControl .loadingText {
   width: 100%;
+  margin-top: 5px;
+  text-align: center;
+}
+
+.FetchToSubgridControl .fetchLoading {
+  width: 100%;
+  justify-content: center;
   margin-top: 5px;
   text-align: center;
 }
@@ -26,6 +33,8 @@
 .FetchToSubgridControl .infoMessage .infoMessageText {
   text-align: center;
   width: 100%;
+  cursor: pointer;
+  color: red;
 }
 
 .FetchToSubgridControl .ms-DetailsList {

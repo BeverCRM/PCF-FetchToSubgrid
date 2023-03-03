@@ -88,15 +88,13 @@ const createColumnsForEntity = (
 
     const hasAggregate: boolean = isAggregate(fetchXml ?? '');
 
-    const aggregateAttrNames: string[] | null = hasAggregate
-      ? getEntityAliasNames(fetchXml ?? '') : null;
+    const aliasNames: string[] | null = getEntityAliasNames(fetchXml ?? '');
 
     const changeAliasNameInFetch = changeAliasNames(fetchXml ?? '');
-    const changedAliasNames: string[] | null = hasAggregate
-      ? getEntityAliasNames(changeAliasNameInFetch) : null;
+    const changedAliasNames: string[] | null = getEntityAliasNames(changeAliasNameInFetch);
 
-    if (aggregateAttrNames?.length && changedAliasNames?.length) {
-      displayName = aggregateAttrNames[index];
+    if (aliasNames[index] && changedAliasNames?.length) {
+      displayName = aliasNames[index];
       name = changedAliasNames[index];
     }
 
@@ -127,6 +125,7 @@ export const getEntityData = (props: IItemProps, dataverseService: IDataverseSer
     attributeType,
     fieldName,
     entity,
+    hasAliasValue,
   } = props;
 
   if (attributeType === AttributeType.Number) {
@@ -140,6 +139,8 @@ export const getEntityData = (props: IItemProps, dataverseService: IDataverseSer
     return [field, false];
   }
 
+  const aliasAttrName = entity[`${fieldName}@OData.Community.Display.V1.AttributeName`];
+
   if (needToGetFormattedValue(attributeType)) {
     return [entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`], false];
   }
@@ -148,15 +149,17 @@ export const getEntityData = (props: IItemProps, dataverseService: IDataverseSer
     return [entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`], true];
   }
 
-  if (fieldName === entityMetadata._primaryNameAttribute) {
-
+  if (fieldName === entityMetadata._primaryNameAttribute ||
+    aliasAttrName === entityMetadata._primaryNameAttribute) {
     return [entity[fieldName], true];
   }
 
   if (checkIfAttributeIsEntityReferance(attributeType)) {
+    if (hasAliasValue) {
+      return [entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`], true];
+    }
     return [entity[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`], true];
   }
-
   return [entity[fieldName], false];
 };
 
@@ -169,6 +172,7 @@ export const genereateItems = (props: IItemProps, dataverseService: IDataverseSe
     entity,
     pagingFetchData,
     index,
+    hasAliasValue,
   } = props;
 
   const hasAggregate: boolean = isAggregate(pagingFetchData ?? '');
@@ -188,6 +192,7 @@ export const genereateItems = (props: IItemProps, dataverseService: IDataverseSe
       entityName,
       isLinkEntity,
       aggregate: true,
+      hasAliasValue,
     };
   }
 
@@ -201,6 +206,7 @@ export const genereateItems = (props: IItemProps, dataverseService: IDataverseSe
     attributeType,
     entityName,
     isLinkEntity,
+    hasAliasValue,
   };
 };
 
@@ -238,11 +244,17 @@ export const getItems = async (
   const items: Entity[] = [];
   const timeZoneDefinitions = await dataverseService.getTimeZoneDefinitions();
 
+  const entityAliases = getEntityAliasNames(pagingFetchData);
+
   records.entities.forEach(entity => {
     const item: Entity = isAggregate(fetchXml ?? '') ? {} : { id: entity[`${entityName}id`] };
-
     attributesFieldNames.forEach((fieldName, index) => {
+      const hasAliasValue = !!entityAliases[index];
       const attributeType: number = entityMetadata.Attributes.get(fieldName).AttributeType;
+
+      if (entityAliases[index]) {
+        fieldName = entityAliases[index];
+      }
 
       const attributes: IItemProps = {
         timeZoneDefinitions,
@@ -254,6 +266,7 @@ export const getItems = async (
         entity,
         pagingFetchData,
         index,
+        hasAliasValue,
       };
 
       genereateItems(attributes, dataverseService);
@@ -261,6 +274,7 @@ export const getItems = async (
 
     linkEntityNames.forEach((linkEntityName, i) => {
       linkEntityAttributes[i].forEach((attr, index) => {
+        const hasAliasValue = !!attr.linkEntityAlias;
         const attributeType: number = linkentityMetadata[i].Attributes.get(attr.name).AttributeType;
         let fieldName = attr.attributeAlias;
 
@@ -281,6 +295,7 @@ export const getItems = async (
           entity,
           pagingFetchData,
           index,
+          hasAliasValue,
         };
 
         genereateItems(attributes, dataverseService);

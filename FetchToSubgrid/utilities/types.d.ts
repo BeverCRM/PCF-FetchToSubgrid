@@ -52,6 +52,7 @@ export interface IItemProps {
   entity: Entity;
   pagingFetchData: string;
   index: number;
+  hasAliasValue: boolean;
 }
 
 export interface IAppWrapperProps extends IService<IDataverseService> {
@@ -63,6 +64,7 @@ export interface IAppWrapperProps extends IService<IDataverseService> {
 
 export interface IFetchToSubgridProps extends IAppWrapperProps {
   setIsLoading: (isLoading: boolean) => void;
+  setError: (error?: any) => void;
 }
 
 export interface IListProps extends IService<IDataverseService> {
@@ -107,7 +109,8 @@ export interface IFooterProps {
 }
 
 export interface IInfoMessageProps {
-  message?: string;
+  error?: any;
+  dataverseService: IDataverseService;
 }
 
 export interface ILinkableItemProps extends IService<IDataverseService> {
