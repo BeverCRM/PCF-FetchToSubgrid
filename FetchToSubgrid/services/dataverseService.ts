@@ -242,4 +242,8 @@ export class DataverseService implements IDataverseService {
       details: error.stack,
     });
   }
+
+  public getControlWidth(): number {
+    return this._context.mode.allocatedWidth;
+  }
 }

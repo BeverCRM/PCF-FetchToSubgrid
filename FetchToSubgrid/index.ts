@@ -11,7 +11,8 @@ export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, 
     this._dataverseService = new DataverseService(context);
   }
 
-  public updateView(): React.ReactElement {
+  public updateView(context: ComponentFramework.Context<IInputs>): React.ReactElement {
+    context.mode.trackContainerResize(true);
     const props: IAppWrapperProps = this._dataverseService.getProps();
     return React.createElement(AppWrapper, props);
   }

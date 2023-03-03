@@ -25,6 +25,7 @@ const createColumnsForLinkEntity = (
   linkEntityAttributes: EntityAttribute[][],
   linkentityMetadata: EntityMetadata[],
   fetchXml: string | null,
+  columnWidth: number,
 ): IColumn[] => {
   const hasAggregate = isAggregate(fetchXml ?? '');
   const columns: IColumn[] = [];
@@ -64,6 +65,7 @@ const createColumnsForLinkEntity = (
         minWidth: 10,
         isResizable: true,
         isMultiline: false,
+        calculatedWidth: columnWidth,
       });
     });
   });
@@ -76,6 +78,7 @@ const createColumnsForEntity = (
   displayNameCollection: Dictionary<EntityMetadata>,
   fetchXml: string | null,
   entityName: string,
+  columnWidth: number,
 ): IColumn[] => {
   const columns: IColumn[] = [];
 
@@ -85,9 +88,7 @@ const createColumnsForEntity = (
       : displayNameCollection[name].DisplayName;
 
     const attributeType: number = displayNameCollection[name].AttributeType;
-
     const hasAggregate: boolean = isAggregate(fetchXml ?? '');
-
     const aliasNames: string[] | null = getEntityAliasNames(fetchXml ?? '');
 
     const changeAliasNameInFetch = changeAliasNames(fetchXml ?? '');
@@ -111,6 +112,7 @@ const createColumnsForEntity = (
       minWidth: 10,
       isResizable: true,
       isMultiline: false,
+      calculatedWidth: columnWidth,
     });
   });
 
@@ -330,11 +332,15 @@ export const getColumns = async (
   });
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
 
+  const columnWidth = dataverseService.getControlWidth() /
+   attributesFieldNames.concat(linkEntityNames).length;
+
   const entityColumns = createColumnsForEntity(
     attributesFieldNames,
     displayNameCollection,
     fetchXml,
     entityName,
+    columnWidth,
   );
 
   const linkEntityColumns = createColumnsForLinkEntity(
@@ -342,6 +348,7 @@ export const getColumns = async (
     linkEntityAttributes,
     linkentityMetadata,
     fetchXml,
+    columnWidth,
   );
 
   return entityColumns.concat(linkEntityColumns);

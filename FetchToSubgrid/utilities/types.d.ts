@@ -34,6 +34,7 @@ export interface IDataverseService {
     selectedRecordIds: string[],
     entityName: string,
     setDialogAccepted: (value: any) => void): Promise<void>;
+  getControlWidth(): number;
 }
 
 export interface EntityAttribute {
