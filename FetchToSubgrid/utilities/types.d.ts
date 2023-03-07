@@ -34,7 +34,7 @@ export interface IDataverseService {
     selectedRecordIds: string[],
     entityName: string,
     setDialogAccepted: (value: any) => void): Promise<void>;
-  getControlWidth(): number;
+  getAllocatedWidth(): number;
 }
 
 export interface EntityAttribute {
@@ -59,6 +59,7 @@ export interface IItemProps {
 export interface IAppWrapperProps extends IService<IDataverseService> {
   fetchXml: string | null;
   defaultPageSize: number;
+  allocatedWidth: number;
   deleteButtonVisibility: boolean;
   newButtonVisibility: boolean;
 }
@@ -72,6 +73,7 @@ export interface IListProps extends IService<IDataverseService> {
   entityName: string;
   fetchXml: string | null;
   pageSize: number;
+  allocatedWidthKey: number;
   currentPage: number;
   recordIds: React.MutableRefObject<string[]>;
   columns: IColumn[];

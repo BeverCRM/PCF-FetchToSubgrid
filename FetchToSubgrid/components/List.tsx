@@ -2,14 +2,11 @@ import * as React from 'react';
 import { Entity, IListProps } from '../utilities/types';
 import { addOrderToFetch, isAggregate } from '../utilities/fetchXmlUtils';
 import { calculateFilteredRecordsData, sortColumns } from '../utilities/utils';
-import { Footer } from './Footer';
 import { LinkableItem } from './LinkableItems';
 import {
   DetailsList,
   DetailsListLayoutMode,
   IColumn,
-  IDetailsFooterProps,
-  IDetailsListProps,
   IObjectWithKey,
   Selection,
 } from '@fluentui/react';
@@ -23,6 +20,7 @@ export const List: React.FC<IListProps> = props => {
     fetchXml,
     columns,
     pageSize,
+    allocatedWidthKey,
     items,
     deleteBtnClassName,
     currentPage,
@@ -31,7 +29,6 @@ export const List: React.FC<IListProps> = props => {
     lastItemIndex,
     selectedItemsCount,
     totalRecordsCount,
-    setCurrentPage,
     setColumns,
     setItems,
     setSelectedRecordIds,
@@ -103,27 +100,6 @@ export const List: React.FC<IListProps> = props => {
     setItems(sortedRecords);
   };
 
-  const onRenderDetailsFooter: IDetailsListProps['onRenderDetailsFooter'] = React.useCallback(
-    (props?: IDetailsFooterProps): JSX.Element | null => {
-      const movePreviousIsDisabled = currentPage <= 1;
-      if (!props) return null;
-
-      return (
-        <Footer
-          firstItemIndex={firstItemIndex.current}
-          lastItemIndex={lastItemIndex.current}
-          selectedItems={selectedItemsCount.current}
-          totalRecordsCount={totalRecordsCount.current}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          nextButtonDisable={nextButtonDisabled.current}
-          movePreviousIsDisabled={movePreviousIsDisabled}
-        />
-      );
-    },
-    [currentPage, nextButtonDisabled, selectedItemsCount],
-  );
-
   const selection = new Selection({
     onSelectionChanged: (): void => {
       const currentSelection: IObjectWithKey[] = selection.getSelection();
@@ -140,11 +116,11 @@ export const List: React.FC<IListProps> = props => {
   });
 
   return <DetailsList
+    key={allocatedWidthKey}
     columns={columns}
     items={items}
     layoutMode={DetailsListLayoutMode.fixedColumns}
     onItemInvoked={onItemInvoked}
-    onRenderDetailsFooter={onRenderDetailsFooter}
     onColumnHeaderClick={onColumnHeaderClick}
     selection={selection}
   />;

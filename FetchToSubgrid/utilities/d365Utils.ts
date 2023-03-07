@@ -52,10 +52,14 @@ const createColumnsForLinkEntity = (
       const attributeType = linkentityMetadata[i].Attributes._collection[attr.name].AttributeType;
 
       columns.push({
-        styles: attributeType === AttributeType.MultiselectPickList || hasAggregate
+        styles: attributeType === AttributeType.MultiselectPickList ||
+         hasAggregate ||
+         changedAliasNames[index]
           ? { root: { '&:hover': { cursor: 'default' } } }
           : { root: { '&:hover': { cursor: 'pointer' } } },
-        className: attributeType === AttributeType.MultiselectPickList || hasAggregate
+        className: attributeType === AttributeType.MultiselectPickList ||
+         hasAggregate ||
+         changedAliasNames[index]
           ? 'colIsNotSortable'
           : 'linkEntity',
         ariaLabel: attr.name,
@@ -100,10 +104,14 @@ const createColumnsForEntity = (
     }
 
     columns.push({
-      styles: attributeType === AttributeType.MultiselectPickList || hasAggregate
+      styles: attributeType === AttributeType.MultiselectPickList ||
+      hasAggregate ||
+      changedAliasNames[index]
         ? { root: { '&:hover': { cursor: 'default' } } }
         : { root: { '&:hover': { cursor: 'pointer' } } },
-      className: attributeType === AttributeType.MultiselectPickList || hasAggregate
+      className: attributeType === AttributeType.MultiselectPickList ||
+       hasAggregate ||
+       changedAliasNames[index]
         ? 'colIsNotSortable'
         : 'entity',
       name: displayName,
@@ -312,6 +320,7 @@ export const getItems = async (
 
 export const getColumns = async (
   fetchXml: string | null,
+  allocatedWidth: number,
   dataverseService: IDataverseService): Promise<IColumn[]> => {
   const attributesFieldNames: string[] = getAttributesFieldNamesFromFetchXml(fetchXml ?? '');
   const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
@@ -332,8 +341,7 @@ export const getColumns = async (
   });
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
 
-  const columnWidth = dataverseService.getControlWidth() /
-   attributesFieldNames.concat(linkEntityNames).length;
+  const columnWidth = allocatedWidth / attributesFieldNames.concat(linkEntityNames).length - 50;
 
   const entityColumns = createColumnsForEntity(
     attributesFieldNames,

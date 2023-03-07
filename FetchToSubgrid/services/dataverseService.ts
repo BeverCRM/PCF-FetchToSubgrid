@@ -54,6 +54,7 @@ export class DataverseService implements IDataverseService {
         _service: this,
         fetchXml: fieldValueJson.fetchXml || this._context.parameters.defaultFetchXmlProperty.raw,
         defaultPageSize: this.getPageSize(fieldValueJson),
+        allocatedWidth: this.getAllocatedWidth(),
         newButtonVisibility: fieldValueJson.newButtonVisibility ??
           this._context.parameters.newButtonVisibility.raw === '1',
         deleteButtonVisibility: fieldValueJson.deleteButtonVisiblity ??
@@ -67,6 +68,7 @@ export class DataverseService implements IDataverseService {
         _service: this,
         fetchXml: fetchXml ?? this._context.parameters.defaultFetchXmlProperty.raw,
         defaultPageSize: this.getPageSize(),
+        allocatedWidth: this.getAllocatedWidth(),
         newButtonVisibility: this._context.parameters.newButtonVisibility.raw === '1',
         deleteButtonVisibility: this._context.parameters.deleteButtonVisibility.raw === '1',
       };
@@ -243,7 +245,7 @@ export class DataverseService implements IDataverseService {
     });
   }
 
-  public getControlWidth(): number {
+  public getAllocatedWidth(): number {
     return this._context.mode.allocatedWidth;
   }
 }

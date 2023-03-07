@@ -8,6 +8,7 @@ import { LinkableItem } from './LinkableItems';
 import { CommandBar } from './ComandBar';
 import { List } from './List';
 import { getItems } from '../utilities/d365Utils';
+import { Footer } from './Footer';
 
 export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   const {
@@ -15,6 +16,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
     deleteButtonVisibility,
     newButtonVisibility,
     defaultPageSize,
+    allocatedWidth,
     fetchXml,
     setIsLoading,
     setError,
@@ -25,6 +27,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [isDialogAccepted, setDialogAccepted] = React.useState(false);
   const [columns, setColumns] = React.useState<IColumn[]>([]);
+  const [allocatedWidthKey, setAllocatedWidthKey] = React.useState(allocatedWidth);
 
   const recordIds = React.useRef<string[]>([]);
   const nextButtonDisabled = React.useRef(true);
@@ -42,15 +45,16 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
     (async () => {
       try {
         setCurrentPage(1);
-        const filteredColumns = await getSortedColumns(fetchXml, dataverseService);
+        const filteredColumns = await getSortedColumns(fetchXml, allocatedWidth, dataverseService);
         setColumns(filteredColumns);
+        setAllocatedWidthKey(allocatedWidth);
         displayName.current = await dataverseService.getEntityDisplayName(entityName);
       }
       catch (err: any) {
         setError(err);
       }
     })();
-  }, [fetchXml, deleteButtonVisibility, newButtonVisibility, pageSize]);
+  }, [fetchXml, deleteButtonVisibility, newButtonVisibility, pageSize, allocatedWidth]);
 
   React.useEffect(() => {
     deleteBtnClassName.current = 'disableButton';
@@ -121,6 +125,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
       entityName={entityName}
       deleteBtnClassName={deleteBtnClassName}
       pageSize={pageSize}
+      allocatedWidthKey={allocatedWidthKey}
       firstItemIndex={firstItemIndex}
       lastItemIndex={lastItemIndex}
       selectedItemsCount={selectedItemsCount}
@@ -135,6 +140,17 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
       setColumns={setColumns}
       items={items}
       setItems={setItems}
+    />
+
+    <Footer
+      firstItemIndex={firstItemIndex.current}
+      lastItemIndex={lastItemIndex.current}
+      selectedItems={selectedItemsCount.current}
+      totalRecordsCount={totalRecordsCount.current}
+      currentPage={currentPage}
+      setCurrentPage={setCurrentPage}
+      nextButtonDisable={nextButtonDisabled.current}
+      movePreviousIsDisabled={currentPage <= 1}
     />
   </>
   ;

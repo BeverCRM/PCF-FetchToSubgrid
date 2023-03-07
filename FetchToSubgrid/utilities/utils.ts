@@ -42,8 +42,9 @@ export const sortColumns = (
 
 export const getSortedColumns = async (
   fetchXml: string | null,
+  allocatedWidth: number,
   dataverseService: IDataverseService): Promise<IColumn[]> => {
-  const columns: IColumn[] = await getColumns(fetchXml, dataverseService);
+  const columns: IColumn[] = await getColumns(fetchXml, allocatedWidth, dataverseService);
   const order = getOrderInFetch(fetchXml ?? '');
 
   if (!order) return columns;
