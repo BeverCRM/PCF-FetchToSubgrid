@@ -1,6 +1,9 @@
 import { IInputs } from '../generated/ManifestTypes';
 import { WholeNumberType } from '../utilities/enums';
-import { changeAliasNames, getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
+import { changeAliasNames,
+  checkFetchXmlFormat,
+  getEntityNameFromFetchXml,
+} from '../utilities/fetchXmlUtils';
 import {
   Entity,
   EntityMetadata,
@@ -43,34 +46,49 @@ export class DataverseService implements IDataverseService {
   }
 
   public getProps(): IAppWrapperProps {
-    const fetchXml = this._context.parameters.fetchXmlProperty.raw;
+    const fetchXmlorJson = this._context.parameters.fetchXmlProperty.raw;
     let pageSize = this._context.parameters.defaultPageSize.raw || 1;
     if (pageSize <= 0) pageSize = 1;
 
     try {
-      const fieldValueJson: JsonProps = JSON.parse(fetchXml ?? '') as JsonProps;
+      const fieldValueJson: JsonProps = JSON.parse(fetchXmlorJson ?? '') as JsonProps;
+
+      const allowedProps = [
+        'newButtonVisibility',
+        'deleteButtonVisibility',
+        'pageSize',
+        'fetchXml',
+      ];
+
+      const isJsonValid = Object.keys(fieldValueJson).every(prop => allowedProps.includes(prop));
 
       const props: IAppWrapperProps = {
         _service: this,
         fetchXml: fieldValueJson.fetchXml || this._context.parameters.defaultFetchXmlProperty.raw,
         defaultPageSize: this.getPageSize(fieldValueJson),
         allocatedWidth: this.getAllocatedWidth(),
+        isJsonValid,
         newButtonVisibility: fieldValueJson.newButtonVisibility ??
           this._context.parameters.newButtonVisibility.raw === '1',
         deleteButtonVisibility: fieldValueJson.deleteButtonVisiblity ??
           this._context.parameters.deleteButtonVisibility.raw === '1',
+        fetchXmlorJson,
       };
 
       return props;
     }
     catch {
+      const isJsonValid = !!checkFetchXmlFormat(fetchXmlorJson);
+
       const props: IAppWrapperProps = {
         _service: this,
-        fetchXml: fetchXml ?? this._context.parameters.defaultFetchXmlProperty.raw,
+        fetchXml: fetchXmlorJson ?? this._context.parameters.defaultFetchXmlProperty.raw,
         defaultPageSize: this.getPageSize(),
+        isJsonValid,
         allocatedWidth: this.getAllocatedWidth(),
         newButtonVisibility: this._context.parameters.newButtonVisibility.raw === '1',
         deleteButtonVisibility: this._context.parameters.deleteButtonVisibility.raw === '1',
+        fetchXmlorJson,
       };
       return props;
     }

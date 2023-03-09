@@ -18,6 +18,8 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
     defaultPageSize,
     allocatedWidth,
     fetchXml,
+    isJsonValid,
+    fetchXmlorJson,
     setIsLoading,
     setError,
   } = props;
@@ -54,58 +56,63 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
         setError(err);
       }
     })();
-  }, [fetchXml, deleteButtonVisibility, newButtonVisibility, pageSize, allocatedWidth]);
+  }, [fetchXmlorJson, pageSize, allocatedWidth]);
 
   React.useEffect(() => {
     deleteBtnClassName.current = 'disableButton';
     (async () => {
-      setError();
-      setIsLoading(true);
-      if (isDialogAccepted) return;
-
-      try {
-        totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
-        const records: Entity[] = await getItems(
-          fetchXml,
-          pageSize,
-          currentPage,
-          totalRecordsCount.current,
-          dataverseService);
-
-        calculateFilteredRecordsData(
-          totalRecordsCount.current,
-          records,
-          pageSize,
-          currentPage,
-          nextButtonDisabled,
-          lastItemIndex,
-          firstItemIndex);
-
-        records.forEach(record => {
-          recordIds.current.push(record.id);
-          Object.keys(record).forEach(key => {
-            if (key !== 'id') {
-              const value: any = record[key];
-
-              // eslint-disable-next-line no-extra-parens
-              record[key] = value.isLinkable ? (
-                <LinkableItem
-                  _service={dataverseService}
-                  item={value}
-                />
-              ) : value.displayName;
-            }
-          });
-        });
-        setItems(records);
+      if (!isJsonValid) {
+        setError({ message: 'JSON is not valid', stack: 'JSON is not valid' });
       }
-      catch (err: any) {
-        setError(err);
+      else {
+        setError();
+        setIsLoading(true);
+        if (isDialogAccepted) return;
+
+        try {
+          totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
+          const records: Entity[] = await getItems(
+            fetchXml,
+            pageSize,
+            currentPage,
+            totalRecordsCount.current,
+            dataverseService);
+
+          calculateFilteredRecordsData(
+            totalRecordsCount.current,
+            records,
+            pageSize,
+            currentPage,
+            nextButtonDisabled,
+            lastItemIndex,
+            firstItemIndex);
+
+          records.forEach(record => {
+            recordIds.current.push(record.id);
+            Object.keys(record).forEach(key => {
+              if (key !== 'id') {
+                const value: any = record[key];
+
+                // eslint-disable-next-line no-extra-parens
+                record[key] = value.isLinkable ? (
+                  <LinkableItem
+                    _service={dataverseService}
+                    item={value}
+                  />
+                ) : value.displayName;
+              }
+            });
+          });
+          setItems(records);
+        }
+        catch (err: any) {
+          setError(err);
+        }
       }
 
       setIsLoading(false);
     })();
-  }, [fetchXml, pageSize, currentPage, isDialogAccepted]);
+  }, [pageSize, currentPage, isDialogAccepted, fetchXmlorJson]);
 
   return <>
     <Stack horizontal horizontalAlign="end" className={dataSetStyles.buttons}>
@@ -152,6 +159,5 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
       nextButtonDisable={nextButtonDisabled.current}
       movePreviousIsDisabled={currentPage <= 1}
     />
-  </>
-  ;
+  </>;
 };

@@ -60,8 +60,10 @@ export interface IAppWrapperProps extends IService<IDataverseService> {
   fetchXml: string | null;
   defaultPageSize: number;
   allocatedWidth: number;
+  isJsonValid: boolean,
   deleteButtonVisibility: boolean;
   newButtonVisibility: boolean;
+  fetchXmlorJson: string | null;
 }
 
 export interface IFetchToSubgridProps extends IAppWrapperProps {

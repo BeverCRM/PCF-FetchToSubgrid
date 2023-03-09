@@ -209,3 +209,12 @@ export const getTopInFetchXml = (fetchXml: string | null): number => {
 
   return Number(top) || 0;
 };
+
+export const checkFetchXmlFormat = (fetchXml: string | null): Element => {
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
+
+  const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
+
+  return fetch;
+};
