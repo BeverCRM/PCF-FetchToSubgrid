@@ -26,7 +26,7 @@ const getLinkEntityFieldName = (
   index: number,
   linkEntityIndex: number,
   linkEntityName: string,
-) => {
+): string => {
   let fieldName = attr.attributeAlias;
 
   if (changedAliasNames[index]) {
@@ -56,7 +56,9 @@ const createColumnsForLinkEntity = (
       const changedAliasNames: string[] | null =
         getLinkEntityAggregateAliasNames(changeAliasNameInFetch ?? '', i);
 
-      const fieldName = getLinkEntityFieldName(changedAliasNames, attr, index, i, linkEntityName);
+      const fieldName: string = getLinkEntityFieldName(
+        changedAliasNames, attr, index, i, linkEntityName);
+
       const columnName: string = attr.attributeAlias ||
         linkentityMetadata[i].Attributes._collection[attr.name].DisplayName;
       const attributeType = linkentityMetadata[i].Attributes._collection[attr.name].AttributeType;

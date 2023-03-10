@@ -46,7 +46,7 @@ export class DataverseService implements IDataverseService {
   }
 
   public getProps(): IAppWrapperProps {
-    const fetchXmlorJson = this._context.parameters.fetchXmlProperty.raw;
+    const fetchXmlOrJson = this._context.parameters.fetchXmlProperty.raw;
     let pageSize = this._context.parameters.defaultPageSize.raw || 1;
     if (pageSize <= 0) pageSize = 1;
 
@@ -60,14 +60,14 @@ export class DataverseService implements IDataverseService {
         'fetchXml',
       ];
 
-      const fieldValueJson = JSON.parse(fetchXmlorJson ?? '') as JsonProps;
+      const fieldValueJson = JSON.parse(fetchXmlOrJson ?? '') as JsonProps;
       const isJsonValid = Object.keys(fieldValueJson).every(prop => allowedProps.includes(prop));
       if (!isJsonValid) error = new Error('JSON is not valid');
 
       const props: IAppWrapperProps = {
         _service: this,
         fetchXml: fieldValueJson.fetchXml || this._context.parameters.defaultFetchXmlProperty.raw,
-        defaultPageSize: this.getPageSize(fieldValueJson),
+        pageSize: this.getPageSize(fieldValueJson),
         allocatedWidth: this.getAllocatedWidth(),
         error,
         newButtonVisibility: fieldValueJson.newButtonVisibility ??
@@ -79,7 +79,7 @@ export class DataverseService implements IDataverseService {
       return props;
     }
     catch {
-      const fetchXml = fetchXmlorJson ?? this._context.parameters.defaultFetchXmlProperty.raw;
+      const fetchXml = fetchXmlOrJson ?? this._context.parameters.defaultFetchXmlProperty.raw;
       const fetchXmlParserError: string | null = getFetchXmlParserError(fetchXml);
 
       if (fetchXmlParserError) error = new Error(fetchXmlParserError);
@@ -87,7 +87,7 @@ export class DataverseService implements IDataverseService {
       const props: IAppWrapperProps = {
         _service: this,
         fetchXml,
-        defaultPageSize: this.getPageSize(),
+        pageSize: this.getPageSize(),
         error,
         allocatedWidth: this.getAllocatedWidth(),
         newButtonVisibility: this._context.parameters.newButtonVisibility.raw === '1',
@@ -173,8 +173,8 @@ export class DataverseService implements IDataverseService {
     do {
       fetch?.removeAttribute('page');
       fetch.setAttribute('page', `${++page}`);
-      // @ts-ignore
-      const data = await parent.Xrm.WebApi.retrieveMultipleRecords(
+      // eslint-disable-next-line no-invalid-this
+      const data: any = await this._context.webAPI.retrieveMultipleRecords(
         entityName, `?fetchXml=${encodeURIComponent(changedAliasNames)}`);
       numberOfRecords += data.entities.length;
       pagingCookie = data.fetchXmlPagingCookie;

@@ -26,9 +26,6 @@ export const List: React.FC<IListProps> = props => {
     setItems,
   } = props;
 
-  const updatedFetchXml = React.useRef(fetchXml);
-  React.useEffect(() => { updatedFetchXml.current = fetchXml; }, [fetchXml]);
-
   const onItemInvoked = React.useCallback((record?: Entity, index?: number | undefined): void => {
     const hasAggregate: boolean = isAggregate(fetchXml ?? '');
     if (index !== undefined && !hasAggregate) {
@@ -47,7 +44,7 @@ export const List: React.FC<IListProps> = props => {
       column?.fieldName,
       column?.ariaLabel,
       undefined,
-      columns) ?? [];
+      columns);
 
     const newFetchXml = addOrderToFetch(
       fetchXml ?? '',

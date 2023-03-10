@@ -213,9 +213,9 @@ export const getFetchXmlParserError = (fetchXml: string | null): string | null =
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
 
-  const fetch: Element | null = xmlDoc.querySelector('parsererror');
-  if (!fetch) return null;
+  const parserError: Element | null = xmlDoc.querySelector('parsererror');
+  if (!parserError) return null;
 
-  const errorMessage: string | null = fetch.querySelector('div')?.innerText ?? null;
+  const errorMessage: string | null = parserError.querySelector('div')?.innerText ?? null;
   return errorMessage;
 };

@@ -16,7 +16,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
     _service: dataverseService,
     deleteButtonVisibility,
     newButtonVisibility,
-    defaultPageSize,
+    pageSize,
     allocatedWidth,
     fetchXml,
     setIsLoading,
@@ -40,10 +40,13 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
 
   const entityName = getEntityNameFromFetchXml(fetchXml ?? '');
 
+  const updatedFetchXml = React.useRef(fetchXml);
+  React.useEffect(() => { updatedFetchXml.current = fetchXml; }, [fetchXml]);
+
   const { selection, selectedRecordIds } = useSelection((currentSelection: IObjectWithKey[]) => {
     selectedItemsCount.current = currentSelection.length;
     isButtonActive.current = currentSelection.length > 0 &&
-      !isAggregate(fetchXml);
+      !isAggregate(updatedFetchXml.current);
   });
 
   React.useEffect(() => {
@@ -63,8 +66,8 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   }, [fetchXml, allocatedWidth]);
 
   React.useEffect(() => {
-    isButtonActive.current = false;
     (async () => {
+      isButtonActive.current = false;
       setError();
       setIsLoading(true);
       if (isDialogAccepted) return;
@@ -73,7 +76,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
         totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
         const records: Entity[] = await getItems(
           fetchXml,
-          defaultPageSize,
+          pageSize,
           currentPage,
           totalRecordsCount.current,
           dataverseService);
@@ -81,7 +84,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
         calculateFilteredRecordsData(
           totalRecordsCount.current,
           records,
-          defaultPageSize,
+          pageSize,
           currentPage,
           nextButtonDisabled,
           lastItemIndex,
@@ -112,12 +115,14 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
 
       setIsLoading(false);
     })();
-  }, [defaultPageSize,
+  },
+  [
     currentPage,
     isDialogAccepted,
-    deleteButtonVisibility,
-    newButtonVisibility,
-    fetchXml]);
+    // deleteButtonVisibility,
+    // newButtonVisibility,
+    fetchXml,
+  ]);
 
   return <>
     <Stack horizontal horizontalAlign="end" className={dataSetStyles.buttons}>
@@ -136,7 +141,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
     <List _service={dataverseService}
       entityName={entityName}
       isButtonActive={isButtonActive}
-      pageSize={defaultPageSize}
+      pageSize={pageSize}
       allocatedWidthKey={allocatedWidthKey}
       firstItemIndex={firstItemIndex}
       lastItemIndex={lastItemIndex}

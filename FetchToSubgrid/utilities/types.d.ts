@@ -58,7 +58,7 @@ export interface IItemProps {
 
 export interface IAppWrapperProps extends IService<IDataverseService> {
   fetchXml: string | null;
-  defaultPageSize: number;
+  pageSize: number;
   allocatedWidth: number;
   deleteButtonVisibility: boolean;
   newButtonVisibility: boolean;

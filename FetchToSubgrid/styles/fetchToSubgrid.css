@@ -1,7 +1,7 @@
  .FetchToSubgridControl {
   width: 100%;
   position: relative;
-} 
+}
 
 .FetchToSubgridControl .fetchLoading {
   position: absolute;

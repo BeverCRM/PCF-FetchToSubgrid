@@ -21,7 +21,7 @@ export const sortColumns = (
   fieldName?: string,
   ariaLabel?: string,
   descending? : boolean,
-  allColumns?: IColumn[]): IColumn[] | undefined => {
+  allColumns?: IColumn[]): IColumn[] => {
   const filteredColumns = allColumns?.map((col: IColumn) => {
     const fetchXmlOrderMathAttributeFieldName = fieldName === col.fieldName &&
     fieldName !== undefined;
@@ -37,7 +37,7 @@ export const sortColumns = (
     return col;
   });
 
-  return filteredColumns;
+  return filteredColumns ?? [];
 };
 
 export const getSortedColumns = async (
@@ -53,7 +53,7 @@ export const getSortedColumns = async (
     Object.keys(order)[0],
     Object.keys(order)[0],
     Object.values(order)[0],
-    columns) ?? [];
+    columns);
 
   return filteredColumns;
 };
