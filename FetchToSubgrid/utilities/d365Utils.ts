@@ -60,16 +60,13 @@ const createColumnsForLinkEntity = (
       const columnName: string = attr.attributeAlias ||
         linkentityMetadata[i].Attributes._collection[attr.name].DisplayName;
       const attributeType = linkentityMetadata[i].Attributes._collection[attr.name].AttributeType;
+      const isMultiselectPickList = attributeType === AttributeType.MultiselectPickList;
 
       columns.push({
-        styles: attributeType === AttributeType.MultiselectPickList ||
-          hasAggregate ||
-          changedAliasNames[index]
+        styles: isMultiselectPickList || hasAggregate || changedAliasNames[index]
           ? { root: { '&:hover': { cursor: 'default' } } }
           : { root: { '&:hover': { cursor: 'pointer' } } },
-        className: attributeType === AttributeType.MultiselectPickList ||
-          hasAggregate ||
-          changedAliasNames[index]
+        className: isMultiselectPickList || hasAggregate || changedAliasNames[index]
           ? 'colIsNotSortable'
           : 'linkEntity',
         ariaLabel: attr.name,
@@ -104,6 +101,7 @@ const createColumnsForEntity = (
     const attributeType: number = displayNameCollection[name].AttributeType;
     const hasAggregate: boolean = isAggregate(fetchXml ?? '');
     const aliasNames: string[] | null = getEntityAggregateAliasNames(fetchXml ?? '');
+    const isMultiselectPickList = attributeType === AttributeType.MultiselectPickList;
 
     const changeAliasNameInFetch = changeAliasNames(fetchXml ?? '');
     const changedAliasNames: string[] | null = getEntityAggregateAliasNames(changeAliasNameInFetch);
@@ -114,14 +112,10 @@ const createColumnsForEntity = (
     }
 
     columns.push({
-      styles: attributeType === AttributeType.MultiselectPickList ||
-        hasAggregate ||
-        changedAliasNames[index]
+      styles: isMultiselectPickList || hasAggregate || changedAliasNames[index]
         ? { root: { '&:hover': { cursor: 'default' } } }
         : { root: { '&:hover': { cursor: 'pointer' } } },
-      className: attributeType === AttributeType.MultiselectPickList ||
-        hasAggregate ||
-        changedAliasNames[index]
+      className: isMultiselectPickList || hasAggregate || changedAliasNames[index]
         ? 'colIsNotSortable'
         : 'entity',
       name: displayName,
