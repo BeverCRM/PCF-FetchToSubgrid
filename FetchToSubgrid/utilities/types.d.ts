@@ -1,4 +1,4 @@
-import { IColumn } from '@fluentui/react';
+import { IColumn, ISelection } from '@fluentui/react';
 import * as React from 'react';
 
 export type EntityMetadata = ComponentFramework.PropertyHelper.EntityMetadata;
@@ -24,12 +24,12 @@ export interface IDataverseService {
     timeZoneDefinitions: any): string;
   getRecordsCount(fetchXml: string): Promise<number>;
   getEntityMetadata(entityName: string, attributesFieldNames: string[]): Promise<EntityMetadata>;
-  getCurrentPageRecords(fetchXml: string | null): Promise<RetriveRecords>;
+  getCurrentPageRecords(fetchXml: string | null): Promise<any>;
   openRecord(entityName: string, entityId: string): void;
   openLookupForm(entity: Entity, fieldName: string): void;
   openLinkEntityRecord(entity: Entity, fieldName: string): void;
   openPrimaryEntityForm(entity: Entity, entityName: string): void;
-  showNotificationPopup(message: string): Promise<void>;
+  showNotificationPopup(error: Error | undefined): Promise<void>;
   openRecordDeleteDialog(
     selectedRecordIds: string[],
     entityName: string,
@@ -60,15 +60,14 @@ export interface IAppWrapperProps extends IService<IDataverseService> {
   fetchXml: string | null;
   defaultPageSize: number;
   allocatedWidth: number;
-  isJsonValid: boolean,
   deleteButtonVisibility: boolean;
   newButtonVisibility: boolean;
-  fetchXmlorJson: string | null;
+  error?: Error;
 }
 
 export interface IFetchToSubgridProps extends IAppWrapperProps {
   setIsLoading: (isLoading: boolean) => void;
-  setError: (error?: any) => void;
+  setError: (error?: Error | undefined) => void;
 }
 
 export interface IListProps extends IService<IDataverseService> {
@@ -80,7 +79,7 @@ export interface IListProps extends IService<IDataverseService> {
   recordIds: React.MutableRefObject<string[]>;
   columns: IColumn[];
   items: Entity[];
-  deleteBtnClassName: React.MutableRefObject<string>
+  isButtonActive: React.MutableRefObject<boolean>
   firstItemIndex: React.MutableRefObject<number>;
   lastItemIndex: React.MutableRefObject<number>;
   selectedItemsCount: React.MutableRefObject<number>;
@@ -89,11 +88,11 @@ export interface IListProps extends IService<IDataverseService> {
   setItems: React.Dispatch<React.SetStateAction<ComponentFramework.WebApi.Entity[]>>;
   setColumns: React.Dispatch<React.SetStateAction<IColumn[]>>;
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
-  setSelectedRecordIds: React.Dispatch<React.SetStateAction<string[]>>
+  selection: ISelection;
 }
 
 export interface ICommandBarProps extends IService<IDataverseService> {
-  className: string;
+  isButtonActive: boolean;
   entityName: string;
   selectedRecordIds: string[];
   displayName: string;
@@ -114,7 +113,7 @@ export interface IFooterProps {
 }
 
 export interface IInfoMessageProps {
-  error?: any;
+  error?: Error;
   dataverseService: IDataverseService;
 }
 
@@ -124,7 +123,7 @@ export interface ILinkableItemProps extends IService<IDataverseService> {
 
 export interface JsonProps {
   newButtonVisibility?: boolean;
-  deleteButtonVisiblity?: boolean;
+  deleteButtonVisibility?: boolean;
   pageSize?: number;
   fetchXml?: string;
 }

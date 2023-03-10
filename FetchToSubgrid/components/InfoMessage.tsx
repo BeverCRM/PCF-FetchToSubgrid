@@ -6,7 +6,7 @@ export const InfoMessage: React.FC<IInfoMessageProps> = ({ error, dataverseServi
     <div className='infoMessage'>
       <h1 className='infoMessageText' onClick={ () =>
         dataverseService.showNotificationPopup(error)} >
-        Error
+        An error has occurred!
       </h1>
     </div>
   </div>;

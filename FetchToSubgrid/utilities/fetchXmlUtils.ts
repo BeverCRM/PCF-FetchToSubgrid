@@ -72,7 +72,6 @@ export const getOrderInFetch = (fetchXml: string) => {
 export const addOrderToFetch = (
   fetchXml: string,
   fieldName: string,
-  dialogEvent: any,
   column?: IColumn,
 ): string => {
 
@@ -155,7 +154,7 @@ export const getAttributesFieldNamesFromFetchXml = (fetchXml: string): string[] 
   return attributesFieldNames;
 };
 
-export const getEntityAliasNames = (fetchXml: string): string[] => {
+export const getEntityAggregateAliasNames = (fetchXml: string): string[] => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
@@ -172,7 +171,7 @@ export const getEntityAliasNames = (fetchXml: string): string[] => {
   return aggregateAttrNames;
 };
 
-export const getLinkEntityAliasNames = (fetchXml: string, i: number): string[] => {
+export const getLinkEntityAggregateAliasNames = (fetchXml: string, i: number): string[] => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
@@ -189,9 +188,9 @@ export const getLinkEntityAliasNames = (fetchXml: string, i: number): string[] =
   return aggregateAttrNames;
 };
 
-export const isAggregate = (fetchXml: string): boolean => {
+export const isAggregate = (fetchXml: string | null): boolean => {
   const parser: DOMParser = new DOMParser();
-  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+  const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
 
   const aggregate = xmlDoc.getElementsByTagName('fetch')?.[0]?.getAttribute('aggregate') ?? '';
   if (aggregate === 'true') return true;
@@ -210,11 +209,13 @@ export const getTopInFetchXml = (fetchXml: string | null): number => {
   return Number(top) || 0;
 };
 
-export const checkFetchXmlFormat = (fetchXml: string | null): Element => {
+export const getFetchXmlParserError = (fetchXml: string | null): string | null => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
 
-  const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
+  const fetch: Element | null = xmlDoc.querySelector('parsererror');
+  if (!fetch) return null;
 
-  return fetch;
+  const errorMessage: string | null = fetch.querySelector('div')?.innerText ?? null;
+  return errorMessage;
 };

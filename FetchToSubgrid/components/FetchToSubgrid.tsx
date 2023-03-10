@@ -1,14 +1,15 @@
 import * as React from 'react';
-import { IColumn, Stack } from '@fluentui/react';
+import { IColumn, IObjectWithKey, Stack } from '@fluentui/react';
 import { Entity, IFetchToSubgridProps } from '../utilities/types';
 import { getSortedColumns, calculateFilteredRecordsData } from '../utilities/utils';
-import { getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
+import { getEntityNameFromFetchXml, isAggregate } from '../utilities/fetchXmlUtils';
 import { dataSetStyles } from '../styles/comandBarStyles';
 import { LinkableItem } from './LinkableItems';
 import { CommandBar } from './ComandBar';
 import { List } from './List';
 import { getItems } from '../utilities/d365Utils';
 import { Footer } from './Footer';
+import { useSelection } from '../hooks/useSelection';
 
 export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   const {
@@ -18,14 +19,11 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
     defaultPageSize,
     allocatedWidth,
     fetchXml,
-    isJsonValid,
-    fetchXmlorJson,
     setIsLoading,
     setError,
   } = props;
 
   const [items, setItems] = React.useState<Entity[]>([]);
-  const [selectedRecordIds, setSelectedRecordIds] = React.useState<string[]>([]);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [isDialogAccepted, setDialogAccepted] = React.useState(false);
   const [columns, setColumns] = React.useState<IColumn[]>([]);
@@ -34,14 +32,19 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   const recordIds = React.useRef<string[]>([]);
   const nextButtonDisabled = React.useRef(true);
   const displayName = React.useRef('');
-  const deleteBtnClassName = React.useRef('disableButton');
+  const isButtonActive = React.useRef(false);
   const totalRecordsCount = React.useRef(0);
   const selectedItemsCount = React.useRef(0);
   const firstItemIndex = React.useRef(0);
   const lastItemIndex = React.useRef(0);
 
-  const pageSize: number = defaultPageSize;
   const entityName = getEntityNameFromFetchXml(fetchXml ?? '');
+
+  const { selection, selectedRecordIds } = useSelection((currentSelection: IObjectWithKey[]) => {
+    selectedItemsCount.current = currentSelection.length;
+    isButtonActive.current = currentSelection.length > 0 &&
+      !isAggregate(fetchXml);
+  });
 
   React.useEffect(() => {
     (async () => {
@@ -52,67 +55,69 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
         setAllocatedWidthKey(allocatedWidth);
         displayName.current = await dataverseService.getEntityDisplayName(entityName);
       }
-      catch (err: any) {
-        setError(err);
+      catch {
+        const error = await dataverseService.getCurrentPageRecords(fetchXml);
+        setError(error);
       }
     })();
-  }, [fetchXmlorJson, pageSize, allocatedWidth]);
+  }, [fetchXml, allocatedWidth]);
 
   React.useEffect(() => {
-    deleteBtnClassName.current = 'disableButton';
+    isButtonActive.current = false;
     (async () => {
-      if (!isJsonValid) {
-        setError({ message: 'JSON is not valid', stack: 'JSON is not valid' });
-      }
-      else {
-        setError();
-        setIsLoading(true);
-        if (isDialogAccepted) return;
+      setError();
+      setIsLoading(true);
+      if (isDialogAccepted) return;
 
-        try {
-          totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
-          const records: Entity[] = await getItems(
-            fetchXml,
-            pageSize,
-            currentPage,
-            totalRecordsCount.current,
-            dataverseService);
+      try {
+        totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
+        const records: Entity[] = await getItems(
+          fetchXml,
+          defaultPageSize,
+          currentPage,
+          totalRecordsCount.current,
+          dataverseService);
 
-          calculateFilteredRecordsData(
-            totalRecordsCount.current,
-            records,
-            pageSize,
-            currentPage,
-            nextButtonDisabled,
-            lastItemIndex,
-            firstItemIndex);
+        calculateFilteredRecordsData(
+          totalRecordsCount.current,
+          records,
+          defaultPageSize,
+          currentPage,
+          nextButtonDisabled,
+          lastItemIndex,
+          firstItemIndex);
 
-          records.forEach(record => {
-            recordIds.current.push(record.id);
-            Object.keys(record).forEach(key => {
-              if (key !== 'id') {
-                const value: any = record[key];
+        records.forEach(record => {
+          recordIds.current.push(record.id);
+          Object.keys(record).forEach(key => {
+            if (key !== 'id') {
+              const value: any = record[key];
 
-                // eslint-disable-next-line no-extra-parens
-                record[key] = value.isLinkable ? (
-                  <LinkableItem
-                    _service={dataverseService}
-                    item={value}
-                  />
-                ) : value.displayName;
-              }
-            });
+              // eslint-disable-next-line no-extra-parens
+              record[key] = value.isLinkable ? (
+                <LinkableItem
+                  _service={dataverseService}
+                  item={value}
+                />
+              ) : value.displayName;
+            }
           });
-          setItems(records);
-        }
-        catch (err: any) {
-          setError(err);
-        }
+        });
+        setItems(records);
+      }
+      catch (err: any) {
+        const error = await dataverseService.getCurrentPageRecords(fetchXml);
+        setError(error);
       }
 
       setIsLoading(false);
     })();
-  }, [pageSize, currentPage, isDialogAccepted, fetchXmlorJson]);
+  }, [defaultPageSize,
+    currentPage,
+    isDialogAccepted,
+    deleteButtonVisibility,
+    newButtonVisibility,
+    fetchXml]);
 
   return <>
     <Stack horizontal horizontalAlign="end" className={dataSetStyles.buttons}>
@@ -122,7 +127,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
         selectedRecordIds={selectedRecordIds}
         displayName={displayName.current}
         setDialogAccepted={setDialogAccepted}
-        className={deleteBtnClassName.current}
+        isButtonActive={isButtonActive.current}
         deleteButtonVisibility={deleteButtonVisibility}
         newButtonVisibility={newButtonVisibility}
       />
@@ -130,8 +135,8 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
 
     <List _service={dataverseService}
       entityName={entityName}
-      deleteBtnClassName={deleteBtnClassName}
-      pageSize={pageSize}
+      isButtonActive={isButtonActive}
+      pageSize={defaultPageSize}
       allocatedWidthKey={allocatedWidthKey}
       firstItemIndex={firstItemIndex}
       lastItemIndex={lastItemIndex}
@@ -140,7 +145,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
       nextButtonDisabled={nextButtonDisabled}
       fetchXml={fetchXml}
       recordIds={recordIds}
-      setSelectedRecordIds={setSelectedRecordIds}
+      selection={selection}
       currentPage={currentPage}
       setCurrentPage={setCurrentPage}
       columns={columns}

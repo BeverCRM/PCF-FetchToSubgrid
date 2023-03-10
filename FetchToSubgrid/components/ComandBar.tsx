@@ -9,30 +9,37 @@ const addIcon: IIconProps = { iconName: 'Add' };
 
 export const CommandBar = ({
   _service: dataverseService,
-  className,
+  isButtonActive,
   entityName,
   selectedRecordIds,
   displayName,
   newButtonVisibility,
   deleteButtonVisibility,
-  setDialogAccepted } : ICommandBarProps) =>
-  <div className='containerButtons'>
-    <CommandBarButton
-      maxLength={1}
-      iconProps={addIcon}
-      styles={!newButtonVisibility ? { root: { display: 'none' } } : ContainerButtonStyles}
-      text={`New ${displayName}`}
-      onClick={() => dataverseService.openRecord(entityName, '')}
-    />
+  setDialogAccepted }: ICommandBarProps) => {
 
-    <CommandBarButton
-      className={className}
-      iconProps={deleteIcon}
-      styles={!deleteButtonVisibility ? { root: { display: 'none' } } : ContainerButtonStyles}
-      text="Delete"
-      onClick={() => dataverseService.openRecordDeleteDialog(
-        selectedRecordIds,
-        entityName,
-        setDialogAccepted)}
-    />
-  </div>;
+  const isButtonVisible = deleteButtonVisibility && isButtonActive;
+
+  return (
+    <div className='containerButtons'>
+      {newButtonVisibility &&
+        <CommandBarButton
+          styles={ContainerButtonStyles}
+          maxLength={1}
+          iconProps={addIcon}
+          text={`New ${displayName}`}
+          onClick={() => dataverseService.openRecord(entityName, '')}
+        />
+      }
+
+      {isButtonVisible &&
+        <CommandBarButton
+          styles={ContainerButtonStyles}
+          iconProps={deleteIcon}
+          text="Delete"
+          onClick={() => dataverseService.openRecordDeleteDialog(
+            selectedRecordIds, entityName, setDialogAccepted)}
+        />
+      }
+    </div>
+  );
+};

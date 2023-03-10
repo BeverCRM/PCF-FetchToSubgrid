@@ -3,13 +3,7 @@ import { Entity, IListProps } from '../utilities/types';
 import { addOrderToFetch, isAggregate } from '../utilities/fetchXmlUtils';
 import { calculateFilteredRecordsData, sortColumns } from '../utilities/utils';
 import { LinkableItem } from './LinkableItems';
-import {
-  DetailsList,
-  DetailsListLayoutMode,
-  IColumn,
-  IObjectWithKey,
-  Selection,
-} from '@fluentui/react';
+import { DetailsList, DetailsListLayoutMode, IColumn } from '@fluentui/react';
 import { getItems } from '../utilities/d365Utils';
 
 export const List: React.FC<IListProps> = props => {
@@ -22,16 +16,14 @@ export const List: React.FC<IListProps> = props => {
     pageSize,
     allocatedWidthKey,
     items,
-    deleteBtnClassName,
     currentPage,
     nextButtonDisabled,
     firstItemIndex,
     lastItemIndex,
-    selectedItemsCount,
     totalRecordsCount,
+    selection,
     setColumns,
     setItems,
-    setSelectedRecordIds,
   } = props;
 
   const updatedFetchXml = React.useRef(fetchXml);
@@ -60,7 +52,6 @@ export const List: React.FC<IListProps> = props => {
     const newFetchXml = addOrderToFetch(
       fetchXml ?? '',
       fieldName ?? '',
-      dialogEvent,
       column);
 
     const sortedRecords: Entity[] = await getItems(
@@ -99,21 +90,6 @@ export const List: React.FC<IListProps> = props => {
     setColumns(sortedColumns);
     setItems(sortedRecords);
   };
-
-  const selection = new Selection({
-    onSelectionChanged: (): void => {
-      const currentSelection: IObjectWithKey[] = selection.getSelection();
-      selectedItemsCount.current = currentSelection.length;
-
-      deleteBtnClassName.current = currentSelection.length &&
-       !isAggregate(updatedFetchXml.current ?? '')
-        ? 'ms-Button'
-        : 'disableButton';
-
-      const recordIds: string[] = currentSelection.map((record: any) => record.id);
-      setSelectedRecordIds(recordIds);
-    },
-  });
 
   return <DetailsList
     key={allocatedWidthKey}
