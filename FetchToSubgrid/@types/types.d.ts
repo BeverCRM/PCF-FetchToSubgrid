@@ -24,7 +24,7 @@ export interface IDataverseService {
     timeZoneDefinitions: any): string;
   getRecordsCount(fetchXml: string): Promise<number>;
   getEntityMetadata(entityName: string, attributesFieldNames: string[]): Promise<EntityMetadata>;
-  getCurrentPageRecords(fetchXml: string | null): Promise<any>;
+  getCurrentPageRecords(fetchXml: string | null): Promise<RetriveRecords>;
   openRecord(entityName: string, entityId: string): void;
   openLookupForm(entity: Entity, fieldName: string): void;
   openLinkEntityRecord(entity: Entity, fieldName: string): void;
@@ -74,16 +74,15 @@ export interface IListProps extends IService<IDataverseService> {
   entityName: string;
   fetchXml: string | null;
   pageSize: number;
-  allocatedWidthKey: number;
+  inputsHashCode: number;
   currentPage: number;
   recordIds: React.MutableRefObject<string[]>;
   columns: IColumn[];
   items: Entity[];
-  isButtonActive: React.MutableRefObject<boolean>
   firstItemIndex: React.MutableRefObject<number>;
   lastItemIndex: React.MutableRefObject<number>;
   selectedItemsCount: React.MutableRefObject<number>;
-  totalRecordsCount: React.MutableRefObject<number>;
+  totalRecordsCount: number;
   nextButtonDisabled: React.MutableRefObject<boolean>;
   setItems: React.Dispatch<React.SetStateAction<ComponentFramework.WebApi.Entity[]>>;
   setColumns: React.Dispatch<React.SetStateAction<IColumn[]>>;
@@ -104,7 +103,7 @@ export interface ICommandBarProps extends IService<IDataverseService> {
 export interface IFooterProps {
   firstItemIndex: number;
   lastItemIndex: number;
-  selectedItems: number;
+  selectedItemsCount: number;
   totalRecordsCount: number;
   currentPage: number;
   nextButtonDisable: boolean;
@@ -119,11 +118,4 @@ export interface IInfoMessageProps {
 
 export interface ILinkableItemProps extends IService<IDataverseService> {
   item: Entity
-}
-
-export interface JsonProps {
-  newButtonVisibility?: boolean;
-  deleteButtonVisibility?: boolean;
-  pageSize?: number;
-  fetchXml?: string;
 }

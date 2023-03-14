@@ -1,7 +1,7 @@
 import { CommandBarButton, IIconProps } from '@fluentui/react';
 import * as React from 'react';
 import { ContainerButtonStyles } from '../styles/comandBarStyles';
-import { ICommandBarProps } from '../utilities/types';
+import { ICommandBarProps } from '../@types/types';
 
 const deleteIcon: IIconProps = { iconName: 'Delete' };
 const addIcon: IIconProps = { iconName: 'Add' };

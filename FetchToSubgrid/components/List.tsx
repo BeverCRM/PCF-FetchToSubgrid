@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Entity, IListProps } from '../utilities/types';
+import { Entity, IListProps } from '../@types/types';
 import { addOrderToFetch, isAggregate } from '../utilities/fetchXmlUtils';
 import { calculateFilteredRecordsData, sortColumns } from '../utilities/utils';
 import { LinkableItem } from './LinkableItems';
@@ -14,7 +14,7 @@ export const List: React.FC<IListProps> = props => {
     fetchXml,
     columns,
     pageSize,
-    allocatedWidthKey,
+    inputsHashCode,
     items,
     currentPage,
     nextButtonDisabled,
@@ -55,11 +55,11 @@ export const List: React.FC<IListProps> = props => {
       newFetchXml,
       pageSize,
       currentPage,
-      totalRecordsCount.current,
+      totalRecordsCount,
       dataverseService);
 
     calculateFilteredRecordsData(
-      totalRecordsCount.current,
+      totalRecordsCount,
       sortedRecords,
       pageSize,
       currentPage,
@@ -89,7 +89,7 @@ export const List: React.FC<IListProps> = props => {
   };
 
   return <DetailsList
-    key={allocatedWidthKey}
+    key={inputsHashCode}
     columns={columns}
     items={items}
     layoutMode={DetailsListLayoutMode.fixedColumns}

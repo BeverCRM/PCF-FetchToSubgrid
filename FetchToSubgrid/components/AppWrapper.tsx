@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { IAppWrapperProps } from '../utilities/types';
+import { IAppWrapperProps } from '../@types/types';
 import { FetchToSubgrid } from './FetchToSubgrid';
 import { InfoMessage } from './InfoMessage';
 import { Loader } from './Loader';

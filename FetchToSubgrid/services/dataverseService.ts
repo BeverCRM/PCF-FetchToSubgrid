@@ -10,8 +10,18 @@ import {
   EntityMetadata,
   IAppWrapperProps,
   IDataverseService,
-  JsonProps,
-} from '../utilities/types';
+  RetriveRecords,
+} from '../@types/types';
+
+class JsonProps {
+  newButtonVisibility?: boolean = undefined;
+  deleteButtonVisibility?: boolean = undefined;
+  pageSize?: number = undefined;
+  fetchXml?: string = undefined;
+}
+
+interface IJsonProps extends JsonProps {}
+type JsonAllowedProps = Array<keyof JsonProps>
 
 export class DataverseService implements IDataverseService {
   private _context: ComponentFramework.Context<IInputs>;
@@ -20,7 +30,7 @@ export class DataverseService implements IDataverseService {
     this._context = context;
   }
 
-  private getPageSize(jsonObj?: JsonProps) {
+  private getPageSize(jsonObj?: IJsonProps) {
     const pageSizse = Number(jsonObj?.pageSize);
     if (pageSizse) {
       if (pageSizse < 1) return 1;
@@ -53,15 +63,12 @@ export class DataverseService implements IDataverseService {
     let error: Error | undefined = undefined;
 
     try {
-      const allowedProps = [
-        'newButtonVisibility',
-        'deleteButtonVisibility',
-        'pageSize',
-        'fetchXml',
-      ];
+      const allowedProps: JsonAllowedProps = Object.keys(new JsonProps()) as JsonAllowedProps;
+      const fieldValueJson = JSON.parse(fetchXmlOrJson ?? '') as IJsonProps;
 
-      const fieldValueJson = JSON.parse(fetchXmlOrJson ?? '') as JsonProps;
-      const isJsonValid = Object.keys(fieldValueJson).every(prop => allowedProps.includes(prop));
+      const isJsonValid = Object.keys(fieldValueJson).every(
+        prop => allowedProps.includes(prop as keyof JsonProps));
+
       if (!isJsonValid) error = new Error('JSON is not valid');
 
       const props: IAppWrapperProps = {
@@ -158,7 +165,7 @@ export class DataverseService implements IDataverseService {
     return '';
   }
 
-  public getRecordsCount = async (fetchXml: string) => {
+  public async getRecordsCount(fetchXml: string) {
     let pagingCookie = null;
     let numberOfRecords = 0;
     let page = 0;
@@ -194,15 +201,10 @@ export class DataverseService implements IDataverseService {
   }
 
   public async getCurrentPageRecords(fetchXml: string | null):
-   Promise<any> {
-    try {
-      const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
-      const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
-      return await this._context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
-    }
-    catch (error) {
-      return error;
-    }
+    Promise<RetriveRecords> {
+    const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
+    const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
+    return await this._context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
   }
 
   public openRecord(entityName: string, entityId: string): void {

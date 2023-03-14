@@ -18,7 +18,7 @@ import {
   IDataverseService,
   IItemProps,
   RetriveRecords,
-} from './types';
+} from '../@types/types';
 
 const getLinkEntityFieldName = (
   changedAliasNames: string[],
@@ -62,13 +62,15 @@ const createColumnsForLinkEntity = (
       const columnName: string = attr.attributeAlias ||
         linkentityMetadata[i].Attributes._collection[attr.name].DisplayName;
       const attributeType = linkentityMetadata[i].Attributes._collection[attr.name].AttributeType;
+
       const isMultiselectPickList = attributeType === AttributeType.MultiselectPickList;
+      const sortingIsAllowed = isMultiselectPickList || hasAggregate || changedAliasNames[index];
 
       columns.push({
-        styles: isMultiselectPickList || hasAggregate || changedAliasNames[index]
+        styles: sortingIsAllowed
           ? { root: { '&:hover': { cursor: 'default' } } }
           : { root: { '&:hover': { cursor: 'pointer' } } },
-        className: isMultiselectPickList || hasAggregate || changedAliasNames[index]
+        className: sortingIsAllowed
           ? 'colIsNotSortable'
           : 'linkEntity',
         ariaLabel: attr.name,
@@ -107,6 +109,7 @@ const createColumnsForEntity = (
 
     const changeAliasNameInFetch = changeAliasNames(fetchXml ?? '');
     const changedAliasNames: string[] | null = getEntityAggregateAliasNames(changeAliasNameInFetch);
+    const sortingIsAllowed = isMultiselectPickList || hasAggregate || changedAliasNames[index];
 
     if (aliasNames[index] && changedAliasNames?.length) {
       displayName = aliasNames[index];
@@ -114,10 +117,10 @@ const createColumnsForEntity = (
     }
 
     columns.push({
-      styles: isMultiselectPickList || hasAggregate || changedAliasNames[index]
+      styles: sortingIsAllowed
         ? { root: { '&:hover': { cursor: 'default' } } }
         : { root: { '&:hover': { cursor: 'pointer' } } },
-      className: isMultiselectPickList || hasAggregate || changedAliasNames[index]
+      className: sortingIsAllowed
         ? 'colIsNotSortable'
         : 'entity',
       name: displayName,

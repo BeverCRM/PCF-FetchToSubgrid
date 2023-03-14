@@ -1,6 +1,6 @@
 /* global HTMLCollectionOf, NodeListOf */
 import { IColumn } from '@fluentui/react';
-import { Dictionary, EntityAttribute } from './types';
+import { Dictionary, EntityAttribute } from '../@types/types';
 
 export const changeAliasNames = (fetchXml: string) => {
   const parser = new DOMParser();

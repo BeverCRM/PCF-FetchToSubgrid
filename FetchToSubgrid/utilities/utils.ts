@@ -3,7 +3,7 @@ import { IColumn } from '@fluentui/react';
 import { getColumns } from './d365Utils';
 import { AttributeType } from './enums';
 import { getOrderInFetch } from './fetchXmlUtils';
-import { Entity, IDataverseService } from './types';
+import { Entity, IDataverseService } from '../@types/types';
 
 export const checkIfAttributeIsEntityReferance = (attributeType: AttributeType): boolean =>
   attributeType === AttributeType.Lookup ||
@@ -20,13 +20,13 @@ export const needToGetFormattedValue = (attributeType: AttributeType) =>
 export const sortColumns = (
   fieldName?: string,
   ariaLabel?: string,
-  descending? : boolean,
+  descending?: boolean,
   allColumns?: IColumn[]): IColumn[] => {
   const filteredColumns = allColumns?.map((col: IColumn) => {
     const fetchXmlOrderMathAttributeFieldName = fieldName === col.fieldName &&
-    fieldName !== undefined;
+      fieldName !== undefined;
     const fetchXmlOrderMathcLinkEntityAriaLabel = ariaLabel === col.ariaLabel &&
-     ariaLabel !== undefined;
+      ariaLabel !== undefined;
 
     col.isSorted = fetchXmlOrderMathAttributeFieldName || fetchXmlOrderMathcLinkEntityAriaLabel;
 
