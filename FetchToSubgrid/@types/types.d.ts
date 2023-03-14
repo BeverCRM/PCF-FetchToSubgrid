@@ -119,3 +119,18 @@ export interface IInfoMessageProps {
 export interface ILinkableItemProps extends IService<IDataverseService> {
   item: Entity
 }
+
+export interface IJsonProps {
+  newButtonVisibility: boolean;
+  deleteButtonVisibility: boolean;
+  pageSize: number;
+  fetchXml: string;
+}
+
+export type JsonAllowedProps = Array<keyof IJsonProps>;
+
+declare global {
+  interface String {
+    hashCode() : number;
+  }
+}

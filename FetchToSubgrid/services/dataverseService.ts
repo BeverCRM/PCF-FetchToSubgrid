@@ -10,18 +10,10 @@ import {
   EntityMetadata,
   IAppWrapperProps,
   IDataverseService,
+  IJsonProps,
   RetriveRecords,
 } from '../@types/types';
-
-class JsonProps {
-  newButtonVisibility?: boolean = undefined;
-  deleteButtonVisibility?: boolean = undefined;
-  pageSize?: number = undefined;
-  fetchXml?: string = undefined;
-}
-
-interface IJsonProps extends JsonProps {}
-type JsonAllowedProps = Array<keyof JsonProps>
+import { isJsonValid } from '../utilities/utils';
 
 export class DataverseService implements IDataverseService {
   private _context: ComponentFramework.Context<IInputs>;
@@ -63,13 +55,9 @@ export class DataverseService implements IDataverseService {
     let error: Error | undefined = undefined;
 
     try {
-      const allowedProps: JsonAllowedProps = Object.keys(new JsonProps()) as JsonAllowedProps;
-      const fieldValueJson = JSON.parse(fetchXmlOrJson ?? '') as IJsonProps;
+      const fieldValueJson: IJsonProps = JSON.parse(fetchXmlOrJson ?? '') as IJsonProps;
 
-      const isJsonValid = Object.keys(fieldValueJson).every(
-        prop => allowedProps.includes(prop as keyof JsonProps));
-
-      if (!isJsonValid) error = new Error('JSON is not valid');
+      if (!isJsonValid(fieldValueJson)) error = new Error('JSON is not valid');
 
       const props: IAppWrapperProps = {
         _service: this,

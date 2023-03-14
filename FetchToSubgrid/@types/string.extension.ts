@@ -1,14 +1,4 @@
-declare global {
-  interface String {
-    hashCode() : number;
-  }
-}
-
-export interface String {
-  hashCode(): number;
-}
-
-export default String.prototype.hashCode = function() {
+String.prototype.hashCode = function() {
   if (this.length === 0) return 0;
 
   let hash = 0;

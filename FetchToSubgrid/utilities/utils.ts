@@ -3,19 +3,29 @@ import { IColumn } from '@fluentui/react';
 import { getColumns } from './d365Utils';
 import { AttributeType } from './enums';
 import { getOrderInFetch } from './fetchXmlUtils';
-import { Entity, IDataverseService } from '../@types/types';
+import { Entity, IDataverseService, IJsonProps, JsonAllowedProps } from '../@types/types';
 
-export const checkIfAttributeIsEntityReferance = (attributeType: AttributeType): boolean =>
-  attributeType === AttributeType.Lookup ||
-  attributeType === AttributeType.Owner ||
-  attributeType === AttributeType.Customer;
+export const checkIfAttributeIsEntityReferance = (attributeType: AttributeType): boolean => {
+  const attributetypes: AttributeType[] = [
+    AttributeType.Lookup,
+    AttributeType.Owner,
+    AttributeType.Customer,
+  ];
 
-export const needToGetFormattedValue = (attributeType: AttributeType) =>
-  attributeType === AttributeType.Money ||
-  attributeType === AttributeType.PickList ||
-  attributeType === AttributeType.DateTime ||
-  attributeType === AttributeType.MultiselectPickList ||
-  attributeType === AttributeType.TwoOptions;
+  return attributetypes.includes(attributeType);
+};
+
+export const needToGetFormattedValue = (attributeType: AttributeType) => {
+  const attributeTypes: AttributeType[] = [
+    AttributeType.Money,
+    AttributeType.PickList,
+    AttributeType.DateTime,
+    AttributeType.MultiselectPickList,
+    AttributeType.TwoOptions,
+  ];
+
+  return attributeTypes.includes(attributeType);
+};
 
 export const sortColumns = (
   fieldName?: string,
@@ -70,4 +80,16 @@ export const calculateFilteredRecordsData = (
 
   lastItemIndex.current = (currentPage - 1) * pageSize + records.length;
   firstItemIndex.current = (currentPage - 1) * pageSize + 1;
+};
+
+class JsonProps implements IJsonProps {
+  newButtonVisibility: boolean = false;
+  deleteButtonVisibility: boolean = false;
+  pageSize: number = 0;
+  fetchXml: string = '';
+}
+
+export const isJsonValid = (jsonObj: Object): boolean => {
+  const allowedProps: JsonAllowedProps = Object.keys(new JsonProps()) as JsonAllowedProps;
+  return Object.keys(jsonObj).every(prop => allowedProps.includes(prop as keyof JsonProps));
 };
