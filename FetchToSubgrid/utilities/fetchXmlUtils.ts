@@ -1,6 +1,6 @@
 /* global HTMLCollectionOf, NodeListOf */
 import { IColumn } from '@fluentui/react';
-import { Dictionary, EntityAttribute } from '../@types/types';
+import { Dictionary, EntityAttribute, OrderInFetchXml } from '../@types/types';
 
 export const changeAliasNames = (fetchXml: string) => {
   const parser = new DOMParser();
@@ -47,7 +47,7 @@ export const getEntityNameFromFetchXml = (fetchXml: string): string => {
   return xmlDoc.getElementsByTagName('entity')?.[0]?.getAttribute('name') ?? '';
 };
 
-export const getOrderInFetch = (fetchXml: string) => {
+export const getOrderInFetchXml = (fetchXml: string): OrderInFetchXml | null => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: XMLDocument = parser.parseFromString(fetchXml, 'text/xml');
   const entityOrder: any = xmlDoc.querySelector('entity > order');

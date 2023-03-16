@@ -1,9 +1,15 @@
 import * as React from 'react';
 import { IColumn } from '@fluentui/react';
 import { getColumns } from './d365Utils';
-import { AttributeType } from './enums';
-import { getOrderInFetch } from './fetchXmlUtils';
-import { Entity, IDataverseService, IJsonProps, JsonAllowedProps } from '../@types/types';
+import { AttributeType } from '../@types/enum';
+import { getOrderInFetchXml } from './fetchXmlUtils';
+import {
+  Entity,
+  IDataverseService,
+  IJsonProps,
+  JsonAllowedProps,
+  OrderInFetchXml,
+} from '../@types/types';
 
 export const checkIfAttributeIsEntityReferance = (attributeType: AttributeType): boolean => {
   const attributetypes: AttributeType[] = [
@@ -55,7 +61,7 @@ export const getSortedColumns = async (
   allocatedWidth: number,
   dataverseService: IDataverseService): Promise<IColumn[]> => {
   const columns: IColumn[] = await getColumns(fetchXml, allocatedWidth, dataverseService);
-  const order = getOrderInFetch(fetchXml ?? '');
+  const order: OrderInFetchXml | null = getOrderInFetchXml(fetchXml ?? '');
 
   if (!order) return columns;
 

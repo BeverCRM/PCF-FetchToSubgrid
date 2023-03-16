@@ -7,16 +7,23 @@ export type RetriveRecords = ComponentFramework.WebApi.RetrieveMultipleResponse;
 
 export type Entity = ComponentFramework.WebApi.Entity;
 
+export type DialogResponse = ComponentFramework.NavigationApi.ConfirmDialogResponse
+
 export type Dictionary<T> = { [key: string]: T };
 
 export interface IService<T> {
   _service: T;
 }
 
+export interface OrderInFetchXml {
+  [attribute: string]: boolean;
+  isLinkEntity: boolean;
+}
+
 export interface IDataverseService {
   getProps(): IAppWrapperProps;
   getEntityDisplayName(entityName: string): Promise<string>;
-  getTimeZoneDefinitions(): Promise<void>;
+  getTimeZoneDefinitions(): Promise<Object>;
   getWholeNumberFieldName(
     format: string,
     entity: Entity,
@@ -74,7 +81,7 @@ export interface IListProps extends IService<IDataverseService> {
   entityName: string;
   fetchXml: string | null;
   pageSize: number;
-  inputsHashCode: number;
+  forceReRender: number;
   currentPage: number;
   recordIds: React.MutableRefObject<string[]>;
   columns: IColumn[];

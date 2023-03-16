@@ -27,7 +27,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [isDialogAccepted, setDialogAccepted] = React.useState(false);
   const [columns, setColumns] = React.useState<IColumn[]>([]);
-  const [listInputsHashCode, setListInputsHashCode] = React.useState(-1);
+  const listInputsHashCode = React.useRef(-1);
 
   const recordIds = React.useRef<string[]>([]);
   const nextButtonDisabled = React.useRef(true);
@@ -37,13 +37,13 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   const selectedItemsCount = React.useRef(0);
   const firstItemIndex = React.useRef(0);
   const lastItemIndex = React.useRef(0);
+  const fetchXmlOldValue = React.useRef(fetchXml);
 
   const entityName = getEntityNameFromFetchXml(fetchXml ?? '');
 
   const { selection, selectedRecordIds } = useSelection((currentSelection: IObjectWithKey[]) => {
     selectedItemsCount.current = currentSelection.length;
-    isButtonActive.current = currentSelection.length > 0 &&
-      !isAggregate(fetchXml);
+    isButtonActive.current = currentSelection.length > 0 && !isAggregate(fetchXml);
   });
 
   React.useEffect(() => {
@@ -51,9 +51,12 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
       try {
         const filteredColumns = await getSortedColumns(fetchXml, allocatedWidth, dataverseService);
         setColumns(filteredColumns);
-        setListInputsHashCode(`${allocatedWidth}${fetchXml}`.hashCode());
-        setCurrentPage(1);
-        displayName.current = await dataverseService.getEntityDisplayName(entityName);
+        listInputsHashCode.current = `${allocatedWidth}${fetchXml}`.hashCode();
+        if (fetchXml !== fetchXmlOldValue.current) {
+          setCurrentPage(1);
+          displayName.current = await dataverseService.getEntityDisplayName(entityName);
+          fetchXmlOldValue.current = fetchXml;
+        }
       }
       catch (error: any) {
         setError(error);
@@ -64,7 +67,6 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   React.useEffect(() => {
     (async () => {
       isButtonActive.current = false;
-      setError();
       setIsLoading(true);
       if (isDialogAccepted) return;
 
@@ -107,7 +109,6 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
       catch (error: any) {
         setError(error);
       }
-
       setIsLoading(false);
     })();
   },
@@ -134,7 +135,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
     <List _service={dataverseService}
       entityName={entityName}
       pageSize={pageSize}
-      inputsHashCode={listInputsHashCode}
+      forceReRender={listInputsHashCode.current}
       firstItemIndex={firstItemIndex}
       lastItemIndex={lastItemIndex}
       selectedItemsCount={selectedItemsCount}

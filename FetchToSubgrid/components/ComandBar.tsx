@@ -14,13 +14,9 @@ export const CommandBar = ({
   displayName,
   newButtonVisibility,
   deleteButtonVisibility,
-  setDialogAccepted }: ICommandBarProps) => {
-
-  const isButtonVisible = deleteButtonVisibility && isButtonActive;
-
-  return (
-    <div className='containerButtons'>
-      {newButtonVisibility &&
+  setDialogAccepted }: ICommandBarProps) =>
+  <div className='containerButtons'>
+    {newButtonVisibility &&
         <CommandBarButton
           styles={ContainerButtonStyles}
           maxLength={1}
@@ -28,9 +24,8 @@ export const CommandBar = ({
           text={`New ${displayName}`}
           onClick={() => dataverseService.openRecord(entityName, '')}
         />
-      }
-
-      {isButtonVisible &&
+    }
+    {deleteButtonVisibility && isButtonActive &&
         <CommandBarButton
           styles={ContainerButtonStyles}
           iconProps={deleteIcon}
@@ -38,7 +33,5 @@ export const CommandBar = ({
           onClick={() => dataverseService.openRecordDeleteDialog(
             selectedRecordIds, entityName, setDialogAccepted)}
         />
-      }
-    </div>
-  );
-};
+    }
+  </div>;

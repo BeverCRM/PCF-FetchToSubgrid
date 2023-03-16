@@ -1,5 +1,5 @@
 import { IColumn } from '@fluentui/react';
-import { AttributeType } from './enums';
+import { AttributeType } from '../@types/enum';
 import { needToGetFormattedValue, checkIfAttributeIsEntityReferance } from './utils';
 import {
   addPagingToFetchXml,
@@ -258,10 +258,8 @@ const getRecordsData = async (
   });
 
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
-
-  const timeZoneDefinitions = await dataverseService.getTimeZoneDefinitions();
-
-  const entityAliases = getEntityAggregateAliasNames(pagingFetchData);
+  const entityAliases: string[] = getEntityAggregateAliasNames(pagingFetchData);
+  const timeZoneDefinitions: Object = await dataverseService.getTimeZoneDefinitions();
 
   return {
     pagingFetchData,
@@ -383,7 +381,7 @@ export const getColumns = async (
   });
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
 
-  const columnWidth = allocatedWidth / attributesFieldNames.concat(linkEntityNames).length - 50;
+  const columnWidth = allocatedWidth / attributesFieldNames.concat(linkEntityNames).length - 125;
 
   const entityColumns = createColumnsForEntity(
     attributesFieldNames,

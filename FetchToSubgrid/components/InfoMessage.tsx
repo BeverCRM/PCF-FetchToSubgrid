@@ -5,8 +5,8 @@ export const InfoMessage: React.FC<IInfoMessageProps> = ({ error, dataverseServi
   <div className='FetchToSubgridControl'>
     <div className='infoMessage'>
       <h1
-        className='infoMessageText' onClick={ () =>
-          dataverseService.showNotificationPopup(error)}
+        className='infoMessageText'
+        onClick={ () => dataverseService.showNotificationPopup(error)}
       >
         An error has occurred!
       </h1>

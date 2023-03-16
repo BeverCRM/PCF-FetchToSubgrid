@@ -14,7 +14,7 @@ export const List: React.FC<IListProps> = props => {
     fetchXml,
     columns,
     pageSize,
-    inputsHashCode,
+    forceReRender,
     items,
     currentPage,
     nextButtonDisabled,
@@ -33,7 +33,7 @@ export const List: React.FC<IListProps> = props => {
     }
   }, [fetchXml]);
 
-  const onColumnHeaderClick = async (
+  const onColumnHeaderClick = React.useCallback(async (
     dialogEvent?: React.MouseEvent<HTMLElement, MouseEvent>,
     column?: IColumn): Promise<void> => {
     if (column?.className === 'colIsNotSortable') return;
@@ -86,10 +86,20 @@ export const List: React.FC<IListProps> = props => {
 
     setColumns(sortedColumns);
     setItems(sortedRecords);
-  };
+  }, [
+    columns,
+    currentPage,
+    dataverseService,
+    fetchXml,
+    firstItemIndex,
+    nextButtonDisabled,
+    pageSize,
+    recordIds,
+    totalRecordsCount,
+  ]);
 
   return <DetailsList
-    key={inputsHashCode}
+    key={forceReRender}
     columns={columns}
     items={items}
     layoutMode={DetailsListLayoutMode.fixedColumns}

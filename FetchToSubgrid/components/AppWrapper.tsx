@@ -9,18 +9,21 @@ export const AppWrapper: React.FC<IAppWrapperProps> = props => {
   const [error, setError] = React.useState<Error | undefined>(undefined);
 
   React.useEffect(() => {
-    setError(props.error);
-  }, [props.error]);
+    if (props.error === error) setError(undefined);
+    else setError(props.error);
+  }, [props.fetchXml, props.error]);
 
-  return <>
-    { error && <InfoMessage error={error} dataverseService={props._service} /> }
-    <div className='FetchToSubgridControl' style={{ display: error ? 'none' : 'grid' }} >
-      {isLoading && <Loader />}
-      <FetchToSubgrid
-        {...props}
-        setIsLoading={setIsLoading}
-        setError={setError}
-      />
+  return (
+    <div className='FetchToSubgridControl'>
+      { error && <InfoMessage error={error} dataverseService={props._service} /> }
+      { !error && isLoading && <Loader />}
+      { !error &&
+        <FetchToSubgrid
+          {...props}
+          setIsLoading={setIsLoading}
+          setError={setError}
+        />
+      }
     </div>
-  </>;
+  );
 };
