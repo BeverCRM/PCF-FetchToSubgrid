@@ -1,8 +1,7 @@
 import * as React from 'react';
 import { Entity, IListProps } from '../@types/types';
 import { addOrderToFetch, isAggregate } from '../utilities/fetchXmlUtils';
-import { calculateFilteredRecordsData, sortColumns } from '../utilities/utils';
-import { LinkableItem } from './LinkableItems';
+import { calculateFilteredRecordsData, createLinkableItems, sortColumns } from '../utilities/utils';
 import { DetailsList, DetailsListLayoutMode, IColumn } from '@fluentui/react';
 import { getItems } from '../utilities/d365Utils';
 
@@ -67,25 +66,10 @@ export const List: React.FC<IListProps> = props => {
       lastItemIndex,
       firstItemIndex);
 
-    sortedRecords.forEach(record => {
-      recordIds.current.push(record.id);
-      Object.keys(record).forEach(key => {
-        if (key !== 'id') {
-          const value: any = record[key];
-
-          // eslint-disable-next-line no-extra-parens
-          record[key] = value.isLinkable ? (
-            <LinkableItem
-              _service={dataverseService}
-              item={value}
-            />
-          ) : value.displayName;
-        }
-      });
-    });
+    const linkableItems = createLinkableItems(sortedRecords, recordIds.current, dataverseService);
 
     setColumns(sortedColumns);
-    setItems(sortedRecords);
+    setItems(linkableItems);
   }, [
     columns,
     currentPage,

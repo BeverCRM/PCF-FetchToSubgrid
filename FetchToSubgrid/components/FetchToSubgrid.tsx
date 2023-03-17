@@ -1,15 +1,18 @@
 import * as React from 'react';
 import { IColumn, IObjectWithKey, Stack } from '@fluentui/react';
 import { Entity, IFetchToSubgridProps } from '../@types/types';
-import { getSortedColumns, calculateFilteredRecordsData } from '../utilities/utils';
 import { getEntityNameFromFetchXml, isAggregate } from '../utilities/fetchXmlUtils';
 import { dataSetStyles } from '../styles/comandBarStyles';
-import { LinkableItem } from './LinkableItems';
 import { CommandBar } from './ComandBar';
 import { List } from './List';
 import { getItems } from '../utilities/d365Utils';
 import { Footer } from './Footer';
 import { useSelection } from '../hooks/useSelection';
+import {
+  getSortedColumns,
+  calculateFilteredRecordsData,
+  createLinkableItems,
+} from '../utilities/utils';
 
 export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   const {
@@ -88,23 +91,9 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
           lastItemIndex,
           firstItemIndex);
 
-        records.forEach(record => {
-          recordIds.current.push(record.id);
-          Object.keys(record).forEach(key => {
-            if (key !== 'id') {
-              const value: any = record[key];
+        const linkableItems = createLinkableItems(records, recordIds.current, dataverseService);
 
-              // eslint-disable-next-line no-extra-parens
-              record[key] = value.isLinkable ? (
-                <LinkableItem
-                  _service={dataverseService}
-                  item={value}
-                />
-              ) : value.displayName;
-            }
-          });
-        });
-        setItems(records);
+        setItems(linkableItems);
       }
       catch (error: any) {
         setError(error);

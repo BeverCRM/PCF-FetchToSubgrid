@@ -108,8 +108,6 @@ export class DataverseService implements IDataverseService {
       `${contextPage.getClientUrl()}/api/data/v9.0/timezonedefinitions`);
 
     const results = await request.json();
-    console.log(request, ' request');
-    console.log(results, ' results');
     return results;
   }
 

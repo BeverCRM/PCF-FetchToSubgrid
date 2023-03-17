@@ -3,6 +3,7 @@ import { IColumn } from '@fluentui/react';
 import { getColumns } from './d365Utils';
 import { AttributeType } from '../@types/enum';
 import { getOrderInFetchXml } from './fetchXmlUtils';
+import { LinkableItem } from '../components/LinkableItems';
 import {
   Entity,
   IDataverseService,
@@ -98,4 +99,26 @@ class JsonProps implements IJsonProps {
 export const isJsonValid = (jsonObj: Object): boolean => {
   const allowedProps: JsonAllowedProps = Object.keys(new JsonProps()) as JsonAllowedProps;
   return Object.keys(jsonObj).every(prop => allowedProps.includes(prop as keyof JsonProps));
+};
+
+export const createLinkableItems = (
+  records: Entity[],
+  recordIds: string[],
+  dataverseService: IDataverseService): Entity[] => {
+  records.forEach(record => {
+    recordIds.push(record.id);
+    Object.keys(record).forEach(key => {
+      if (key !== 'id') {
+        const value: any = record[key];
+
+        record[key] = value.isLinkable ? React.createElement(LinkableItem, {
+          _service: dataverseService,
+          item: value,
+        })
+          : value.displayName;
+      }
+    });
+  });
+
+  return records;
 };
