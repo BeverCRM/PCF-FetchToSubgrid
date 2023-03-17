@@ -1,34 +1,23 @@
 import { IInputs } from '../generated/ManifestTypes';
-import { WholeNumberType } from '../utilities/enums';
-import { changeAliasNames, getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
+import { WholeNumberType } from '../@types/enums';
+import {
+  changeAliasNames,
+  getEntityNameFromFetchXml,
+} from '../utilities/fetchXmlUtils';
 import {
   Entity,
   EntityMetadata,
   IAppWrapperProps,
   IDataverseService,
-  JsonProps,
   RetriveRecords,
-} from '../utilities/types';
+  DialogResponse,
+} from '../@types/types';
 
 export class DataverseService implements IDataverseService {
   private _context: ComponentFramework.Context<IInputs>;
 
   constructor(context: ComponentFramework.Context<IInputs>) {
     this._context = context;
-  }
-
-  private getPageSize(jsonObj?: JsonProps) {
-    const pageSizse = Number(jsonObj?.pageSize);
-    if (pageSizse) {
-      if (pageSizse < 1) return 1;
-      if (pageSizse > 250) return 250;
-      return pageSizse;
-    }
-
-    const defaultPageSizse = this._context.parameters.defaultPageSize.raw ?? 0;
-    if (defaultPageSizse < 1) return 1;
-    if (defaultPageSizse > 250) return 250;
-    return defaultPageSizse;
   }
 
   private async deleteSelectedRecords(recordIds: string[], entityName: string): Promise<void> {
@@ -43,49 +32,39 @@ export class DataverseService implements IDataverseService {
   }
 
   public getProps(): IAppWrapperProps {
-    const fetchXml = this._context.parameters.fetchXmlProperty.raw;
-    let pageSize = this._context.parameters.defaultPageSize.raw || 1;
-    if (pageSize <= 0) pageSize = 1;
+    const fetchXmlOrJson: string | null = this._context.parameters.fetchXmlProperty.raw;
 
-    try {
-      const fieldValueJson: JsonProps = JSON.parse(fetchXml ?? '') as JsonProps;
+    let defaultPageSize: number = this._context.parameters.defaultPageSize.raw || 1;
+    if (defaultPageSize < 0) defaultPageSize = 1;
 
-      const props: IAppWrapperProps = {
-        _service: this,
-        fetchXml: fieldValueJson.fetchXml || this._context.parameters.defaultFetchXmlProperty.raw,
-        defaultPageSize: this.getPageSize(fieldValueJson),
-        newButtonVisibility: fieldValueJson.newButtonVisibility ??
-          this._context.parameters.newButtonVisibility.raw === '1',
-        deleteButtonVisibility: fieldValueJson.deleteButtonVisiblity ??
-          this._context.parameters.deleteButtonVisibility.raw === '1',
-      };
-
-      return props;
-    }
-    catch {
-      const props: IAppWrapperProps = {
-        _service: this,
-        fetchXml: fetchXml ?? this._context.parameters.defaultFetchXmlProperty.raw,
-        defaultPageSize: this.getPageSize(),
+    const props: IAppWrapperProps = {
+      _service: this,
+      fetchXmlOrJson,
+      allocatedWidth: this.getAllocatedWidth(),
+      default: {
+        fetchXml: this._context.parameters.defaultFetchXmlProperty.raw,
+        pageSize: defaultPageSize,
         newButtonVisibility: this._context.parameters.newButtonVisibility.raw === '1',
         deleteButtonVisibility: this._context.parameters.deleteButtonVisibility.raw === '1',
-      };
-      return props;
-    }
+      },
+
+    };
+    return props;
   }
 
   public async getEntityDisplayName(entityName: string): Promise<string> {
-    const entityMetadata = await this._context.utils.getEntityMetadata(entityName);
+    const entityMetadata: EntityMetadata = await this._context.utils.getEntityMetadata(entityName);
     return entityMetadata._displayName;
   }
 
-  public async getTimeZoneDefinitions(): Promise<void> {
+  public async getTimeZoneDefinitions(): Promise<Object> {
     // @ts-ignore
     const contextPage = this._context.page;
 
-    const request = await fetch(`${contextPage.getClientUrl()}/api/data/v9.0/timezonedefinitions`);
-    const results = await request.json();
+    const request: Response = await fetch(
+      `${contextPage.getClientUrl()}/api/data/v9.0/timezonedefinitions`);
 
+    const results = await request.json();
     return results;
   }
 
@@ -135,46 +114,33 @@ export class DataverseService implements IDataverseService {
   }
 
   public async getRecordsCount(fetchXml: string): Promise<number> {
+    let pagingCookie = null;
+    let numberOfRecords = 0;
+    let page = 0;
     const parser: DOMParser = new DOMParser();
     const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
     const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
 
+    const entityName: string = getEntityNameFromFetchXml(fetchXml);
     fetch?.removeAttribute('count');
-    fetch?.removeAttribute('page');
+    const changedAliasNames: string = changeAliasNames(fetchXml);
 
-    const fetchWithoutCount: string = new XMLSerializer().serializeToString(xmlDoc);
-    const changedAliasNames: string = changeAliasNames(fetchWithoutCount);
-    const entityName: string = getEntityNameFromFetchXml(changedAliasNames);
+    do {
+      fetch?.removeAttribute('page');
+      fetch.setAttribute('page', `${++page}`);
+      // eslint-disable-next-line no-invalid-this
+      const data: any = await this._context.webAPI.retrieveMultipleRecords(
+        entityName, `?fetchXml=${encodeURIComponent(changedAliasNames)}`);
+      numberOfRecords += data.entities.length;
+      pagingCookie = data.fetchXmlPagingCookie;
 
-    const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(changedAliasNames ?? '')}`;
-    const records: RetriveRecords = await this._context.webAPI.retrieveMultipleRecords(
-      `${entityName}`,
-      encodeFetchXml);
+    } while (pagingCookie);
 
-    let allRecordsCount: number = records.entities.length;
-    let nextPage = 2;
-
-    while (allRecordsCount >= 5000) {
-      fetch.setAttribute('page', `${nextPage}`);
-      const fetchNextPage: string = new XMLSerializer().serializeToString(xmlDoc);
-      const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchNextPage ?? '')}`;
-      const nextRecords: RetriveRecords =
-        await this._context.webAPI.retrieveMultipleRecords(`${entityName}`, encodeFetchXml);
-
-      allRecordsCount += nextRecords.entities.length;
-      nextPage++;
-      if (nextRecords.entities.length !== 5000) {
-        return allRecordsCount;
-      }
-    }
-
-    return allRecordsCount;
+    return numberOfRecords;
   }
 
   public async getEntityMetadata(
-    entityName: string,
-    attributesFieldNames: string[],
-  ): Promise<EntityMetadata> {
+    entityName: string, attributesFieldNames: string[]): Promise<EntityMetadata> {
     const entityMetadata: EntityMetadata = await this._context.utils.getEntityMetadata(
       entityName,
       [...attributesFieldNames]);
@@ -217,7 +183,7 @@ export class DataverseService implements IDataverseService {
     entityName: string,
     setDialogAccepted: (value: any) => void,
   ): Promise<void> {
-    const entityMetadata = await this._context.utils.getEntityMetadata(entityName);
+    const entityMetadata: EntityMetadata = await this._context.utils.getEntityMetadata(entityName);
 
     const confirmOptions = { height: 200, width: 450 };
     const confirmStrings = {
@@ -225,9 +191,8 @@ export class DataverseService implements IDataverseService {
       You can't undo this action.`, title: 'Confirm Deletion',
     };
 
-    const deleteDialogStatus = await this._context.navigation.openConfirmDialog(
-      confirmStrings,
-      confirmOptions);
+    const deleteDialogStatus: DialogResponse = await this._context.navigation.openConfirmDialog(
+      confirmStrings, confirmOptions);
 
     if (deleteDialogStatus.confirmed) {
       setDialogAccepted(true);
@@ -236,10 +201,14 @@ export class DataverseService implements IDataverseService {
     }
   }
 
-  public async showNotificationPopup(message: string): Promise<void> {
+  public async showNotificationPopup(error: Error | undefined): Promise<void> {
     await this._context.navigation.openErrorDialog({
-      message: 'An error has occurred!',
-      details: message,
+      message: error?.message,
+      details: error?.stack,
     });
+  }
+
+  public getAllocatedWidth(): number {
+    return this._context.mode.allocatedWidth;
   }
 }

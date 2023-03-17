@@ -1,6 +1,6 @@
 import { Link } from '@fluentui/react';
 import * as React from 'react';
-import { ILinkableItemProps } from '../utilities/types';
+import { ILinkableItemProps } from '../@types/types';
 import { checkIfAttributeIsEntityReferance } from '../utilities/utils';
 
 export const LinkableItem: React.FC<ILinkableItemProps> = ({

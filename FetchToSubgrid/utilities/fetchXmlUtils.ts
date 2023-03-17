@@ -1,6 +1,6 @@
 /* global HTMLCollectionOf, NodeListOf */
 import { IColumn } from '@fluentui/react';
-import { Dictionary, EntityAttribute } from './types';
+import { Dictionary, EntityAttribute, OrderInFetchXml } from '../@types/types';
 
 export const changeAliasNames = (fetchXml: string) => {
   const parser = new DOMParser();
@@ -47,7 +47,7 @@ export const getEntityNameFromFetchXml = (fetchXml: string): string => {
   return xmlDoc.getElementsByTagName('entity')?.[0]?.getAttribute('name') ?? '';
 };
 
-export const getOrderInFetch = (fetchXml: string) => {
+export const getOrderInFetchXml = (fetchXml: string): OrderInFetchXml | null => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: XMLDocument = parser.parseFromString(fetchXml, 'text/xml');
   const entityOrder: any = xmlDoc.querySelector('entity > order');
@@ -72,7 +72,6 @@ export const getOrderInFetch = (fetchXml: string) => {
 export const addOrderToFetch = (
   fetchXml: string,
   fieldName: string,
-  dialogEvent: any,
   column?: IColumn,
 ): string => {
 
@@ -155,7 +154,7 @@ export const getAttributesFieldNamesFromFetchXml = (fetchXml: string): string[] 
   return attributesFieldNames;
 };
 
-export const getEntityAliasNames = (fetchXml: string): string[] => {
+export const getEntityAggregateAliasNames = (fetchXml: string): string[] => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
@@ -172,7 +171,7 @@ export const getEntityAliasNames = (fetchXml: string): string[] => {
   return aggregateAttrNames;
 };
 
-export const getLinkEntityAliasNames = (fetchXml: string, i: number): string[] => {
+export const getLinkEntityAggregateAliasNames = (fetchXml: string, i: number): string[] => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
@@ -189,9 +188,9 @@ export const getLinkEntityAliasNames = (fetchXml: string, i: number): string[] =
   return aggregateAttrNames;
 };
 
-export const isAggregate = (fetchXml: string): boolean => {
+export const isAggregate = (fetchXml: string | null): boolean => {
   const parser: DOMParser = new DOMParser();
-  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+  const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
 
   const aggregate = xmlDoc.getElementsByTagName('fetch')?.[0]?.getAttribute('aggregate') ?? '';
   if (aggregate === 'true') return true;
@@ -208,4 +207,15 @@ export const getTopInFetchXml = (fetchXml: string | null): number => {
   const top: string | null = fetch?.getAttribute('top');
 
   return Number(top) || 0;
+};
+
+export const getFetchXmlParserError = (fetchXml: string | null): string | null => {
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
+
+  const parserError: Element | null = xmlDoc.querySelector('parsererror');
+  if (!parserError) return null;
+
+  const errorMessage: string | null = parserError.querySelector('div')?.innerText ?? null;
+  return errorMessage;
 };

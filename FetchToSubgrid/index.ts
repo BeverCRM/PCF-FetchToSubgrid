@@ -1,6 +1,7 @@
+import './@types/string.extensions';
 import * as React from 'react';
 import { IInputs, IOutputs } from './generated/ManifestTypes';
-import { IAppWrapperProps, IDataverseService } from './utilities/types';
+import { IAppWrapperProps, IDataverseService } from './@types/types';
 import { AppWrapper } from './components/AppWrapper';
 import { DataverseService } from './services/dataverseService';
 
@@ -8,6 +9,7 @@ export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, 
   private _dataverseService: IDataverseService;
 
   public init(context: ComponentFramework.Context<IInputs>): void {
+    context.mode.trackContainerResize(true);
     this._dataverseService = new DataverseService(context);
   }
 

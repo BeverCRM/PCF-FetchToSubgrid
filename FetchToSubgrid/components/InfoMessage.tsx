@@ -1,11 +1,14 @@
 import * as React from 'react';
-import { IInfoMessageProps } from '../utilities/types';
+import { IInfoMessageProps } from '../@types/types';
 
-export const InfoMessage: React.FC<IInfoMessageProps> = ({ message }) =>
+export const InfoMessage: React.FC<IInfoMessageProps> = ({ error, dataverseService }) =>
   <div className='FetchToSubgridControl'>
     <div className='infoMessage'>
-      <h1 className='infoMessageText'>
-        {message || 'No data available'}
+      <h1
+        className='infoMessageText'
+        onClick={ () => dataverseService.showNotificationPopup(error)}
+      >
+        An error has occurred!
       </h1>
     </div>
   </div>;

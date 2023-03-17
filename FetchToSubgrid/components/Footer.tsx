@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { IFooterProps } from '../utilities/types';
+import { IFooterProps } from '../@types/types';
 import { IconButton } from '@fluentui/react/lib/Button';
 import {
   BackIcon,
@@ -13,7 +13,7 @@ export const Footer: React.FC<IFooterProps> = props => {
   const {
     firstItemIndex,
     lastItemIndex,
-    selectedItems,
+    selectedItemsCount,
     totalRecordsCount,
     currentPage,
     nextButtonDisable,
@@ -35,7 +35,7 @@ export const Footer: React.FC<IFooterProps> = props => {
 
   const selected = `${firstItemIndex} - ${lastItemIndex} of 
    ${totalRecordsCount >= 5000 ? '5000+' : totalRecordsCount}
-   ${selectedItems !== 0 ? `(${selectedItems} Selected)` : ''}`;
+   ${selectedItemsCount !== 0 ? `(${selectedItemsCount} Selected)` : ''}`;
 
   return (
     <div className={footerStyles.content}>
