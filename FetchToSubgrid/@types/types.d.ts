@@ -74,8 +74,9 @@ export interface IAppWrapperProps extends IService<IDataverseService> {
   }
 }
 
-export interface IFetchToSubgridProps extends IAppWrapperProps {
+export interface IFetchToSubgridProps {
   fetchXml: string | null;
+  _service: IDataverseService;
   pageSize: number;
   deleteButtonVisibility: boolean;
   newButtonVisibility: boolean;

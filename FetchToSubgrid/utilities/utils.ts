@@ -153,13 +153,6 @@ export const parseRawInput = (
     deleteButtonVisibility: appWrapperProps.default.deleteButtonVisibility,
     setIsLoading,
     setError,
-    fetchXmlOrJson: null,
-    default: {
-      fetchXml: null,
-      pageSize: 0,
-      deleteButtonVisibility: false,
-      newButtonVisibility: false,
-    },
   };
 
   try {
