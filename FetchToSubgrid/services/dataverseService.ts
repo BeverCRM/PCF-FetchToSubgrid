@@ -1,17 +1,14 @@
 import { IInputs } from '../generated/ManifestTypes';
-import { WholeNumberType } from '../@types/enum';
-import { isJsonValid } from '../utilities/utils';
+import { WholeNumberType } from '../@types/enums';
 import {
   changeAliasNames,
   getEntityNameFromFetchXml,
-  getFetchXmlParserError,
 } from '../utilities/fetchXmlUtils';
 import {
   Entity,
   EntityMetadata,
   IAppWrapperProps,
   IDataverseService,
-  IJsonProps,
   RetriveRecords,
   DialogResponse,
 } from '../@types/types';
@@ -21,20 +18,6 @@ export class DataverseService implements IDataverseService {
 
   constructor(context: ComponentFramework.Context<IInputs>) {
     this._context = context;
-  }
-
-  private getPageSize(jsonObj?: IJsonProps): number {
-    const pageSizse = Number(jsonObj?.pageSize);
-    if (pageSizse) {
-      if (pageSizse < 1) return 1;
-      if (pageSizse > 250) return 250;
-      return pageSizse;
-    }
-
-    const defaultPageSizse: number = this._context.parameters.defaultPageSize.raw ?? 0;
-    if (defaultPageSizse < 1) return 1;
-    if (defaultPageSizse > 250) return 250;
-    return defaultPageSizse;
   }
 
   private async deleteSelectedRecords(recordIds: string[], entityName: string): Promise<void> {
@@ -50,49 +33,23 @@ export class DataverseService implements IDataverseService {
 
   public getProps(): IAppWrapperProps {
     const fetchXmlOrJson: string | null = this._context.parameters.fetchXmlProperty.raw;
-    let pageSize: number = this._context.parameters.defaultPageSize.raw || 1;
-    if (pageSize <= 0) pageSize = 1;
 
-    let error: Error | undefined = undefined;
+    let defaultPageSize: number = this._context.parameters.defaultPageSize.raw || 1;
+    if (defaultPageSize < 0) defaultPageSize = 1;
 
-    try {
-      const fieldValueJson: IJsonProps = JSON.parse(fetchXmlOrJson ?? '') as IJsonProps;
-
-      if (!isJsonValid(fieldValueJson)) error = new Error('JSON is not valid');
-
-      const props: IAppWrapperProps = {
-        _service: this,
-        fetchXml: fieldValueJson.fetchXml || this._context.parameters.defaultFetchXmlProperty.raw,
-        pageSize: this.getPageSize(fieldValueJson),
-        allocatedWidth: this.getAllocatedWidth(),
-        error,
-        newButtonVisibility: fieldValueJson.newButtonVisibility ??
-          this._context.parameters.newButtonVisibility.raw === '1',
-        deleteButtonVisibility: fieldValueJson.deleteButtonVisibility ??
-          this._context.parameters.deleteButtonVisibility.raw === '1',
-      };
-
-      return props;
-    }
-    catch {
-      const fetchXml: string | null = fetchXmlOrJson ??
-       this._context.parameters.defaultFetchXmlProperty.raw;
-      const fetchXmlParserError: string | null = getFetchXmlParserError(fetchXml);
-
-      if (fetchXmlParserError) error = new Error(fetchXmlParserError);
-
-      const props: IAppWrapperProps = {
-        _service: this,
-        fetchXml,
-        pageSize: this.getPageSize(),
-        error,
-        allocatedWidth: this.getAllocatedWidth(),
+    const props: IAppWrapperProps = {
+      _service: this,
+      fetchXmlOrJson,
+      allocatedWidth: this.getAllocatedWidth(),
+      default: {
+        fetchXml: this._context.parameters.defaultFetchXmlProperty.raw,
+        pageSize: defaultPageSize,
         newButtonVisibility: this._context.parameters.newButtonVisibility.raw === '1',
         deleteButtonVisibility: this._context.parameters.deleteButtonVisibility.raw === '1',
-      };
+      },
 
-      return props;
-    }
+    };
+    return props;
   }
 
   public async getEntityDisplayName(entityName: string): Promise<string> {

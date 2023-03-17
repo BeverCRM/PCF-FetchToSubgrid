@@ -55,9 +55,9 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
         const filteredColumns = await getSortedColumns(fetchXml, allocatedWidth, dataverseService);
         setColumns(filteredColumns);
         listInputsHashCode.current = `${allocatedWidth}${fetchXml}`.hashCode();
+        displayName.current = await dataverseService.getEntityDisplayName(entityName);
         if (fetchXml !== fetchXmlOldValue.current) {
           setCurrentPage(1);
-          displayName.current = await dataverseService.getEntityDisplayName(entityName);
           fetchXmlOldValue.current = fetchXml;
         }
       }

@@ -73,13 +73,10 @@ export const List: React.FC<IListProps> = props => {
   }, [
     columns,
     currentPage,
-    dataverseService,
     fetchXml,
     firstItemIndex,
     nextButtonDisabled,
     pageSize,
-    recordIds,
-    totalRecordsCount,
   ]);
 
   return <DetailsList

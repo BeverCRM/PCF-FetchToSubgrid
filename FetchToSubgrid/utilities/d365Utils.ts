@@ -1,5 +1,5 @@
 import { IColumn } from '@fluentui/react';
-import { AttributeType } from '../@types/enum';
+import { AttributeType } from '../@types/enums';
 import { needToGetFormattedValue, checkIfAttributeIsEntityReferance } from './utils';
 import {
   addPagingToFetchXml,

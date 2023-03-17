@@ -1,12 +1,14 @@
 import * as React from 'react';
 import { IColumn } from '@fluentui/react';
 import { getColumns } from './d365Utils';
-import { AttributeType } from '../@types/enum';
-import { getOrderInFetchXml } from './fetchXmlUtils';
+import { AttributeType } from '../@types/enums';
+import { getFetchXmlParserError, getOrderInFetchXml } from './fetchXmlUtils';
 import { LinkableItem } from '../components/LinkableItems';
 import {
   Entity,
+  IAppWrapperProps,
   IDataverseService,
+  IFetchToSubgridProps,
   IJsonProps,
   JsonAllowedProps,
   OrderInFetchXml,
@@ -121,4 +123,67 @@ export const createLinkableItems = (
   });
 
   return records;
+};
+
+export const getPageSize = (value?: IJsonProps | number | null): number => {
+  let pageSize = 1;
+
+  if (typeof value === 'number') pageSize = value;
+  else if (value) pageSize = Number(value?.pageSize);
+
+  if (isNaN(pageSize) || pageSize < 1) return 1;
+  if (pageSize > 250) return 250;
+  return pageSize;
+};
+
+export const parseRawInput = (
+  appWrapperProps: IAppWrapperProps,
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  setError: React.Dispatch<React.SetStateAction<Error | undefined>>,
+) => {
+  const { fetchXmlOrJson } = appWrapperProps;
+
+  const props: IFetchToSubgridProps = {
+    error: undefined,
+    _service: appWrapperProps._service,
+    allocatedWidth: appWrapperProps.allocatedWidth,
+    fetchXml: appWrapperProps.default.fetchXml,
+    pageSize: getPageSize(appWrapperProps.default.pageSize),
+    newButtonVisibility: appWrapperProps.default.newButtonVisibility,
+    deleteButtonVisibility: appWrapperProps.default.deleteButtonVisibility,
+    setIsLoading,
+    setError,
+    fetchXmlOrJson: null,
+    default: {
+      fetchXml: null,
+      pageSize: 0,
+      deleteButtonVisibility: false,
+      newButtonVisibility: false,
+    },
+  };
+
+  try {
+    const fieldValueJson: IJsonProps = JSON.parse(fetchXmlOrJson ?? '') as IJsonProps;
+    if (!isJsonValid(fieldValueJson)) props.error = new Error('JSON is not valid');
+
+    if (fieldValueJson.fetchXml) props.fetchXml = fieldValueJson.fetchXml;
+    if (fieldValueJson.pageSize) props.pageSize = fieldValueJson.pageSize;
+
+    if (fieldValueJson.newButtonVisibility) {
+      props.newButtonVisibility = fieldValueJson.newButtonVisibility;
+    }
+
+    if (fieldValueJson.deleteButtonVisibility) {
+      props.deleteButtonVisibility = fieldValueJson.deleteButtonVisibility;
+    }
+  }
+  catch {
+    const fieldValueFetchXml: string | null = fetchXmlOrJson || appWrapperProps.default.fetchXml;
+    const fetchXmlParserError: string | null = getFetchXmlParserError(fieldValueFetchXml);
+
+    if (fetchXmlParserError) props.error = new Error(fetchXmlParserError);
+    if (fieldValueFetchXml) props.fetchXml = fieldValueFetchXml;
+  }
+
+  return props as IFetchToSubgridProps;
 };

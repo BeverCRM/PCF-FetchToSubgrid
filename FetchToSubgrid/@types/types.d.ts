@@ -64,15 +64,23 @@ export interface IItemProps {
 }
 
 export interface IAppWrapperProps extends IService<IDataverseService> {
-  fetchXml: string | null;
-  pageSize: number;
+  fetchXmlOrJson: string | null;
   allocatedWidth: number;
-  deleteButtonVisibility: boolean;
-  newButtonVisibility: boolean;
-  error?: Error;
+  default: {
+    fetchXml: string | null;
+    pageSize: number;
+    deleteButtonVisibility: boolean;
+    newButtonVisibility: boolean;
+  }
 }
 
 export interface IFetchToSubgridProps extends IAppWrapperProps {
+  fetchXml: string | null;
+  pageSize: number;
+  deleteButtonVisibility: boolean;
+  newButtonVisibility: boolean;
+  allocatedWidth: number;
+  error?: Error;
   setIsLoading: (isLoading: boolean) => void;
   setError: (error?: Error | undefined) => void;
 }

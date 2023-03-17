@@ -1,4 +1,4 @@
-import './@types/string.extension';
+import './@types/string.extensions';
 import * as React from 'react';
 import { IInputs, IOutputs } from './generated/ManifestTypes';
 import { IAppWrapperProps, IDataverseService } from './@types/types';
