@@ -30,7 +30,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [isDialogAccepted, setDialogAccepted] = React.useState(false);
   const [columns, setColumns] = React.useState<IColumn[]>([]);
-  const [listInputsHashCode, setListInputsHashCode] = React.useState(-1);
+  const listInputsHashCode = React.useRef(-1);
 
   const recordIds = React.useRef<string[]>([]);
   const nextButtonDisabled = React.useRef(true);
@@ -52,9 +52,9 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   React.useEffect(() => {
     (async () => {
       try {
+        listInputsHashCode.current = `${allocatedWidth}${fetchXml}`.hashCode();
         const filteredColumns = await getSortedColumns(fetchXml, allocatedWidth, dataverseService);
         setColumns(filteredColumns);
-        setListInputsHashCode(`${allocatedWidth}${fetchXml}`.hashCode());
         displayName.current = await dataverseService.getEntityDisplayName(entityName);
         if (fetchXml !== fetchXmlOldValue.current) {
           setCurrentPage(1);
@@ -127,7 +127,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
     <List _service={dataverseService}
       entityName={entityName}
       pageSize={pageSize}
-      forceReRender={listInputsHashCode}
+      forceReRender={listInputsHashCode.current}
       firstItemIndex={firstItemIndex}
       lastItemIndex={lastItemIndex}
       selectedItemsCount={selectedItemsCount}
