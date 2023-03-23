@@ -162,11 +162,11 @@ export const parseRawInput = (
     if (fieldValueJson.fetchXml) props.fetchXml = fieldValueJson.fetchXml;
     if (fieldValueJson.pageSize) props.pageSize = fieldValueJson.pageSize;
 
-    if (fieldValueJson.newButtonVisibility) {
+    if (fieldValueJson.newButtonVisibility !== undefined) {
       props.newButtonVisibility = fieldValueJson.newButtonVisibility;
     }
 
-    if (fieldValueJson.deleteButtonVisibility) {
+    if (fieldValueJson.deleteButtonVisibility !== undefined) {
       props.deleteButtonVisibility = fieldValueJson.deleteButtonVisibility;
     }
   }
