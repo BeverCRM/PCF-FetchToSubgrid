@@ -30,8 +30,8 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [isDialogAccepted, setDialogAccepted] = React.useState(false);
   const [columns, setColumns] = React.useState<IColumn[]>([]);
-  const listInputsHashCode = React.useRef(-1);
 
+  const listInputsHashCode = React.useRef(-1);
   const recordIds = React.useRef<string[]>([]);
   const nextButtonDisabled = React.useRef(true);
   const displayName = React.useRef('');
