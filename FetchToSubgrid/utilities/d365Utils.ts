@@ -77,7 +77,7 @@ const createColumnsForLinkEntity = (
         name: columnName,
         fieldName,
         key: `col-el-${index}`,
-        minWidth: 10,
+        minWidth: 100,
         isResizable: true,
         isMultiline: false,
         calculatedWidth: columnWidth,
@@ -381,7 +381,10 @@ export const getColumns = async (
   });
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
 
-  const columnWidth = (allocatedWidth - 128) / attributesFieldNames.concat(linkEntityNames).length;
+  let columnWidth = (allocatedWidth - 70) / attributesFieldNames.concat(
+    linkEntityNames).length - 20;
+
+  if (columnWidth < 80) columnWidth = 80;
 
   const entityColumns = createColumnsForEntity(
     attributesFieldNames,
