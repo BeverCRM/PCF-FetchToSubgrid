@@ -7,7 +7,7 @@ export const useSelection = (onSelectionChangedHandler: any) => {
   const selection = new Selection({
     onSelectionChanged: () => {
       const currentSelection: IObjectWithKey[] = selection.getSelection();
-      const recordIds = currentSelection.map<string>((row: any) => row.key);
+      const recordIds = currentSelection.map<string>((row: any) => row.id);
       setSelectedRecordIds(recordIds);
       onSelectionChangedHandler(currentSelection, selectedRecordIds, selection);
     },

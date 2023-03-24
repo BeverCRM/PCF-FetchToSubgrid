@@ -77,6 +77,7 @@ export const List: React.FC<IListProps> = props => {
     firstItemIndex,
     nextButtonDisabled,
     pageSize,
+    totalRecordsCount,
   ]);
 
   return <DetailsList

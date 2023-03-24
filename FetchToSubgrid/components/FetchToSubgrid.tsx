@@ -40,7 +40,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   const selectedItemsCount = React.useRef(0);
   const firstItemIndex = React.useRef(0);
   const lastItemIndex = React.useRef(0);
-  const fetchXmlOldValue = React.useRef(fetchXml);
+  const fetchXmlOldValue = React.useRef<string | null>(null);
 
   const entityName = getEntityNameFromFetchXml(fetchXml ?? '');
 
@@ -57,8 +57,8 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
         listInputsHashCode.current = `${allocatedWidth}${fetchXml}`.hashCode();
         displayName.current = await dataverseService.getEntityDisplayName(entityName);
         if (fetchXml !== fetchXmlOldValue.current) {
-          setCurrentPage(1);
           fetchXmlOldValue.current = fetchXml;
+          setCurrentPage(1);
         }
       }
       catch (error: any) {
@@ -74,7 +74,10 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
       if (isDialogAccepted) return;
 
       try {
-        totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
+        if (fetchXml !== fetchXmlOldValue.current) {
+          totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
+        }
+
         const records: Entity[] = await getItems(
           fetchXml,
           pageSize,
@@ -105,6 +108,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
     currentPage,
     isDialogAccepted,
     fetchXml,
+    pageSize,
   ]);
 
   return <>
