@@ -381,7 +381,6 @@ export const getColumns = async (
   });
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
 
-
   let columnWidth = (allocatedWidth - 70) /
    (attributesFieldNames.length + linkEntityNames.length) - 20;
 
