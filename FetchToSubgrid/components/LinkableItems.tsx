@@ -1,14 +1,19 @@
 import { Link } from '@fluentui/react';
 import * as React from 'react';
-import { ILinkableItemProps } from '../@types/types';
+import { Entity, IService } from '../@types/types';
+import { IDataverseService } from '../services/dataverseService';
 import { checkIfAttributeIsEntityReferance } from '../utilities/utils';
+
+interface ILinkableItemProps extends IService<IDataverseService> {
+  item: Entity
+}
 
 export const LinkableItem: React.FC<ILinkableItemProps> = ({
   _service: dataverseService,
   item }): JSX.Element => {
   if (item.isLinkEntity) {
     return (
-      <Link onClick={() => dataverseService.openLinkEntityRecord(item.entity, item.fieldName)}>
+      <Link onClick={() => dataverseService.openLinkEntityRecordForm(item.entity, item.fieldName)}>
         {item.displayName}
       </Link>
     );

@@ -1,9 +1,28 @@
 import * as React from 'react';
-import { Entity, IListProps } from '../@types/types';
+import { Entity, IService } from '../@types/types';
 import { addOrderToFetch, isAggregate } from '../utilities/fetchXmlUtils';
-import { calculateFilteredRecordsData, createLinkableItems, sortColumns } from '../utilities/utils';
-import { DetailsList, DetailsListLayoutMode, IColumn } from '@fluentui/react';
+import { createLinkableItems, sortColumns } from '../utilities/utils';
+import { DetailsList, DetailsListLayoutMode, IColumn, ISelection } from '@fluentui/react';
 import { getItems } from '../utilities/d365Utils';
+import { IDataverseService } from '../services/dataverseService';
+
+interface IListProps extends IService<IDataverseService> {
+  entityName: string;
+  fetchXml: string | null;
+  pageSize: number;
+  forceReRender: number;
+  currentPage: number;
+  recordIds: React.MutableRefObject<string[]>;
+  columns: IColumn[];
+  items: Entity[];
+  selectedItemsCount: React.MutableRefObject<number>;
+  totalRecordsCount: number;
+  nextButtonDisabled: boolean;
+  setItems: React.Dispatch<React.SetStateAction<ComponentFramework.WebApi.Entity[]>>;
+  setColumns: React.Dispatch<React.SetStateAction<IColumn[]>>;
+  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
+  selection: ISelection;
+}
 
 export const List: React.FC<IListProps> = props => {
   const {
@@ -17,8 +36,6 @@ export const List: React.FC<IListProps> = props => {
     items,
     currentPage,
     nextButtonDisabled,
-    firstItemIndex,
-    lastItemIndex,
     totalRecordsCount,
     selection,
     setColumns,
@@ -28,7 +45,7 @@ export const List: React.FC<IListProps> = props => {
   const onItemInvoked = React.useCallback((record?: Entity, index?: number | undefined): void => {
     const hasAggregate: boolean = isAggregate(fetchXml ?? '');
     if (index !== undefined && !hasAggregate) {
-      dataverseService.openRecord(entityName, recordIds.current[index]);
+      dataverseService.openRecordForm(entityName, recordIds.current[index]);
     }
   }, [fetchXml]);
 
@@ -57,15 +74,6 @@ export const List: React.FC<IListProps> = props => {
       totalRecordsCount,
       dataverseService);
 
-    calculateFilteredRecordsData(
-      totalRecordsCount,
-      sortedRecords,
-      pageSize,
-      currentPage,
-      nextButtonDisabled,
-      lastItemIndex,
-      firstItemIndex);
-
     const linkableItems = createLinkableItems(sortedRecords, recordIds.current, dataverseService);
 
     setColumns(sortedColumns);
@@ -74,7 +82,6 @@ export const List: React.FC<IListProps> = props => {
     columns,
     currentPage,
     fetchXml,
-    firstItemIndex,
     nextButtonDisabled,
     pageSize,
     totalRecordsCount,

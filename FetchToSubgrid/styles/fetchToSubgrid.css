@@ -30,7 +30,7 @@
   text-align: center;
 }
 
-.FetchToSubgridControl .infoMessage .infoMessageText {
+.FetchToSubgridControl .errorMessage .errorMessageText {
   text-align: center;
   width: 100%;
   cursor: pointer;

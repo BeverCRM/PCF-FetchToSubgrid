@@ -1,6 +1,7 @@
 import { IColumn } from '@fluentui/react';
 import { AttributeType } from '../@types/enums';
 import { needToGetFormattedValue, checkIfAttributeIsEntityReferance } from './utils';
+import { IDataverseService } from '../services/dataverseService';
 import {
   addPagingToFetchXml,
   getEntityAggregateAliasNames,
@@ -13,12 +14,24 @@ import {
 } from './fetchXmlUtils';
 import {
   Dictionary,
-  Entity, EntityAttribute,
+  Entity,
+  EntityAttribute,
   EntityMetadata,
-  IDataverseService,
-  IItemProps,
   RetriveRecords,
 } from '../@types/types';
+
+export interface IItemProps {
+  timeZoneDefinitions: any;
+  item: Entity;
+  isLinkEntity: boolean;
+  entityMetadata: EntityMetadata;
+  attributeType: number;
+  fieldName: string;
+  entity: Entity;
+  pagingFetchData: string;
+  index: number;
+  hasAliasValue: boolean;
+}
 
 const getLinkEntityFieldName = (
   changedAliasNames: string[],

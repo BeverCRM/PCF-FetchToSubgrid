@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { IFooterProps } from '../@types/types';
 import { IconButton } from '@fluentui/react/lib/Button';
 import {
   BackIcon,
@@ -8,6 +7,17 @@ import {
   ForwardIcon,
   PreviousIcon,
 } from '../styles/footerStyles';
+
+interface IFooterProps {
+  firstItemIndex: number;
+  lastItemIndex: number;
+  selectedItemsCount: number;
+  totalRecordsCount: number;
+  currentPage: number;
+  nextButtonDisable: boolean;
+  movePreviousIsDisabled: boolean;
+  setCurrentPage: (page: number) => void;
+}
 
 export const Footer: React.FC<IFooterProps> = props => {
   const {
@@ -33,8 +43,10 @@ export const Footer: React.FC<IFooterProps> = props => {
     setCurrentPage(currentPage + 1);
   }
 
+  const MAX_RECORD_DISPLAY_COUNT = 5000;
+
   const selected = `${firstItemIndex} - ${lastItemIndex} of 
-   ${totalRecordsCount >= 5000 ? '5000+' : totalRecordsCount}
+   ${totalRecordsCount > MAX_RECORD_DISPLAY_COUNT ? '5000+' : totalRecordsCount}
    ${selectedItemsCount !== 0 ? `(${selectedItemsCount} Selected)` : ''}`;
 
   return (

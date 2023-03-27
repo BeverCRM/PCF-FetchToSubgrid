@@ -4,15 +4,19 @@ import { getColumns } from './d365Utils';
 import { AttributeType } from '../@types/enums';
 import { getFetchXmlParserError, getOrderInFetchXml } from './fetchXmlUtils';
 import { LinkableItem } from '../components/LinkableItems';
-import {
-  Entity,
-  IAppWrapperProps,
-  IDataverseService,
-  IFetchToSubgridProps,
-  IJsonProps,
-  JsonAllowedProps,
-  OrderInFetchXml,
-} from '../@types/types';
+import { IDataverseService } from '../services/dataverseService';
+import { Entity, OrderInFetchXml } from '../@types/types';
+import { IAppWrapperProps } from '../components/AppWrapper';
+import { IFetchToSubgridProps } from '../components/FetchToSubgrid';
+
+interface IJsonProps {
+  newButtonVisibility: boolean;
+  deleteButtonVisibility: boolean;
+  pageSize: number;
+  fetchXml: string;
+}
+
+type JsonAllowedProps = Array<keyof IJsonProps>;
 
 export const checkIfAttributeIsEntityReferance = (attributeType: AttributeType): boolean => {
   const attributetypes: AttributeType[] = [
@@ -75,20 +79,6 @@ export const getSortedColumns = async (
     columns);
 
   return filteredColumns;
-};
-
-export const calculateFilteredRecordsData = (
-  totalRecordsCount: number,
-  records: Entity[],
-  pageSize: number,
-  currentPage: number,
-  nextButtonDisabled: React.MutableRefObject<boolean>,
-  lastItemIndex: React.MutableRefObject<number>,
-  firstItemIndex: React.MutableRefObject<number>): void => {
-  nextButtonDisabled.current = Math.ceil(totalRecordsCount / pageSize) <= currentPage;
-
-  lastItemIndex.current = (currentPage - 1) * pageSize + records.length;
-  firstItemIndex.current = (currentPage - 1) * pageSize + 1;
 };
 
 class JsonProps implements IJsonProps {
@@ -179,4 +169,16 @@ export const parseRawInput = (
   }
 
   return props as IFetchToSubgridProps;
+};
+
+export const hashCode = (str: string) => {
+  if (str.length === 0) return 0;
+
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const charCode = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + charCode;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
 };
