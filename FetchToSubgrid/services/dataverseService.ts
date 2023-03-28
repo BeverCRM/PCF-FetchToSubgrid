@@ -2,6 +2,7 @@ import { IInputs } from '../generated/ManifestTypes';
 import { WholeNumberType } from '../@types/enums';
 import { IAppWrapperProps } from '../components/AppWrapper';
 import { changeAliasNames, getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
+import { getFormattingFieldValue } from '../utilities/utils';
 import {
   Entity,
   EntityMetadata,
@@ -27,7 +28,6 @@ export interface IDataverseService {
   openPrimaryEntityForm(entity: Entity, entityName: string): void;
   openErrorDialog(error: Error): Promise<void>;
   openRecordDeleteDialog(entityName: string): Promise<DialogResponse>;
-  getAllocatedWidth(): number;
   deleteSelectedRecords(
     selectedRecordIds: string[],
     entityName: string,
@@ -84,8 +84,7 @@ export class DataverseService implements IDataverseService {
     fieldName: string,
     timeZoneDefinitions: any,
   ): string {
-    let fieldValue: number = entity[fieldName];
-    let unit: string;
+    const fieldValue: number = entity[fieldName];
 
     if (!fieldValue) return '';
 
@@ -100,18 +99,7 @@ export class DataverseService implements IDataverseService {
         return '';
 
       case WholeNumberType.Duration:
-        if (fieldValue < 60) {
-          unit = 'minute';
-        }
-        else if (fieldValue < 1440) {
-          fieldValue = Math.round(fieldValue / 60 * 100) / 100;
-          unit = 'hour';
-        }
-        else {
-          Math.round(fieldValue / 1440 * 100) / 100;
-          unit = 'day';
-        }
-        return `${fieldValue} ${unit}${fieldValue === 1 ? '' : 's'}`;
+        return getFormattingFieldValue(fieldValue);
 
       case WholeNumberType.Number:
         return `${fieldValue}`;
@@ -208,10 +196,6 @@ export class DataverseService implements IDataverseService {
     });
   }
 
-  public getAllocatedWidth(): number {
-    return this._context.mode.allocatedWidth;
-  }
-
   public async deleteSelectedRecords(recordIds: string[], entityName: string): Promise<void> {
     try {
       for (const id of recordIds) {
@@ -221,5 +205,9 @@ export class DataverseService implements IDataverseService {
     catch (e) {
       console.log(e);
     }
+  }
+
+  private getAllocatedWidth(): number {
+    return this._context.mode.allocatedWidth;
   }
 }

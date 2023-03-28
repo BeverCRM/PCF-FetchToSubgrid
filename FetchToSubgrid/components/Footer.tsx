@@ -19,6 +19,8 @@ interface IFooterProps {
   setCurrentPage: (page: number) => void;
 }
 
+const MAX_RECORD_DISPLAY_COUNT = 5000;
+
 export const Footer: React.FC<IFooterProps> = props => {
   const {
     firstItemIndex,
@@ -42,8 +44,6 @@ export const Footer: React.FC<IFooterProps> = props => {
   function moveNext() {
     setCurrentPage(currentPage + 1);
   }
-
-  const MAX_RECORD_DISPLAY_COUNT = 5000;
 
   const selected = `${firstItemIndex} - ${lastItemIndex} of 
    ${totalRecordsCount > MAX_RECORD_DISPLAY_COUNT ? '5000+' : totalRecordsCount}

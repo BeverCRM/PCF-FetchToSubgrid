@@ -5,11 +5,10 @@ import { getEntityNameFromFetchXml, isAggregate } from '../utilities/fetchXmlUti
 import { dataSetStyles } from '../styles/comandBarStyles';
 import { CommandBar } from './ComandBar';
 import { List } from './List';
-import { getItems } from '../utilities/d365Utils';
 import { Footer } from './Footer';
 import { useSelection } from '../hooks/useSelection';
 import { IDataverseService } from '../services/dataverseService';
-import { getSortedColumns, createLinkableItems, hashCode } from '../utilities/utils';
+import { getSortedColumns, hashCode, setLinkableItems } from '../utilities/utils';
 
 export interface IFetchToSubgridProps {
   fetchXml: string | null;
@@ -50,7 +49,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
 
   const entityName = getEntityNameFromFetchXml(fetchXml ?? '');
   const firstItemIndex = (currentPage - 1) * pageSize + 1;
-  const lastItemIndex = (currentPage - 1) * pageSize + items.length;
+  const lastItemIndex = firstItemIndex + items.length - 1;
   const nextButtonDisabled = Math.ceil(totalRecordsCount.current / pageSize) <= currentPage;
 
   const { selection, selectedRecordIds } = useSelection((currentSelection: IObjectWithKey[]) => {
@@ -89,16 +88,17 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
           totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
         }
 
-        const records: Entity[] = await getItems(
-          fetchXml,
-          pageSize,
-          currentPage,
-          totalRecordsCount.current,
-          dataverseService);
-
-        const linkableItems = createLinkableItems(records, recordIds.current, dataverseService);
-
-        setItems(linkableItems);
+        await setLinkableItems(
+          {
+            fetchXml,
+            pageSize,
+            currentPage,
+            totalRecordsCount: totalRecordsCount.current,
+            recordIds: recordIds.current,
+          },
+          dataverseService,
+          setItems,
+        );
       }
       catch (error: any) {
         setError(error);
@@ -129,7 +129,6 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
       forceReRender={listInputsHashCode.current}
       selectedItemsCount={selectedItemsCount}
       totalRecordsCount={totalRecordsCount.current}
-      nextButtonDisabled={nextButtonDisabled}
       fetchXml={fetchXml}
       recordIds={recordIds}
       selection={selection}

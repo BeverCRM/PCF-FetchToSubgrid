@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { IColumn } from '@fluentui/react';
-import { getColumns } from './d365Utils';
+import { getColumns, getItems } from './d365Utils';
 import { AttributeType } from '../@types/enums';
 import { getFetchXmlParserError, getOrderInFetchXml } from './fetchXmlUtils';
 import { LinkableItem } from '../components/LinkableItems';
@@ -14,6 +14,14 @@ interface IJsonProps {
   deleteButtonVisibility: boolean;
   pageSize: number;
   fetchXml: string;
+}
+
+interface ItemsData {
+  fetchXml: string | null,
+  pageSize: number,
+  currentPage: number,
+  totalRecordsCount: number,
+  recordIds: string[]
 }
 
 type JsonAllowedProps = Array<keyof IJsonProps>;
@@ -181,4 +189,41 @@ export const hashCode = (str: string) => {
     hash |= 0; // Convert to 32bit integer
   }
   return hash;
+};
+
+export const getFormattingFieldValue = (fieldValue: number): string => {
+  let unit: string;
+
+  if (fieldValue < 60) {
+    return 'minute';
+  }
+  else if (fieldValue < 1440) {
+    fieldValue = Math.round(fieldValue / 60 * 100) / 100;
+    unit = 'hour';
+  }
+  else {
+    Math.round(fieldValue / 1440 * 100) / 100;
+    unit = 'day';
+  }
+
+  return `${fieldValue} ${unit}${fieldValue === 1 ? '' : 's'}`;
+};
+
+export const setLinkableItems = async (
+  data: ItemsData,
+  dataverseService: IDataverseService,
+  setItems: React.Dispatch<React.SetStateAction<Entity[]>>) => {
+  const records: Entity[] = await getItems(
+    data.fetchXml,
+    data.pageSize,
+    data.currentPage,
+    data.totalRecordsCount,
+    dataverseService);
+
+  const linkableItems = createLinkableItems(
+    records,
+    data.recordIds,
+    dataverseService);
+
+  setItems(linkableItems);
 };

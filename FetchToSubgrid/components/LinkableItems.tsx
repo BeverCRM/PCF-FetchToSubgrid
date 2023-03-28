@@ -9,8 +9,7 @@ interface ILinkableItemProps extends IService<IDataverseService> {
 }
 
 export const LinkableItem: React.FC<ILinkableItemProps> = ({
-  _service: dataverseService,
-  item }): JSX.Element => {
+  _service: dataverseService, item }): JSX.Element => {
   if (item.isLinkEntity) {
     return (
       <Link onClick={() => dataverseService.openLinkEntityRecordForm(item.entity, item.fieldName)}>

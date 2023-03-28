@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { Entity, IService } from '../@types/types';
 import { addOrderToFetch, isAggregate } from '../utilities/fetchXmlUtils';
-import { createLinkableItems, sortColumns } from '../utilities/utils';
+import { setLinkableItems, sortColumns } from '../utilities/utils';
 import { DetailsList, DetailsListLayoutMode, IColumn, ISelection } from '@fluentui/react';
-import { getItems } from '../utilities/d365Utils';
 import { IDataverseService } from '../services/dataverseService';
 
 interface IListProps extends IService<IDataverseService> {
@@ -17,7 +16,6 @@ interface IListProps extends IService<IDataverseService> {
   items: Entity[];
   selectedItemsCount: React.MutableRefObject<number>;
   totalRecordsCount: number;
-  nextButtonDisabled: boolean;
   setItems: React.Dispatch<React.SetStateAction<ComponentFramework.WebApi.Entity[]>>;
   setColumns: React.Dispatch<React.SetStateAction<IColumn[]>>;
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
@@ -35,7 +33,6 @@ export const List: React.FC<IListProps> = props => {
     forceReRender,
     items,
     currentPage,
-    nextButtonDisabled,
     totalRecordsCount,
     selection,
     setColumns,
@@ -67,22 +64,23 @@ export const List: React.FC<IListProps> = props => {
       fieldName ?? '',
       column);
 
-    const sortedRecords: Entity[] = await getItems(
-      newFetchXml,
-      pageSize,
-      currentPage,
-      totalRecordsCount,
-      dataverseService);
-
-    const linkableItems = createLinkableItems(sortedRecords, recordIds.current, dataverseService);
+    await setLinkableItems(
+      {
+        fetchXml: newFetchXml,
+        pageSize,
+        currentPage,
+        totalRecordsCount,
+        recordIds: recordIds.current,
+      },
+      dataverseService,
+      setItems,
+    );
 
     setColumns(sortedColumns);
-    setItems(linkableItems);
   }, [
     columns,
     currentPage,
     fetchXml,
-    nextButtonDisabled,
     pageSize,
     totalRecordsCount,
   ]);
