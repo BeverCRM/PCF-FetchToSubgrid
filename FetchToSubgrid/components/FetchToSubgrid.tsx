@@ -45,7 +45,6 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   const isButtonActive = React.useRef(false);
   const totalRecordsCount = React.useRef(0);
   const selectedItemsCount = React.useRef(0);
-  const fetchXmlOldValue = React.useRef<string | null>(null);
 
   const entityName = getEntityNameFromFetchXml(fetchXml ?? '');
   const firstItemIndex = (currentPage - 1) * pageSize + 1;
@@ -57,17 +56,22 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
     isButtonActive.current = currentSelection.length > 0 && !isAggregate(fetchXml);
   });
 
+  React.useLayoutEffect(() => {
+    listInputsHashCode.current = hashCode(`${allocatedWidth}${fetchXml}`);
+  }, [allocatedWidth]);
+
+  React.useMemo(async () => {
+    totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
+  }, [fetchXml, isDialogAccepted]);
+
+  React.useEffect(() => setCurrentPage(1), [pageSize, fetchXml]);
+
   React.useEffect(() => {
     const fetchColumns = async () => {
       try {
         const filteredColumns = await getSortedColumns(fetchXml, allocatedWidth, dataverseService);
         setColumns(filteredColumns);
-        listInputsHashCode.current = hashCode(`${allocatedWidth}${fetchXml}`);
         displayName.current = await dataverseService.getEntityDisplayName(entityName);
-        if (fetchXml !== fetchXmlOldValue.current) {
-          fetchXmlOldValue.current = fetchXml;
-          setCurrentPage(1);
-        }
       }
       catch (error: any) {
         setError(error);
@@ -84,10 +88,6 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
       if (isDialogAccepted) return;
 
       try {
-        if (fetchXml !== fetchXmlOldValue.current) {
-          totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
-        }
-
         await setLinkableItems(
           {
             fetchXml,

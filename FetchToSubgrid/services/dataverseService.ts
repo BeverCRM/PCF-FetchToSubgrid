@@ -3,12 +3,7 @@ import { WholeNumberType } from '../@types/enums';
 import { IAppWrapperProps } from '../components/AppWrapper';
 import { changeAliasNames, getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
 import { getFormattingFieldValue } from '../utilities/utils';
-import {
-  Entity,
-  EntityMetadata,
-  RetriveRecords,
-  DialogResponse,
-} from '../@types/types';
+import { Entity, EntityMetadata, RetriveRecords, DialogResponse } from '../@types/types';
 
 export interface IDataverseService {
   getProps(): IAppWrapperProps;
