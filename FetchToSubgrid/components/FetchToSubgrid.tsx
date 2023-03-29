@@ -57,6 +57,8 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   });
 
   React.useLayoutEffect(() => {
+    if (allocatedWidth === -1) return;
+
     listInputsHashCode.current = hashCode(`${allocatedWidth}${fetchXml}`);
   }, [allocatedWidth]);
 
@@ -69,6 +71,8 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   React.useEffect(() => {
     const fetchColumns = async () => {
       try {
+        if (allocatedWidth === -1) return;
+
         const filteredColumns = await getSortedColumns(fetchXml, allocatedWidth, dataverseService);
         setColumns(filteredColumns);
         displayName.current = await dataverseService.getEntityDisplayName(entityName);
