@@ -1,7 +1,12 @@
 import { IColumn } from '@fluentui/react';
 import { AttributeType } from '../@types/enums';
-import { needToGetFormattedValue, checkIfAttributeIsEntityReferance } from './utils';
 import { IDataverseService } from '../services/dataverseService';
+import {
+  needToGetFormattedValue,
+  checkIfAttributeIsEntityReferance,
+  genereateItemsForEntity,
+  genereateItemsForLinkEntity,
+} from './utils';
 import {
   addPagingToFetchXml,
   getEntityAggregateAliasNames,
@@ -17,7 +22,8 @@ import {
   Entity,
   EntityAttribute,
   EntityMetadata,
-  RetriveRecords,
+  IRecordsData,
+  RetrieveRecords,
 } from '../@types/types';
 
 export interface IItemProps {
@@ -245,17 +251,15 @@ export const genereateItems = (props: IItemProps, dataverseService: IDataverseSe
 const getRecordsData = async (
   fetchXml: string | null,
   pagingData: any,
-  dataverseService: IDataverseService,
-) => {
+  dataverseService: IDataverseService): Promise<IRecordsData> => {
   const pagingFetchData: string = addPagingToFetchXml(
     fetchXml ?? '',
     pagingData.pageSize,
-    pagingData.currentPage,
-    pagingData.recordsCount);
+    pagingData.currentPage);
 
   const attributesFieldNames: string[] = getAttributesFieldNamesFromFetchXml(pagingFetchData);
   const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
-  const records: RetriveRecords = await dataverseService.getCurrentPageRecords(pagingFetchData);
+  const records: RetrieveRecords = await dataverseService.getCurrentPageRecords(pagingFetchData);
 
   const entityMetadata: EntityMetadata = await dataverseService.getEntityMetadata(
     entityName, attributesFieldNames);
@@ -292,78 +296,17 @@ export const getItems = async (
   fetchXml: string | null,
   pageSize: number,
   currentPage: number,
-  recordsCount: number,
   dataverseService: IDataverseService): Promise<Entity[]> => {
   const items: Entity[] = [];
 
-  const {
-    pagingFetchData,
-    attributesFieldNames,
-    entityName,
-    records,
-    entityMetadata,
-    linkEntityNames,
-    linkEntityAttributes,
-    linkentityMetadata,
-    timeZoneDefinitions,
-    entityAliases,
-  } = await getRecordsData(fetchXml, { pageSize, currentPage, recordsCount }, dataverseService);
+  const recordsData: IRecordsData = await getRecordsData(
+    fetchXml, { pageSize, currentPage }, dataverseService);
 
-  records.entities.forEach(entity => {
-    const item: Entity = isAggregate(fetchXml ?? '') ? {} : { id: entity[`${entityName}id`] };
-    attributesFieldNames.forEach((fieldName, index) => {
-      const hasAliasValue = !!entityAliases[index];
-      const attributeType: number = entityMetadata.Attributes.get(fieldName).AttributeType;
+  recordsData.records.entities.forEach(entity => {
+    const item: Entity = isAggregate(fetchXml) ? {} : { id: entity[`${recordsData.entityName}id`] };
 
-      if (entityAliases[index]) {
-        fieldName = entityAliases[index];
-      }
-
-      const attributes: IItemProps = {
-        timeZoneDefinitions,
-        item,
-        isLinkEntity: false,
-        entityMetadata,
-        attributeType,
-        fieldName,
-        entity,
-        pagingFetchData,
-        index,
-        hasAliasValue,
-      };
-
-      genereateItems(attributes, dataverseService);
-    });
-
-    linkEntityNames.forEach((linkEntityName, i) => {
-      linkEntityAttributes[i].forEach((attr, index) => {
-        const hasAliasValue = !!attr.linkEntityAlias;
-        const attributeType: number = linkentityMetadata[i].Attributes.get(attr.name).AttributeType;
-        let fieldName = attr.attributeAlias;
-
-        if (!fieldName && attr.linkEntityAlias) {
-          fieldName = `${attr.linkEntityAlias}.${attr.name}`;
-        }
-        else if (!fieldName) {
-          fieldName = `${linkEntityName}${i + 1}.${attr.name}`;
-        }
-
-        const attributes: IItemProps = {
-          timeZoneDefinitions,
-          item,
-          isLinkEntity: true,
-          entityMetadata: linkentityMetadata[i],
-          attributeType,
-          fieldName,
-          entity,
-          pagingFetchData,
-          index,
-          hasAliasValue,
-        };
-
-        genereateItems(attributes, dataverseService);
-      });
-    });
+    genereateItemsForEntity(recordsData, item, entity, dataverseService);
+    genereateItemsForLinkEntity(recordsData, item, entity, dataverseService);
 
     items.push(item);
   });

@@ -1,27 +1,24 @@
 import * as React from 'react';
 import { IColumn } from '@fluentui/react';
-import { getColumns, getItems } from './d365Utils';
+import { genereateItems, getColumns, getItems, IItemProps } from './d365Utils';
 import { AttributeType } from '../@types/enums';
 import { getFetchXmlParserError, getOrderInFetchXml } from './fetchXmlUtils';
 import { LinkableItem } from '../components/LinkableItems';
 import { IDataverseService } from '../services/dataverseService';
-import { Entity, OrderInFetchXml } from '../@types/types';
 import { IAppWrapperProps } from '../components/AppWrapper';
 import { IFetchToSubgridProps } from '../components/FetchToSubgrid';
+import {
+  Entity,
+  EntityAttribute,
+  IItemsData,
+  IRecordsData,
+  OrderInFetchXml } from '../@types/types';
 
 interface IJsonProps {
   newButtonVisibility: boolean;
   deleteButtonVisibility: boolean;
   pageSize: number;
   fetchXml: string;
-}
-
-interface ItemsData {
-  fetchXml: string | null,
-  pageSize: number,
-  currentPage: number,
-  totalRecordsCount: number,
-  recordIds: string[]
 }
 
 type JsonAllowedProps = Array<keyof IJsonProps>;
@@ -103,10 +100,8 @@ export const isJsonValid = (jsonObj: Object): boolean => {
 
 export const createLinkableItems = (
   records: Entity[],
-  recordIds: string[],
   dataverseService: IDataverseService): Entity[] => {
   records.forEach(record => {
-    recordIds.push(record.id);
     Object.keys(record).forEach(key => {
       if (key !== 'id') {
         const value: any = record[key];
@@ -209,21 +204,86 @@ export const getFormattingFieldValue = (fieldValue: number): string => {
   return `${fieldValue} ${unit}${fieldValue === 1 ? '' : 's'}`;
 };
 
-export const setLinkableItems = async (
-  data: ItemsData,
-  dataverseService: IDataverseService,
-  setItems: React.Dispatch<React.SetStateAction<Entity[]>>) => {
+export const getLinkableItems = async (
+  data: IItemsData,
+  dataverseService: IDataverseService): Promise<Entity[]> => {
   const records: Entity[] = await getItems(
     data.fetchXml,
     data.pageSize,
     data.currentPage,
-    data.totalRecordsCount,
     dataverseService);
 
-  const linkableItems = createLinkableItems(
-    records,
-    data.recordIds,
-    dataverseService);
+  const linkableItems = createLinkableItems(records, dataverseService);
 
-  setItems(linkableItems);
+  return linkableItems;
+};
+
+export const getAttributeAliasName = (
+  attribute: EntityAttribute,
+  index: number,
+  linkEntityName: string) => {
+  if (!attribute.attributeAlias && attribute.linkEntityAlias) {
+    return `${attribute.linkEntityAlias}.${attribute.name}`;
+  }
+  else if (!attribute.attributeAlias) {
+    return `${linkEntityName}${index + 1}.${attribute.name}`;
+  }
+
+  return attribute.attributeAlias;
+};
+
+export const genereateItemsForEntity = (
+  recordsData: IRecordsData, item: Entity, entity: Entity, dataverseService: IDataverseService) => {
+
+  recordsData.attributesFieldNames.forEach((fieldName: any, index: number) => {
+    const hasAliasValue = !!recordsData.entityAliases[index];
+    const attributeType: number = recordsData.entityMetadata.Attributes.get(
+      fieldName).AttributeType;
+
+    if (recordsData.entityAliases[index]) {
+      fieldName = recordsData.entityAliases[index];
+    }
+
+    const attributes: IItemProps = {
+      timeZoneDefinitions: recordsData.timeZoneDefinitions,
+      item,
+      isLinkEntity: false,
+      entityMetadata: recordsData.entityMetadata,
+      attributeType,
+      fieldName,
+      entity,
+      pagingFetchData: recordsData.pagingFetchData,
+      index,
+      hasAliasValue,
+    };
+
+    genereateItems(attributes, dataverseService);
+  });
+};
+
+export const genereateItemsForLinkEntity = (
+  recordsData: IRecordsData, item: Entity, entity: Entity, dataverseService: IDataverseService) => {
+  recordsData.linkEntityNames.forEach((linkEntityName: string, i: number) => {
+    recordsData.linkEntityAttributes[i].forEach((attr: any, index: number) => {
+      const hasAliasValue = !!attr.linkEntityAlias;
+      const attributeType: number = recordsData.linkentityMetadata[i].Attributes.get(
+        attr.name).AttributeType;
+      const fieldName = getAttributeAliasName(attr, i, linkEntityName);
+
+      const attributes: IItemProps = {
+        timeZoneDefinitions: recordsData.timeZoneDefinitions,
+        item,
+        isLinkEntity: true,
+        entityMetadata: recordsData.linkentityMetadata[i],
+        attributeType,
+        fieldName,
+        entity,
+        pagingFetchData: recordsData.pagingFetchData,
+        index,
+        hasAliasValue,
+      };
+
+      genereateItems(attributes, dataverseService);
+    });
+  });
 };

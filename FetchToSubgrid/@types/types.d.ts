@@ -1,6 +1,6 @@
 export type EntityMetadata = ComponentFramework.PropertyHelper.EntityMetadata;
 
-export type RetriveRecords = ComponentFramework.WebApi.RetrieveMultipleResponse;
+export type RetrieveRecords = ComponentFramework.WebApi.RetrieveMultipleResponse;
 
 export type Entity = ComponentFramework.WebApi.Entity;
 
@@ -21,4 +21,23 @@ export interface EntityAttribute {
   linkEntityAlias?: string;
   name: string;
   attributeAlias: string;
+}
+
+export interface IRecordsData {
+  pagingFetchData: string;
+  attributesFieldNames: string[];
+  entityName:string;
+  records: RetrieveRecords;
+  entityMetadata: EntityMetadata;
+  linkEntityNames: string[];
+  linkEntityAttributes: EntityAttribute[][];
+  linkentityMetadata: EntityMetadata;
+  timeZoneDefinitions: Object;
+  entityAliases: string[];
+}
+
+export interface IItemsData {
+  fetchXml: string | null,
+  pageSize: number,
+  currentPage: number,
 }

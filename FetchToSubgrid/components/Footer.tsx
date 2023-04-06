@@ -15,7 +15,6 @@ interface IFooterProps {
   totalRecordsCount: number;
   currentPage: number;
   nextButtonDisable: boolean;
-  movePreviousIsDisabled: boolean;
   setCurrentPage: (page: number) => void;
 }
 
@@ -29,7 +28,6 @@ export const Footer: React.FC<IFooterProps> = props => {
     totalRecordsCount,
     currentPage,
     nextButtonDisable,
-    movePreviousIsDisabled,
     setCurrentPage,
   } = props;
 
@@ -57,13 +55,13 @@ export const Footer: React.FC<IFooterProps> = props => {
           styles={footerButtonStyles}
           iconProps={PreviousIcon}
           onClick={moveToFirst}
-          disabled = {movePreviousIsDisabled}
+          disabled = {currentPage <= 1}
         />
         <IconButton
           styles={footerButtonStyles}
           iconProps={BackIcon}
           onClick={movePrevious}
-          disabled={movePreviousIsDisabled}
+          disabled={currentPage <= 1}
         />
         <span color='black'> Page {currentPage} </span>
         <IconButton

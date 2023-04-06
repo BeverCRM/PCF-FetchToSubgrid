@@ -1,7 +1,7 @@
 import { IObjectWithKey, Selection } from '@fluentui/react';
 import * as React from 'react';
 
-export const useSelection = (onSelectionChangedHandler: any) => {
+export const useSelection = () => {
   const [selectedRecordIds, setSelectedRecordIds] = React.useState<string[]>([]);
 
   const selection = new Selection({
@@ -9,7 +9,6 @@ export const useSelection = (onSelectionChangedHandler: any) => {
       const currentSelection: IObjectWithKey[] = selection.getSelection();
       const recordIds = currentSelection.map<string>((row: any) => row.id);
       setSelectedRecordIds(recordIds);
-      onSelectionChangedHandler(currentSelection, selectedRecordIds, selection);
     },
   });
 

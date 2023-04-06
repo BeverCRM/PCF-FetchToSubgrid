@@ -3,7 +3,7 @@ import { WholeNumberType } from '../@types/enums';
 import { IAppWrapperProps } from '../components/AppWrapper';
 import { changeAliasNames, getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
 import { getFormattingFieldValue } from '../utilities/utils';
-import { Entity, EntityMetadata, RetriveRecords, DialogResponse } from '../@types/types';
+import { Entity, EntityMetadata, RetrieveRecords, DialogResponse } from '../@types/types';
 
 export interface IDataverseService {
   getProps(): IAppWrapperProps;
@@ -16,7 +16,7 @@ export interface IDataverseService {
     timeZoneDefinitions: any): string;
   getRecordsCount(fetchXml: string): Promise<number>;
   getEntityMetadata(entityName: string, attributesFieldNames: string[]): Promise<EntityMetadata>;
-  getCurrentPageRecords(fetchXml: string | null): Promise<RetriveRecords>;
+  getCurrentPageRecords(fetchXml: string | null): Promise<RetrieveRecords>;
   openRecordForm(entityName: string, entityId: string): void;
   openLookupForm(entity: Entity, fieldName: string): void;
   openLinkEntityRecordForm(entity: Entity, fieldName: string): void;
@@ -139,7 +139,7 @@ export class DataverseService implements IDataverseService {
     return entityMetadata;
   }
 
-  public async getCurrentPageRecords(fetchXml: string | null): Promise<RetriveRecords> {
+  public async getCurrentPageRecords(fetchXml: string | null): Promise<RetrieveRecords> {
     const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
     const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
     return await this._context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);

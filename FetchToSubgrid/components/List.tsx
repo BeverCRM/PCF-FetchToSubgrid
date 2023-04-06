@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Entity, IService } from '../@types/types';
-import { addOrderToFetch, isAggregate } from '../utilities/fetchXmlUtils';
-import { setLinkableItems, sortColumns } from '../utilities/utils';
+import { isAggregate } from '../utilities/fetchXmlUtils';
+import { sortColumns } from '../utilities/utils';
 import { DetailsList, DetailsListLayoutMode, IColumn, ISelection } from '@fluentui/react';
 import { IDataverseService } from '../services/dataverseService';
 
@@ -11,22 +11,17 @@ interface IListProps extends IService<IDataverseService> {
   pageSize: number;
   forceReRender: number;
   currentPage: number;
-  recordIds: React.MutableRefObject<string[]>;
   columns: IColumn[];
   items: Entity[];
-  selectedItemsCount: React.MutableRefObject<number>;
   totalRecordsCount: number;
-  setItems: React.Dispatch<React.SetStateAction<ComponentFramework.WebApi.Entity[]>>;
-  setColumns: React.Dispatch<React.SetStateAction<IColumn[]>>;
-  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   selection: ISelection;
+  setSortingData: any;
 }
 
 export const List: React.FC<IListProps> = props => {
   const {
     _service: dataverseService,
     entityName,
-    recordIds,
     fetchXml,
     columns,
     pageSize,
@@ -35,14 +30,13 @@ export const List: React.FC<IListProps> = props => {
     currentPage,
     totalRecordsCount,
     selection,
-    setColumns,
-    setItems,
+    setSortingData,
   } = props;
 
   const onItemInvoked = React.useCallback((record?: Entity, index?: number | undefined): void => {
     const hasAggregate: boolean = isAggregate(fetchXml ?? '');
     if (index !== undefined && !hasAggregate) {
-      dataverseService.openRecordForm(entityName, recordIds.current[index]);
+      dataverseService.openRecordForm(entityName, record?.id);
     }
   }, [fetchXml]);
 
@@ -52,31 +46,9 @@ export const List: React.FC<IListProps> = props => {
     if (column?.className === 'colIsNotSortable') return;
 
     const fieldName = column?.className === 'linkEntity' ? column?.ariaLabel : column?.fieldName;
+    sortColumns(column?.fieldName, column?.ariaLabel, undefined, columns);
 
-    const sortedColumns: IColumn[] = sortColumns(
-      column?.fieldName,
-      column?.ariaLabel,
-      undefined,
-      columns);
-
-    const newFetchXml = addOrderToFetch(
-      fetchXml ?? '',
-      fieldName ?? '',
-      column);
-
-    await setLinkableItems(
-      {
-        fetchXml: newFetchXml,
-        pageSize,
-        currentPage,
-        totalRecordsCount,
-        recordIds: recordIds.current,
-      },
-      dataverseService,
-      setItems,
-    );
-
-    setColumns(sortedColumns);
+    setSortingData({ fieldName, column });
   }, [
     columns,
     currentPage,

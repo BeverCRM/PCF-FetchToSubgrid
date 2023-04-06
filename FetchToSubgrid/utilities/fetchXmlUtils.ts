@@ -16,29 +16,32 @@ export const changeAliasNames = (fetchXml: string) => {
   return xmlDoc.documentElement.outerHTML;
 };
 
-export const addPagingToFetchXml =
- (fetchXml: string, pageSize: number, currentPage :number, recordsCount: number): string => {
-   const parser: DOMParser = new DOMParser();
-   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+export const addPagingToFetchXml = (
+  fetchXml: string,
+  pageSize: number,
+  currentPage: number): string => {
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+  const top: string | null | undefined = xmlDoc.querySelector('fetch')?.getAttribute('top');
 
-   const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
-   fetch?.removeAttribute('count');
-   fetch?.removeAttribute('page');
-   fetch?.removeAttribute('top');
+  const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
+  fetch?.removeAttribute('count');
+  fetch?.removeAttribute('page');
+  fetch?.removeAttribute('top');
 
-   let recordsPerPage = pageSize;
+  let recordsPerPage = pageSize;
 
-   if (currentPage * recordsPerPage > recordsCount) {
-     recordsPerPage = recordsCount % pageSize;
-   }
+  if (top && currentPage * recordsPerPage > Number(top)) {
+    recordsPerPage = Number(top) % pageSize;
+  }
 
-   fetch.setAttribute('page', `${currentPage}`);
-   fetch.setAttribute('count', `${recordsPerPage}`);
+  fetch.setAttribute('page', `${currentPage}`);
+  fetch.setAttribute('count', `${recordsPerPage}`);
 
-   const newFetchChangedAliases = changeAliasNames(new XMLSerializer().serializeToString(xmlDoc));
+  const newFetchChangedAliases = changeAliasNames(new XMLSerializer().serializeToString(xmlDoc));
 
-   return newFetchChangedAliases;
- };
+  return newFetchChangedAliases;
+};
 
 export const getEntityNameFromFetchXml = (fetchXml: string): string => {
   const parser: DOMParser = new DOMParser();
@@ -70,13 +73,10 @@ export const getOrderInFetchXml = (fetchXml: string): OrderInFetchXml | null => 
 };
 
 export const addOrderToFetch = (
-  fetchXml: string,
-  fieldName: string,
-  column?: IColumn,
-): string => {
-
+  fetchXml: string | null,
+  sortingData: { fieldName: string, column?: IColumn }): string => {
   const parser: DOMParser = new DOMParser();
-  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+  const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
 
   const entity: Element = xmlDoc.getElementsByTagName('entity')[0];
   const linkEntity: Element = xmlDoc.getElementsByTagName('link-entity')[0];
@@ -89,16 +89,16 @@ export const addOrderToFetch = (
     parent.removeChild(linkOrder || entityOrder);
   }
 
-  if (column?.className === 'linkEntity') {
+  if (sortingData.column?.className === 'linkEntity') {
     const newOrder: HTMLElement = xmlDoc.createElement('order');
-    newOrder.setAttribute('attribute', `${fieldName}`);
-    newOrder.setAttribute('descending', `${!column.isSortedDescending}`);
+    newOrder.setAttribute('attribute', `${sortingData.fieldName}`);
+    newOrder.setAttribute('descending', `${!sortingData.column.isSortedDescending}`);
     linkEntity.appendChild(newOrder);
   }
   else {
     const newOrder: HTMLElement = xmlDoc.createElement('order');
-    newOrder.setAttribute('attribute', `${fieldName}`);
-    newOrder.setAttribute('descending', `${!column?.isSortedDescending}`);
+    newOrder.setAttribute('attribute', `${sortingData.fieldName}`);
+    newOrder.setAttribute('descending', `${!sortingData.column?.isSortedDescending}`);
     entity.appendChild(newOrder);
   }
 
