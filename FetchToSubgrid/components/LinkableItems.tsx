@@ -10,24 +10,20 @@ interface ILinkableItemProps extends IService<IDataverseService> {
 
 export const LinkableItem: React.FC<ILinkableItemProps> = ({
   _service: dataverseService, item }): JSX.Element => {
-  if (item.isLinkEntity) {
-    return (
-      <Link onClick={() => dataverseService.openLinkEntityRecordForm(item.entity, item.fieldName)}>
-        {item.displayName}
-      </Link>
-    );
-  }
-
-  if (checkIfAttributeIsEntityReferance(item.AttributeType)) {
-    return (
-      <Link onClick={() => dataverseService.openLookupForm(item.entity, item.fieldName)}>
-        {item.displayName}
-      </Link>
-    );
-  }
+  const onLinkClick = () => {
+    if (item.isLinkEntity) {
+      dataverseService.openLinkEntityRecordForm(item.entity, item.fieldName);
+    }
+    else if (checkIfAttributeIsEntityReferance(item.AttributeType)) {
+      dataverseService.openLookupForm(item.entity, item.fieldName);
+    }
+    else {
+      dataverseService.openPrimaryEntityForm(item.entity, item.entityName);
+    }
+  };
 
   return (
-    <Link onClick={() => dataverseService.openPrimaryEntityForm(item.entity, item.entityName)}>
+    <Link onClick={onLinkClick}>
       {item.displayName}
     </Link>
   );

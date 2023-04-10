@@ -21,8 +21,8 @@ export interface IFetchToSubgridProps {
   newButtonVisibility: boolean;
   allocatedWidth: number;
   error?: Error;
-  setIsLoading: (isLoading: boolean) => void;
-  setError: (error?: Error | undefined) => void;
+  setIsLoading?: (isLoading: boolean) => void;
+  setError?: (error?: Error | undefined) => void;
 }
 
 export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
@@ -47,9 +47,6 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   const [sortingData, setSortingData] = React.useState({ fieldName: '', column: undefined });
 
   const entityName = getEntityNameFromFetchXml(fetchXml ?? '');
-  const firstItemIndex = (currentPage - 1) * pageSize + 1;
-  const lastItemIndex = firstItemIndex + items.length - 1;
-  const nextButtonDisabled = Math.ceil(totalRecordsCount.current / pageSize) <= currentPage;
 
   const { selection, selectedRecordIds } = useSelection();
   let isButtonActive = selectedRecordIds.length > 0 && !isAggregate(fetchXml);
@@ -75,7 +72,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
         setColumns(filteredColumns);
       }
       catch (error: any) {
-        setError(error);
+        setError!(error);
       }
     };
 
@@ -85,7 +82,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   React.useEffect(() => {
     const fetchItems = async () => {
       isButtonActive = false;
-      setIsLoading(true);
+      setIsLoading!(true);
       if (isDialogAccepted) return;
 
       try {
@@ -102,9 +99,9 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
         setItems(linkableItems);
       }
       catch (error: any) {
-        setError(error);
+        setError!(error);
       }
-      setIsLoading(false);
+      setIsLoading!(false);
     };
 
     fetchItems();
@@ -123,27 +120,23 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
       />
     </Stack>
 
-    <List _service={dataverseService}
+    <List
+      _service={dataverseService}
       entityName={entityName}
-      pageSize={pageSize}
       forceReRender={listInputsHashCode.current}
-      totalRecordsCount={totalRecordsCount.current}
       fetchXml={fetchXml}
       selection={selection}
-      currentPage={currentPage}
       columns={columns}
       items={items}
       setSortingData={setSortingData}
     />
 
     <Footer
-      firstItemIndex={firstItemIndex}
-      lastItemIndex={lastItemIndex}
+      pageSize={pageSize}
       selectedItemsCount={selectedRecordIds.length}
       totalRecordsCount={totalRecordsCount.current}
       currentPage={currentPage}
       setCurrentPage={setCurrentPage}
-      nextButtonDisable={nextButtonDisabled}
     />
   </>;
 };

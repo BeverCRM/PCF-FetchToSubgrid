@@ -21,7 +21,7 @@ export const AppWrapper: React.FC<IAppWrapperProps> = props => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<Error | undefined>(undefined);
 
-  const fetchToSubgridProps: IFetchToSubgridProps = parseRawInput(props, setIsLoading, setError);
+  const fetchToSubgridProps: IFetchToSubgridProps = parseRawInput(props);
   if (fetchToSubgridProps.error) setError(error);
 
   React.useEffect(() => {

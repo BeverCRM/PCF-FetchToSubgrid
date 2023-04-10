@@ -129,11 +129,7 @@ export const getPageSize = (value?: IJsonProps | number | null): number => {
   return pageSize;
 };
 
-export const parseRawInput = (
-  appWrapperProps: IAppWrapperProps,
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  setError: React.Dispatch<React.SetStateAction<Error | undefined>>,
-) => {
+export const parseRawInput = (appWrapperProps: IAppWrapperProps) => {
   const { fetchXmlOrJson } = appWrapperProps;
 
   const props: IFetchToSubgridProps = {
@@ -144,8 +140,6 @@ export const parseRawInput = (
     pageSize: getPageSize(appWrapperProps.default.pageSize),
     newButtonVisibility: appWrapperProps.default.newButtonVisibility,
     deleteButtonVisibility: appWrapperProps.default.deleteButtonVisibility,
-    setIsLoading,
-    setError,
   };
 
   try {

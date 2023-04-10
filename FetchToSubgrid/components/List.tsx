@@ -8,12 +8,9 @@ import { IDataverseService } from '../services/dataverseService';
 interface IListProps extends IService<IDataverseService> {
   entityName: string;
   fetchXml: string | null;
-  pageSize: number;
   forceReRender: number;
-  currentPage: number;
   columns: IColumn[];
   items: Entity[];
-  totalRecordsCount: number;
   selection: ISelection;
   setSortingData: any;
 }
@@ -24,11 +21,8 @@ export const List: React.FC<IListProps> = props => {
     entityName,
     fetchXml,
     columns,
-    pageSize,
     forceReRender,
     items,
-    currentPage,
-    totalRecordsCount,
     selection,
     setSortingData,
   } = props;
@@ -47,15 +41,8 @@ export const List: React.FC<IListProps> = props => {
 
     const fieldName = column?.className === 'linkEntity' ? column?.ariaLabel : column?.fieldName;
     sortColumns(column?.fieldName, column?.ariaLabel, undefined, columns);
-
     setSortingData({ fieldName, column });
-  }, [
-    columns,
-    currentPage,
-    fetchXml,
-    pageSize,
-    totalRecordsCount,
-  ]);
+  }, [columns, fetchXml]);
 
   return <DetailsList
     key={forceReRender}

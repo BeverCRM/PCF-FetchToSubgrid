@@ -9,12 +9,10 @@ import {
 } from '../styles/footerStyles';
 
 interface IFooterProps {
-  firstItemIndex: number;
-  lastItemIndex: number;
+  pageSize: number,
   selectedItemsCount: number;
   totalRecordsCount: number;
   currentPage: number;
-  nextButtonDisable: boolean;
   setCurrentPage: (page: number) => void;
 }
 
@@ -22,14 +20,16 @@ const MAX_RECORD_DISPLAY_COUNT = 5000;
 
 export const Footer: React.FC<IFooterProps> = props => {
   const {
-    firstItemIndex,
-    lastItemIndex,
+    pageSize,
     selectedItemsCount,
     totalRecordsCount,
     currentPage,
-    nextButtonDisable,
     setCurrentPage,
   } = props;
+
+  const firstItemIndex = (currentPage - 1) * pageSize + 1;
+  const lastItemIndex = firstItemIndex + pageSize - 1;
+  const nextButtonDisabled = Math.ceil(totalRecordsCount / pageSize) <= currentPage;
 
   function moveToFirst() {
     setCurrentPage(1);
@@ -49,13 +49,13 @@ export const Footer: React.FC<IFooterProps> = props => {
 
   return (
     <div className={footerStyles.content}>
-      <span > {selected} </span>
+      <span>{selected}</span>
       <div className='buttons'>
         <IconButton
           styles={footerButtonStyles}
           iconProps={PreviousIcon}
           onClick={moveToFirst}
-          disabled = {currentPage <= 1}
+          disabled={currentPage <= 1}
         />
         <IconButton
           styles={footerButtonStyles}
@@ -68,7 +68,7 @@ export const Footer: React.FC<IFooterProps> = props => {
           styles={footerButtonStyles}
           iconProps={ForwardIcon}
           onClick={moveNext}
-          disabled={nextButtonDisable}
+          disabled={nextButtonDisabled}
         />
       </div>
     </div>
