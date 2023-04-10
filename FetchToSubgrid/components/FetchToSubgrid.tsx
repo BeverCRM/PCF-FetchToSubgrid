@@ -21,8 +21,8 @@ export interface IFetchToSubgridProps {
   newButtonVisibility: boolean;
   allocatedWidth: number;
   error?: Error;
-  setIsLoading?: (isLoading: boolean) => void;
-  setError?: (error?: Error | undefined) => void;
+  setIsLoading: (isLoading: boolean) => void;
+  setError: (error?: Error | undefined) => void;
 }
 
 export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
@@ -72,7 +72,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
         setColumns(filteredColumns);
       }
       catch (error: any) {
-        setError!(error);
+        setError(error);
       }
     };
 
@@ -82,7 +82,7 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
   React.useEffect(() => {
     const fetchItems = async () => {
       isButtonActive = false;
-      setIsLoading!(true);
+      setIsLoading(true);
       if (isDialogAccepted) return;
 
       try {
@@ -99,9 +99,9 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
         setItems(linkableItems);
       }
       catch (error: any) {
-        setError!(error);
+        setError(error);
       }
-      setIsLoading!(false);
+      setIsLoading(false);
     };
 
     fetchItems();

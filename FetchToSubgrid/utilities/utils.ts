@@ -140,6 +140,8 @@ export const parseRawInput = (appWrapperProps: IAppWrapperProps) => {
     pageSize: getPageSize(appWrapperProps.default.pageSize),
     newButtonVisibility: appWrapperProps.default.newButtonVisibility,
     deleteButtonVisibility: appWrapperProps.default.deleteButtonVisibility,
+    setIsLoading: () => {},
+    setError: () => {},
   };
 
   try {
