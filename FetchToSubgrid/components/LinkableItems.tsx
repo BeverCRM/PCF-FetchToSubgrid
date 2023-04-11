@@ -2,7 +2,7 @@ import { Link } from '@fluentui/react';
 import * as React from 'react';
 import { Entity, IService } from '../@types/types';
 import { IDataverseService } from '../services/dataverseService';
-import { checkIfAttributeIsEntityReferance } from '../utilities/utils';
+import { checkIfAttributeIsEntityReference } from '../utilities/utils';
 
 interface ILinkableItemProps extends IService<IDataverseService> {
   item: Entity
@@ -14,7 +14,7 @@ export const LinkableItem: React.FC<ILinkableItemProps> = ({
     if (item.isLinkEntity) {
       dataverseService.openLinkEntityRecordForm(item.entity, item.fieldName);
     }
-    else if (checkIfAttributeIsEntityReferance(item.AttributeType)) {
+    else if (checkIfAttributeIsEntityReference(item.AttributeType)) {
       dataverseService.openLookupForm(item.entity, item.fieldName);
     }
     else {

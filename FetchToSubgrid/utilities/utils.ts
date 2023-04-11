@@ -23,7 +23,7 @@ interface IJsonProps {
 
 type JsonAllowedProps = Array<keyof IJsonProps>;
 
-export const checkIfAttributeIsEntityReferance = (attributeType: AttributeType): boolean => {
+export const checkIfAttributeIsEntityReference = (attributeType: AttributeType): boolean => {
   const attributetypes: AttributeType[] = [
     AttributeType.Lookup,
     AttributeType.Owner,
@@ -33,7 +33,7 @@ export const checkIfAttributeIsEntityReferance = (attributeType: AttributeType):
   return attributetypes.includes(attributeType);
 };
 
-export const needToGetFormattedValue = (attributeType: AttributeType) => {
+export const checkIfAttributeRequiresFormattedValue = (attributeType: AttributeType) => {
   const attributeTypes: AttributeType[] = [
     AttributeType.Money,
     AttributeType.PickList,
@@ -46,26 +46,22 @@ export const needToGetFormattedValue = (attributeType: AttributeType) => {
 };
 
 export const sortColumns = (
+  allColumns: IColumn[],
   fieldName?: string,
-  ariaLabel?: string,
-  descending?: boolean,
-  allColumns?: IColumn[]): IColumn[] => {
-  const filteredColumns = allColumns?.map((col: IColumn) => {
-    const fetchXmlOrderMathAttributeFieldName = fieldName === col.fieldName &&
-      fieldName !== undefined;
-    const fetchXmlOrderMathcLinkEntityAriaLabel = ariaLabel === col.ariaLabel &&
-      ariaLabel !== undefined;
+  descending?: boolean): IColumn[] => {
+  const filteredColumns = allColumns.map(col => {
+    const isFieldMatch = fieldName !== undefined && col.fieldName === fieldName;
 
-    col.isSorted = fetchXmlOrderMathAttributeFieldName || fetchXmlOrderMathcLinkEntityAriaLabel;
+    col.isSorted = isFieldMatch;
 
-    if (fetchXmlOrderMathAttributeFieldName || fetchXmlOrderMathcLinkEntityAriaLabel) {
+    if (isFieldMatch) {
       col.isSortedDescending = descending !== undefined ? descending : !col.isSortedDescending;
     }
 
     return col;
   });
 
-  return filteredColumns ?? [];
+  return filteredColumns;
 };
 
 export const getSortedColumns = async (
@@ -78,24 +74,23 @@ export const getSortedColumns = async (
   if (!order) return columns;
 
   const filteredColumns: IColumn[] = sortColumns(
+    columns,
     Object.keys(order)[0],
-    Object.keys(order)[0],
-    Object.values(order)[0],
-    columns);
+    Object.values(order)[0]);
 
   return filteredColumns;
 };
 
-class JsonProps implements IJsonProps {
-  newButtonVisibility: boolean = false;
-  deleteButtonVisibility: boolean = false;
-  pageSize: number = 0;
-  fetchXml: string = '';
-}
+const defaultProps: IJsonProps = {
+  newButtonVisibility: false,
+  deleteButtonVisibility: false,
+  pageSize: 0,
+  fetchXml: '',
+};
 
 export const isJsonValid = (jsonObj: Object): boolean => {
-  const allowedProps: JsonAllowedProps = Object.keys(new JsonProps()) as JsonAllowedProps;
-  return Object.keys(jsonObj).every(prop => allowedProps.includes(prop as keyof JsonProps));
+  const allowedProps: JsonAllowedProps = Object.keys(defaultProps) as JsonAllowedProps;
+  return Object.keys(jsonObj).every(prop => allowedProps.includes(prop as keyof IJsonProps));
 };
 
 export const createLinkableItems = (
@@ -167,7 +162,7 @@ export const parseRawInput = (appWrapperProps: IAppWrapperProps) => {
     if (fieldValueFetchXml) props.fetchXml = fieldValueFetchXml;
   }
 
-  return props as IFetchToSubgridProps;
+  return props;
 };
 
 export const hashCode = (str: string) => {

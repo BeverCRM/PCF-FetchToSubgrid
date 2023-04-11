@@ -89,16 +89,14 @@ export const addOrderToFetch = (
     parent.removeChild(linkOrder || entityOrder);
   }
 
+  const newOrder: HTMLElement = xmlDoc.createElement('order');
+  newOrder.setAttribute('attribute', `${sortingData.fieldName}`);
+  newOrder.setAttribute('descending', `${!sortingData.column?.isSortedDescending}`);
+
   if (sortingData.column?.className === 'linkEntity') {
-    const newOrder: HTMLElement = xmlDoc.createElement('order');
-    newOrder.setAttribute('attribute', `${sortingData.fieldName}`);
-    newOrder.setAttribute('descending', `${!sortingData.column.isSortedDescending}`);
-    linkEntity.appendChild(newOrder);
+    linkEntity?.appendChild(newOrder);
   }
   else {
-    const newOrder: HTMLElement = xmlDoc.createElement('order');
-    newOrder.setAttribute('attribute', `${sortingData.fieldName}`);
-    newOrder.setAttribute('descending', `${!sortingData.column?.isSortedDescending}`);
     entity.appendChild(newOrder);
   }
 
@@ -137,9 +135,11 @@ export const getLinkEntitiesNamesFromFetchXml = (
   return linkEntityData;
 };
 
-export const getAttributesFieldNamesFromFetchXml = (fetchXml: string): string[] => {
+export const getFetchXmlAttributesData = (
+  fetchXml: string | null,
+  isAggregate: boolean): string[] => {
   const parser: DOMParser = new DOMParser();
-  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+  const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
 
   const entityName = xmlDoc.getElementsByTagName('entity')?.[0]?.getAttribute('name') ?? '';
   const attributesFieldNames: string[] = [];
@@ -148,27 +148,15 @@ export const getAttributesFieldNamesFromFetchXml = (fetchXml: string): string[] 
   const attributes: NodeListOf<Element> = xmlDoc.querySelectorAll(attributeSelector);
 
   Array.prototype.slice.call(attributes).map(attr => {
-    attributesFieldNames.push(attr.attributes.name.value);
+    if (isAggregate) {
+      attributesFieldNames.push(attr.attributes.name.value);
+    }
+    else {
+      attributesFieldNames.push(attr.attributes.alias?.value);
+    }
   });
 
   return attributesFieldNames;
-};
-
-export const getEntityAggregateAliasNames = (fetchXml: string): string[] => {
-  const parser: DOMParser = new DOMParser();
-  const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
-
-  const aggregateAttrNames: string[] = [];
-
-  const entityName = xmlDoc.getElementsByTagName('entity')?.[0]?.getAttribute('name') ?? '';
-  const attributeSelector = `entity[name="${entityName}"] > attribute`;
-  const attributes: NodeListOf<Element> = xmlDoc.querySelectorAll(attributeSelector);
-
-  Array.prototype.slice.call(attributes).map(attr => {
-    aggregateAttrNames.push(attr.attributes.alias?.value);
-  });
-
-  return aggregateAttrNames;
 };
 
 export const getLinkEntityAggregateAliasNames = (fetchXml: string, i: number): string[] => {

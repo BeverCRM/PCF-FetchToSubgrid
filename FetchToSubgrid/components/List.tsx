@@ -40,7 +40,8 @@ export const List: React.FC<IListProps> = props => {
     if (column?.className === 'colIsNotSortable') return;
 
     const fieldName = column?.className === 'linkEntity' ? column?.ariaLabel : column?.fieldName;
-    sortColumns(column?.fieldName, column?.ariaLabel, undefined, columns);
+
+    sortColumns(columns, column?.fieldName, undefined);
     setSortingData({ fieldName, column });
   }, [columns, fetchXml]);
 
