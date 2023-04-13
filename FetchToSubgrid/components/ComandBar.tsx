@@ -1,37 +1,70 @@
 import { CommandBarButton, IIconProps } from '@fluentui/react';
 import * as React from 'react';
+import { IService } from '../@types/types';
+import { IDataverseService } from '../services/dataverseService';
 import { ContainerButtonStyles } from '../styles/comandBarStyles';
-import { ICommandBarProps } from '../@types/types';
 
 const deleteIcon: IIconProps = { iconName: 'Delete' };
 const addIcon: IIconProps = { iconName: 'Add' };
+
+interface ICommandBarProps extends IService<IDataverseService> {
+  isButtonActive: boolean;
+  entityName: string;
+  selectedRecordIds: string[];
+  newButtonVisibility: boolean;
+  deleteButtonVisibility: boolean | string;
+  setDialogAccepted: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
 export const CommandBar = ({
   _service: dataverseService,
   isButtonActive,
   entityName,
   selectedRecordIds,
-  displayName,
   newButtonVisibility,
   deleteButtonVisibility,
-  setDialogAccepted }: ICommandBarProps) =>
-  <div className='containerButtons'>
-    {newButtonVisibility &&
+  setDialogAccepted }: ICommandBarProps) => {
+  const displayName = React.useRef('');
+
+  React.useEffect(() => {
+    const fetchDisplayName = async () => {
+      displayName.current = await dataverseService.getEntityDisplayName(entityName);
+    };
+    fetchDisplayName();
+  }, []);
+
+  const handleNewButtonClick = () => {
+    dataverseService.openRecordForm(entityName, '');
+  };
+
+  const handleDeleteButtonClick = async () => {
+    const deleteDialogStatus = await dataverseService.openRecordDeleteDialog(entityName);
+
+    if (deleteDialogStatus.confirmed) {
+      setDialogAccepted(true);
+      await dataverseService.deleteSelectedRecords(selectedRecordIds, entityName);
+      setDialogAccepted(false);
+    }
+  };
+
+  return (
+    <div className='containerButtons'>
+      {newButtonVisibility &&
         <CommandBarButton
           styles={ContainerButtonStyles}
           maxLength={1}
           iconProps={addIcon}
-          text={`New ${displayName}`}
-          onClick={() => dataverseService.openRecord(entityName, '')}
+          text={`New ${displayName.current}`}
+          onClick={handleNewButtonClick}
         />
-    }
-    {deleteButtonVisibility && isButtonActive &&
+      }
+      {deleteButtonVisibility && isButtonActive &&
         <CommandBarButton
           styles={ContainerButtonStyles}
           iconProps={deleteIcon}
           text="Delete"
-          onClick={() => dataverseService.openRecordDeleteDialog(
-            selectedRecordIds, entityName, setDialogAccepted)}
+          onClick={handleDeleteButtonClick}
         />
-    }
-  </div>;
+      }
+    </div>);
+};

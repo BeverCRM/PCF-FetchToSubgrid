@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { IFooterProps } from '../@types/types';
 import { IconButton } from '@fluentui/react/lib/Button';
 import {
   BackIcon,
@@ -9,17 +8,28 @@ import {
   PreviousIcon,
 } from '../styles/footerStyles';
 
+interface IFooterProps {
+  pageSize: number,
+  selectedItemsCount: number;
+  totalRecordsCount: number;
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
+}
+
+const MAX_RECORD_DISPLAY_COUNT = 5000;
+
 export const Footer: React.FC<IFooterProps> = props => {
   const {
-    firstItemIndex,
-    lastItemIndex,
+    pageSize,
     selectedItemsCount,
     totalRecordsCount,
     currentPage,
-    nextButtonDisable,
-    movePreviousIsDisabled,
     setCurrentPage,
   } = props;
+
+  const firstItemIndex = (currentPage - 1) * pageSize + 1;
+  const lastItemIndex = firstItemIndex + pageSize - 1;
+  const nextButtonDisabled = Math.ceil(totalRecordsCount / pageSize) <= currentPage;
 
   function moveToFirst() {
     setCurrentPage(1);
@@ -34,31 +44,31 @@ export const Footer: React.FC<IFooterProps> = props => {
   }
 
   const selected = `${firstItemIndex} - ${lastItemIndex} of 
-   ${totalRecordsCount >= 5000 ? '5000+' : totalRecordsCount}
+   ${totalRecordsCount > MAX_RECORD_DISPLAY_COUNT ? '5000+' : totalRecordsCount}
    ${selectedItemsCount !== 0 ? `(${selectedItemsCount} Selected)` : ''}`;
 
   return (
     <div className={footerStyles.content}>
-      <span > {selected} </span>
+      <span>{selected}</span>
       <div className='buttons'>
         <IconButton
           styles={footerButtonStyles}
           iconProps={PreviousIcon}
           onClick={moveToFirst}
-          disabled = {movePreviousIsDisabled}
+          disabled={currentPage <= 1}
         />
         <IconButton
           styles={footerButtonStyles}
           iconProps={BackIcon}
           onClick={movePrevious}
-          disabled={movePreviousIsDisabled}
+          disabled={currentPage <= 1}
         />
         <span color='black'> Page {currentPage} </span>
         <IconButton
           styles={footerButtonStyles}
           iconProps={ForwardIcon}
           onClick={moveNext}
-          disabled={nextButtonDisable}
+          disabled={nextButtonDisabled}
         />
       </div>
     </div>

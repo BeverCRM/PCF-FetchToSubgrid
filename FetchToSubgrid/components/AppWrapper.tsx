@@ -1,15 +1,27 @@
 import * as React from 'react';
-import { IAppWrapperProps, IFetchToSubgridProps } from '../@types/types';
+import { IService } from '../@types/types';
+import { IDataverseService } from '../services/dataverseService';
 import { parseRawInput } from '../utilities/utils';
-import { FetchToSubgrid } from './FetchToSubgrid';
-import { InfoMessage } from './InfoMessage';
+import { FetchToSubgrid, IFetchToSubgridProps } from './FetchToSubgrid';
+import { ErrorMessage } from './ErrorMessage';
 import { Loader } from './Loader';
+
+export interface IAppWrapperProps extends IService<IDataverseService> {
+  fetchXmlOrJson: string | null;
+  allocatedWidth: number;
+  default: {
+    fetchXml: string | null;
+    pageSize: number;
+    deleteButtonVisibility: boolean;
+    newButtonVisibility: boolean;
+  }
+}
 
 export const AppWrapper: React.FC<IAppWrapperProps> = props => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<Error | undefined>(undefined);
 
-  const fetchToSubgridProps: IFetchToSubgridProps = parseRawInput(props, setIsLoading, setError);
+  const fetchToSubgridProps: IFetchToSubgridProps = parseRawInput(props);
   if (fetchToSubgridProps.error) setError(error);
 
   React.useEffect(() => {
@@ -18,7 +30,7 @@ export const AppWrapper: React.FC<IAppWrapperProps> = props => {
 
   return (
     <div className='FetchToSubgridControl'>
-      { error && <InfoMessage error={error} dataverseService={props._service} /> }
+      { error && <ErrorMessage error={error} dataverseService={props._service} /> }
       { !error && isLoading && <Loader />}
       { !error &&
         <FetchToSubgrid

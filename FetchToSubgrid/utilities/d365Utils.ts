@@ -1,10 +1,15 @@
 import { IColumn } from '@fluentui/react';
 import { AttributeType } from '../@types/enums';
-import { needToGetFormattedValue, checkIfAttributeIsEntityReferance } from './utils';
+import { IDataverseService } from '../services/dataverseService';
+import {
+  checkIfAttributeRequiresFormattedValue,
+  checkIfAttributeIsEntityReference,
+  genereateItemsForEntity,
+  genereateItemsForLinkEntity,
+} from './utils';
 import {
   addPagingToFetchXml,
-  getEntityAggregateAliasNames,
-  getAttributesFieldNamesFromFetchXml,
+  getFetchXmlAttributesData,
   getEntityNameFromFetchXml,
   getLinkEntitiesNamesFromFetchXml,
   isAggregate,
@@ -13,12 +18,25 @@ import {
 } from './fetchXmlUtils';
 import {
   Dictionary,
-  Entity, EntityAttribute,
+  Entity,
+  EntityAttribute,
   EntityMetadata,
-  IDataverseService,
-  IItemProps,
-  RetriveRecords,
+  IRecordsData,
+  RetrieveRecords,
 } from '../@types/types';
+
+export interface IItemProps {
+  timeZoneDefinitions: any;
+  item: Entity;
+  isLinkEntity: boolean;
+  entityMetadata: EntityMetadata;
+  attributeType: number;
+  fieldName: string;
+  entity: Entity;
+  pagingFetchData: string;
+  index: number;
+  hasAliasValue: boolean;
+}
 
 const getLinkEntityFieldName = (
   changedAliasNames: string[],
@@ -104,11 +122,12 @@ const createColumnsForEntity = (
 
     const attributeType: number = displayNameCollection[name].AttributeType;
     const hasAggregate: boolean = isAggregate(fetchXml ?? '');
-    const aliasNames: string[] | null = getEntityAggregateAliasNames(fetchXml ?? '');
+    const aliasNames: string[] | null = getFetchXmlAttributesData(fetchXml, false);
     const isMultiselectPickList = attributeType === AttributeType.MultiselectPickList;
 
     const changeAliasNameInFetch = changeAliasNames(fetchXml ?? '');
-    const changedAliasNames: string[] | null = getEntityAggregateAliasNames(changeAliasNameInFetch);
+    const changedAliasNames: string[] | null = getFetchXmlAttributesData(
+      changeAliasNameInFetch, false);
     const sortingIsAllowed = isMultiselectPickList || hasAggregate || changedAliasNames[index];
 
     if (aliasNames[index] && changedAliasNames?.length) {
@@ -160,11 +179,11 @@ export const getEntityData = (props: IItemProps, dataverseService: IDataverseSer
 
   const aliasAttrName = entity[`${fieldName}@OData.Community.Display.V1.AttributeName`];
 
-  if (needToGetFormattedValue(attributeType)) {
+  if (checkIfAttributeRequiresFormattedValue(attributeType)) {
     return [entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`], false];
   }
 
-  if (isLinkEntity && checkIfAttributeIsEntityReferance(attributeType)) {
+  if (isLinkEntity && checkIfAttributeIsEntityReference(attributeType)) {
     return [entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`], true];
   }
 
@@ -173,7 +192,7 @@ export const getEntityData = (props: IItemProps, dataverseService: IDataverseSer
     return [entity[fieldName], true];
   }
 
-  if (checkIfAttributeIsEntityReferance(attributeType)) {
+  if (checkIfAttributeIsEntityReference(attributeType)) {
     if (hasAliasValue) {
       return [entity[`${fieldName}@OData.Community.Display.V1.FormattedValue`], true];
     }
@@ -200,7 +219,7 @@ export const genereateItems = (props: IItemProps, dataverseService: IDataverseSe
   if (hasAggregate) {
     const entityAggregateAttrNames: string[] = isLinkEntity
       ? getLinkEntityAggregateAliasNames(pagingFetchData ?? '', index)
-      : getEntityAggregateAliasNames(pagingFetchData ?? '');
+      : getFetchXmlAttributesData(pagingFetchData, false);
 
     return item[entityAggregateAttrNames[index]] = {
       displayName: entity[entityAggregateAttrNames[index]],
@@ -232,17 +251,15 @@ export const genereateItems = (props: IItemProps, dataverseService: IDataverseSe
 const getRecordsData = async (
   fetchXml: string | null,
   pagingData: any,
-  dataverseService: IDataverseService,
-) => {
+  dataverseService: IDataverseService): Promise<IRecordsData> => {
   const pagingFetchData: string = addPagingToFetchXml(
     fetchXml ?? '',
     pagingData.pageSize,
-    pagingData.currentPage,
-    pagingData.recordsCount);
+    pagingData.currentPage);
 
-  const attributesFieldNames: string[] = getAttributesFieldNamesFromFetchXml(pagingFetchData);
+  const attributesFieldNames: string[] = getFetchXmlAttributesData(pagingFetchData, true);
   const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
-  const records: RetriveRecords = await dataverseService.getCurrentPageRecords(pagingFetchData);
+  const records: RetrieveRecords = await dataverseService.getCurrentPageRecords(pagingFetchData);
 
   const entityMetadata: EntityMetadata = await dataverseService.getEntityMetadata(
     entityName, attributesFieldNames);
@@ -258,7 +275,7 @@ const getRecordsData = async (
   });
 
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
-  const entityAliases: string[] = getEntityAggregateAliasNames(pagingFetchData);
+  const entityAliases: string[] = getFetchXmlAttributesData(pagingFetchData, false);
   const timeZoneDefinitions: Object = await dataverseService.getTimeZoneDefinitions();
 
   return {
@@ -279,78 +296,17 @@ export const getItems = async (
   fetchXml: string | null,
   pageSize: number,
   currentPage: number,
-  recordsCount: number,
   dataverseService: IDataverseService): Promise<Entity[]> => {
   const items: Entity[] = [];
 
-  const {
-    pagingFetchData,
-    attributesFieldNames,
-    entityName,
-    records,
-    entityMetadata,
-    linkEntityNames,
-    linkEntityAttributes,
-    linkentityMetadata,
-    timeZoneDefinitions,
-    entityAliases,
-  } = await getRecordsData(fetchXml, { pageSize, currentPage, recordsCount }, dataverseService);
+  const recordsData: IRecordsData = await getRecordsData(
+    fetchXml, { pageSize, currentPage }, dataverseService);
 
-  records.entities.forEach(entity => {
-    const item: Entity = isAggregate(fetchXml ?? '') ? {} : { id: entity[`${entityName}id`] };
-    attributesFieldNames.forEach((fieldName, index) => {
-      const hasAliasValue = !!entityAliases[index];
-      const attributeType: number = entityMetadata.Attributes.get(fieldName).AttributeType;
+  recordsData.records.entities.forEach(entity => {
+    const item: Entity = isAggregate(fetchXml) ? {} : { id: entity[`${recordsData.entityName}id`] };
 
-      if (entityAliases[index]) {
-        fieldName = entityAliases[index];
-      }
-
-      const attributes: IItemProps = {
-        timeZoneDefinitions,
-        item,
-        isLinkEntity: false,
-        entityMetadata,
-        attributeType,
-        fieldName,
-        entity,
-        pagingFetchData,
-        index,
-        hasAliasValue,
-      };
-
-      genereateItems(attributes, dataverseService);
-    });
-
-    linkEntityNames.forEach((linkEntityName, i) => {
-      linkEntityAttributes[i].forEach((attr, index) => {
-        const hasAliasValue = !!attr.linkEntityAlias;
-        const attributeType: number = linkentityMetadata[i].Attributes.get(attr.name).AttributeType;
-        let fieldName = attr.attributeAlias;
-
-        if (!fieldName && attr.linkEntityAlias) {
-          fieldName = `${attr.linkEntityAlias}.${attr.name}`;
-        }
-        else if (!fieldName) {
-          fieldName = `${linkEntityName}${i + 1}.${attr.name}`;
-        }
-
-        const attributes: IItemProps = {
-          timeZoneDefinitions,
-          item,
-          isLinkEntity: true,
-          entityMetadata: linkentityMetadata[i],
-          attributeType,
-          fieldName,
-          entity,
-          pagingFetchData,
-          index,
-          hasAliasValue,
-        };
-
-        genereateItems(attributes, dataverseService);
-      });
-    });
+    genereateItemsForEntity(recordsData, item, entity, dataverseService);
+    genereateItemsForLinkEntity(recordsData, item, entity, dataverseService);
 
     items.push(item);
   });
@@ -362,7 +318,7 @@ export const getColumns = async (
   fetchXml: string | null,
   allocatedWidth: number,
   dataverseService: IDataverseService): Promise<IColumn[]> => {
-  const attributesFieldNames: string[] = getAttributesFieldNamesFromFetchXml(fetchXml ?? '');
+  const attributesFieldNames: string[] = getFetchXmlAttributesData(fetchXml, true);
   const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
   const entityMetadata: EntityMetadata = await dataverseService.getEntityMetadata(
     entityName,
@@ -382,7 +338,7 @@ export const getColumns = async (
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
 
   let columnWidth = (allocatedWidth - 70) /
-   (attributesFieldNames.length + linkEntityNames.length) - 20;
+    (attributesFieldNames.length + linkEntityNames.length) - 20;
 
   if (columnWidth < 80) columnWidth = 80;
 

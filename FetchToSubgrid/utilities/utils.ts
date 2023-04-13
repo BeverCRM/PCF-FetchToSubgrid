@@ -1,20 +1,29 @@
 import * as React from 'react';
 import { IColumn } from '@fluentui/react';
-import { getColumns } from './d365Utils';
+import { genereateItems, getColumns, getItems, IItemProps } from './d365Utils';
 import { AttributeType } from '../@types/enums';
 import { getFetchXmlParserError, getOrderInFetchXml } from './fetchXmlUtils';
 import { LinkableItem } from '../components/LinkableItems';
+import { IDataverseService } from '../services/dataverseService';
+import { IAppWrapperProps } from '../components/AppWrapper';
+import { IFetchToSubgridProps } from '../components/FetchToSubgrid';
 import {
   Entity,
-  IAppWrapperProps,
-  IDataverseService,
-  IFetchToSubgridProps,
-  IJsonProps,
-  JsonAllowedProps,
-  OrderInFetchXml,
-} from '../@types/types';
+  EntityAttribute,
+  IItemsData,
+  IRecordsData,
+  OrderInFetchXml } from '../@types/types';
 
-export const checkIfAttributeIsEntityReferance = (attributeType: AttributeType): boolean => {
+interface IJsonProps {
+  newButtonVisibility: boolean;
+  deleteButtonVisibility: boolean;
+  pageSize: number;
+  fetchXml: string;
+}
+
+type JsonAllowedProps = Array<keyof IJsonProps>;
+
+export const checkIfAttributeIsEntityReference = (attributeType: AttributeType): boolean => {
   const attributetypes: AttributeType[] = [
     AttributeType.Lookup,
     AttributeType.Owner,
@@ -24,7 +33,7 @@ export const checkIfAttributeIsEntityReferance = (attributeType: AttributeType):
   return attributetypes.includes(attributeType);
 };
 
-export const needToGetFormattedValue = (attributeType: AttributeType) => {
+export const checkIfAttributeRequiresFormattedValue = (attributeType: AttributeType) => {
   const attributeTypes: AttributeType[] = [
     AttributeType.Money,
     AttributeType.PickList,
@@ -37,26 +46,22 @@ export const needToGetFormattedValue = (attributeType: AttributeType) => {
 };
 
 export const sortColumns = (
+  allColumns: IColumn[],
   fieldName?: string,
-  ariaLabel?: string,
-  descending?: boolean,
-  allColumns?: IColumn[]): IColumn[] => {
-  const filteredColumns = allColumns?.map((col: IColumn) => {
-    const fetchXmlOrderMathAttributeFieldName = fieldName === col.fieldName &&
-      fieldName !== undefined;
-    const fetchXmlOrderMathcLinkEntityAriaLabel = ariaLabel === col.ariaLabel &&
-      ariaLabel !== undefined;
+  descending?: boolean): IColumn[] => {
+  const filteredColumns = allColumns.map(col => {
+    const isFieldMatch = fieldName !== undefined && col.fieldName === fieldName;
 
-    col.isSorted = fetchXmlOrderMathAttributeFieldName || fetchXmlOrderMathcLinkEntityAriaLabel;
+    col.isSorted = isFieldMatch;
 
-    if (fetchXmlOrderMathAttributeFieldName || fetchXmlOrderMathcLinkEntityAriaLabel) {
+    if (isFieldMatch) {
       col.isSortedDescending = descending !== undefined ? descending : !col.isSortedDescending;
     }
 
     return col;
   });
 
-  return filteredColumns ?? [];
+  return filteredColumns;
 };
 
 export const getSortedColumns = async (
@@ -69,46 +74,29 @@ export const getSortedColumns = async (
   if (!order) return columns;
 
   const filteredColumns: IColumn[] = sortColumns(
+    columns,
     Object.keys(order)[0],
-    Object.keys(order)[0],
-    Object.values(order)[0],
-    columns);
+    Object.values(order)[0]);
 
   return filteredColumns;
 };
 
-export const calculateFilteredRecordsData = (
-  totalRecordsCount: number,
-  records: Entity[],
-  pageSize: number,
-  currentPage: number,
-  nextButtonDisabled: React.MutableRefObject<boolean>,
-  lastItemIndex: React.MutableRefObject<number>,
-  firstItemIndex: React.MutableRefObject<number>): void => {
-  nextButtonDisabled.current = Math.ceil(totalRecordsCount / pageSize) <= currentPage;
-
-  lastItemIndex.current = (currentPage - 1) * pageSize + records.length;
-  firstItemIndex.current = (currentPage - 1) * pageSize + 1;
+const defaultProps: IJsonProps = {
+  newButtonVisibility: false,
+  deleteButtonVisibility: false,
+  pageSize: 0,
+  fetchXml: '',
 };
 
-class JsonProps implements IJsonProps {
-  newButtonVisibility: boolean = false;
-  deleteButtonVisibility: boolean = false;
-  pageSize: number = 0;
-  fetchXml: string = '';
-}
-
 export const isJsonValid = (jsonObj: Object): boolean => {
-  const allowedProps: JsonAllowedProps = Object.keys(new JsonProps()) as JsonAllowedProps;
-  return Object.keys(jsonObj).every(prop => allowedProps.includes(prop as keyof JsonProps));
+  const allowedProps: JsonAllowedProps = Object.keys(defaultProps) as JsonAllowedProps;
+  return Object.keys(jsonObj).every(prop => allowedProps.includes(prop as keyof IJsonProps));
 };
 
 export const createLinkableItems = (
   records: Entity[],
-  recordIds: string[],
   dataverseService: IDataverseService): Entity[] => {
   records.forEach(record => {
-    recordIds.push(record.id);
     Object.keys(record).forEach(key => {
       if (key !== 'id') {
         const value: any = record[key];
@@ -136,11 +124,7 @@ export const getPageSize = (value?: IJsonProps | number | null): number => {
   return pageSize;
 };
 
-export const parseRawInput = (
-  appWrapperProps: IAppWrapperProps,
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  setError: React.Dispatch<React.SetStateAction<Error | undefined>>,
-) => {
+export const parseRawInput = (appWrapperProps: IAppWrapperProps) => {
   const { fetchXmlOrJson } = appWrapperProps;
 
   const props: IFetchToSubgridProps = {
@@ -151,8 +135,8 @@ export const parseRawInput = (
     pageSize: getPageSize(appWrapperProps.default.pageSize),
     newButtonVisibility: appWrapperProps.default.newButtonVisibility,
     deleteButtonVisibility: appWrapperProps.default.deleteButtonVisibility,
-    setIsLoading,
-    setError,
+    setIsLoading: () => {},
+    setError: () => {},
   };
 
   try {
@@ -178,5 +162,119 @@ export const parseRawInput = (
     if (fieldValueFetchXml) props.fetchXml = fieldValueFetchXml;
   }
 
-  return props as IFetchToSubgridProps;
+  return props;
+};
+
+export const hashCode = (str: string) => {
+  if (str.length === 0) return 0;
+
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const charCode = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + charCode;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+};
+
+export const getFormattingFieldValue = (fieldValue: number): string => {
+  let unit: string;
+
+  if (fieldValue < 60) {
+    return 'minute';
+  }
+  else if (fieldValue < 1440) {
+    fieldValue = Math.round(fieldValue / 60 * 100) / 100;
+    unit = 'hour';
+  }
+  else {
+    Math.round(fieldValue / 1440 * 100) / 100;
+    unit = 'day';
+  }
+
+  return `${fieldValue} ${unit}${fieldValue === 1 ? '' : 's'}`;
+};
+
+export const getLinkableItems = async (
+  data: IItemsData,
+  dataverseService: IDataverseService): Promise<Entity[]> => {
+  const records: Entity[] = await getItems(
+    data.fetchXml,
+    data.pageSize,
+    data.currentPage,
+    dataverseService);
+
+  const linkableItems = createLinkableItems(records, dataverseService);
+
+  return linkableItems;
+};
+
+export const getAttributeAliasName = (
+  attribute: EntityAttribute,
+  index: number,
+  linkEntityName: string) => {
+  if (!attribute.attributeAlias && attribute.linkEntityAlias) {
+    return `${attribute.linkEntityAlias}.${attribute.name}`;
+  }
+  else if (!attribute.attributeAlias) {
+    return `${linkEntityName}${index + 1}.${attribute.name}`;
+  }
+
+  return attribute.attributeAlias;
+};
+
+export const genereateItemsForEntity = (
+  recordsData: IRecordsData, item: Entity, entity: Entity, dataverseService: IDataverseService) => {
+
+  recordsData.attributesFieldNames.forEach((fieldName: any, index: number) => {
+    const hasAliasValue = !!recordsData.entityAliases[index];
+    const attributeType: number = recordsData.entityMetadata.Attributes.get(
+      fieldName).AttributeType;
+
+    if (recordsData.entityAliases[index]) {
+      fieldName = recordsData.entityAliases[index];
+    }
+
+    const attributes: IItemProps = {
+      timeZoneDefinitions: recordsData.timeZoneDefinitions,
+      item,
+      isLinkEntity: false,
+      entityMetadata: recordsData.entityMetadata,
+      attributeType,
+      fieldName,
+      entity,
+      pagingFetchData: recordsData.pagingFetchData,
+      index,
+      hasAliasValue,
+    };
+
+    genereateItems(attributes, dataverseService);
+  });
+};
+
+export const genereateItemsForLinkEntity = (
+  recordsData: IRecordsData, item: Entity, entity: Entity, dataverseService: IDataverseService) => {
+  recordsData.linkEntityNames.forEach((linkEntityName: string, i: number) => {
+    recordsData.linkEntityAttributes[i].forEach((attr: any, index: number) => {
+      const hasAliasValue = !!attr.linkEntityAlias;
+      const attributeType: number = recordsData.linkentityMetadata[i].Attributes.get(
+        attr.name).AttributeType;
+      const fieldName = getAttributeAliasName(attr, i, linkEntityName);
+
+      const attributes: IItemProps = {
+        timeZoneDefinitions: recordsData.timeZoneDefinitions,
+        item,
+        isLinkEntity: true,
+        entityMetadata: recordsData.linkentityMetadata[i],
+        attributeType,
+        fieldName,
+        entity,
+        pagingFetchData: recordsData.pagingFetchData,
+        index,
+        hasAliasValue,
+      };
+
+      genereateItems(attributes, dataverseService);
+    });
+  });
 };

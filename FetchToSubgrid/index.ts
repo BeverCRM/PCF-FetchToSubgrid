@@ -1,9 +1,7 @@
-import './@types/string.extensions';
 import * as React from 'react';
 import { IInputs, IOutputs } from './generated/ManifestTypes';
-import { IAppWrapperProps, IDataverseService } from './@types/types';
-import { AppWrapper } from './components/AppWrapper';
-import { DataverseService } from './services/dataverseService';
+import { AppWrapper, IAppWrapperProps } from './components/AppWrapper';
+import { DataverseService, IDataverseService } from './services/dataverseService';
 
 export class FetchToSubgrid implements ComponentFramework.ReactControl<IInputs, IOutputs> {
   private _dataverseService: IDataverseService;
