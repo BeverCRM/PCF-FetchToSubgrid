@@ -3,16 +3,16 @@
   <control namespace="BeverControls" constructor="FetchToSubgrid" version="1.0.0" display-name-key="BeverControls.FetchToSubgrid" description-key="This control converts a FetchXml string into a subgrid." control-type="virtual" >
     <external-service-usage enabled="false" />
     
-    <property name="fetchXmlProperty" display-name-key="Property_Display_Key" description-key="Property_Desc_Key" of-type="Multiple" usage="bound" required="true" />
-    <property name="defaultFetchXmlProperty" display-name-key="Default fetchXml" description-key="Default FetchXml" of-type="Multiple" usage="input" required="true"/>
-    <property name="defaultPageSize" display-name-key="Default number of rows" description-key="Default number of rows" of-type="Whole.None" usage="input" required="true"/>
-    <property name="newButtonVisibility" display-name-key="New Button Visibility" description-key="Set true/false if you want to make New Button enable/disable" of-type="Enum" required="true" default-value="1" usage="input">
-      <value name="true" display-name-key="true" description-key="Visible New Button">1</value>
-      <value name="false" display-name-key="false" description-key="Invisible New Button">0</value>
+    <property name="fetchXmlProperty" display-name-key="FetchXml Property" description-key="FetchXml or JSON string" of-type="Multiple" usage="bound" required="true" />
+    <property name="defaultFetchXml" display-name-key="Default FetchXml" description-key="Default fetchXml string to use when the FetchXml Property is blank" of-type="Multiple" usage="input" required="true"/>
+    <property name="defaultPageSize" display-name-key="Default Page Size" description-key="Default number of rows" of-type="Whole.None" usage="input" required="true"/>
+    <property name="newButtonVisibility" display-name-key="New Button Visibility" description-key="Set true/false if you want to make the New Button enabled/disabled" of-type="Enum" required="true" default-value="1" usage="input">
+      <value name="true" display-name-key="true" description-key="Enabled">1</value>
+      <value name="false" display-name-key="false" description-key="Disabled">0</value>
     </property>
-    <property name="deleteButtonVisibility" display-name-key="Delete Button Visibility" description-key="Set true/false if you want to make Delete Button enable/disable" of-type="Enum" required="true" default-value="1" usage="input">
-       <value name="true" display-name-key="true" description-key="Visible Delete Button">1</value>
-      <value name="false" display-name-key="false" description-key="Invisible Delete Button">0</value> 
+    <property name="deleteButtonVisibility" display-name-key="Delete Button Visibility" description-key="Set true/false if you want to make the Delete Button enabled/disabled" of-type="Enum" required="true" default-value="1" usage="input">
+      <value name="true" display-name-key="true" description-key="Enabled">1</value>
+      <value name="false" display-name-key="false" description-key="Disabled">0</value> 
     </property>
 
     <resources>
