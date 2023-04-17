@@ -5,7 +5,7 @@
     
     <property name="fetchXmlProperty" display-name-key="FetchXml" description-key="FetchXml or JSON string" of-type="Multiple" usage="bound" required="true" />
     <property name="defaultFetchXml" display-name-key="Default FetchXml" description-key="Default fetchXml string to use when the FetchXml Property is blank" of-type="Multiple" usage="input" required="true"/>
-    <property name="defaultPageSize" display-name-key="Default number of rows" description-key="Default number of rows" of-type="Whole.None" usage="input" required="true"/>
+    <property name="defaultPageSize" display-name-key="Default Page Size" description-key="Default number of rows" of-type="Whole.None" usage="input" required="true"/>
     <property name="newButtonVisibility" display-name-key="New Button Visibility" description-key="Set true/false if you want to make New Button enable/disable" of-type="Enum" required="true" default-value="1" usage="input">
       <value name="true" display-name-key="true" description-key="Enabled">1</value>
       <value name="false" display-name-key="false" description-key="Disabled">0</value>
