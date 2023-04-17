@@ -28,7 +28,7 @@ export const Footer: React.FC<IFooterProps> = props => {
   } = props;
 
   const firstItemIndex = (currentPage - 1) * pageSize + 1;
-  const lastItemIndex = firstItemIndex + pageSize - 1;
+  const lastItemIndex = Math.min(firstItemIndex + pageSize - 1, totalRecordsCount);
   const nextButtonDisabled = Math.ceil(totalRecordsCount / pageSize) <= currentPage;
 
   function moveToFirst() {

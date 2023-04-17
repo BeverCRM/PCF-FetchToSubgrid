@@ -24,16 +24,16 @@ interface IJsonProps {
 type JsonAllowedProps = Array<keyof IJsonProps>;
 
 export const checkIfAttributeIsEntityReference = (attributeType: AttributeType): boolean => {
-  const attributetypes: AttributeType[] = [
+  const attributeTypes: AttributeType[] = [
     AttributeType.Lookup,
     AttributeType.Owner,
     AttributeType.Customer,
   ];
 
-  return attributetypes.includes(attributeType);
+  return attributeTypes.includes(attributeType);
 };
 
-export const checkIfAttributeRequiresFormattedValue = (attributeType: AttributeType) => {
+export const checkIfAttributeRequiresFormattedValue = (attributeType: AttributeType): boolean => {
   const attributeTypes: AttributeType[] = [
     AttributeType.Money,
     AttributeType.PickList,

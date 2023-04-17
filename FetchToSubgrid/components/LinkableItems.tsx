@@ -14,7 +14,7 @@ export const LinkableItem: React.FC<ILinkableItemProps> = ({
     if (item.isLinkEntity) {
       dataverseService.openLinkEntityRecordForm(item.entity, item.fieldName);
     }
-    else if (checkIfAttributeIsEntityReference(item.AttributeType)) {
+    else if (checkIfAttributeIsEntityReference(item.attributeType)) {
       dataverseService.openLookupForm(item.entity, item.fieldName);
     }
     else {
