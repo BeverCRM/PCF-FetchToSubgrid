@@ -47,7 +47,7 @@ export class DataverseService implements IDataverseService {
       fetchXmlOrJson,
       allocatedWidth: this.getAllocatedWidth(),
       default: {
-        fetchXml: this._context.parameters.defaultFetchXmlProperty.raw,
+        fetchXml: this._context.parameters.defaultFetchXml.raw,
         pageSize: defaultPageSize,
         newButtonVisibility: this._context.parameters.newButtonVisibility.raw === '1',
         deleteButtonVisibility: this._context.parameters.deleteButtonVisibility.raw === '1',
@@ -105,26 +105,34 @@ export class DataverseService implements IDataverseService {
   }
 
   public async getRecordsCount(fetchXml: string): Promise<number> {
-    let pagingCookie = null;
     let numberOfRecords = 0;
     let page = 0;
-    const parser: DOMParser = new DOMParser();
-    const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
-    const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
+    let pagingCookie: string | null = null;
 
     const entityName: string = getEntityNameFromFetchXml(fetchXml);
-    fetch?.removeAttribute('count');
     const changedAliasNames: string = changeAliasNames(fetchXml);
 
-    do {
+    const updateFetchXml = (xml: string, page: number): string => {
+      const parser: DOMParser = new DOMParser();
+      const xmlDoc: Document = parser.parseFromString(xml, 'text/xml');
+      const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
+
+      fetch?.removeAttribute('count');
       fetch?.removeAttribute('page');
-      fetch.setAttribute('page', `${++page}`);
-      // eslint-disable-next-line no-invalid-this
+
+      fetch.setAttribute('page', `${page}`);
+
+      const serializer = new XMLSerializer();
+      return serializer.serializeToString(xmlDoc);
+    };
+
+    do {
+      const updatedFetchXml: string = updateFetchXml(changedAliasNames, ++page);
       const data: any = await this._context.webAPI.retrieveMultipleRecords(
-        entityName, `?fetchXml=${encodeURIComponent(changedAliasNames)}`);
+        entityName, `?fetchXml=${encodeURIComponent(updatedFetchXml)}`);
+
       numberOfRecords += data.entities.length;
       pagingCookie = data.fetchXmlPagingCookie;
-
     } while (pagingCookie);
 
     return numberOfRecords;
@@ -153,10 +161,16 @@ export class DataverseService implements IDataverseService {
   }
 
   public openLookupForm(entity: Entity, fieldName: string): void {
-    const entityName: string = entity[
-      `_${fieldName}_value@Microsoft.Dynamics.CRM.lookuplogicalname`];
-
-    const entityId: string = entity[`_${fieldName}_value`];
+    let entityName: string;
+    let entityId: string;
+    if (fieldName.startsWith('alias')) {
+      entityName = entity[`${fieldName}@Microsoft.Dynamics.CRM.lookuplogicalname`];
+      entityId = entity[`${fieldName}`];
+    }
+    else {
+      entityName = entity[`_${fieldName}_value@Microsoft.Dynamics.CRM.lookuplogicalname`];
+      entityId = entity[`_${fieldName}_value`];
+    }
     this.openRecordForm(entityName, entityId);
   }
 

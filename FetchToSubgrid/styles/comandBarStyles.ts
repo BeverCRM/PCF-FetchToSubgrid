@@ -16,7 +16,6 @@ export const dataSetStyles = mergeStyleSets({
   },
   buttons: {
     height: '44px',
-    paddingRight: '20px',
   },
   detailsList: {
     paddingTop: '0px',
