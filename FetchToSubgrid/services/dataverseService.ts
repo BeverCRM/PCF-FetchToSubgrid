@@ -228,7 +228,7 @@ export class DataverseService implements IDataverseService {
     const parser: DOMParser = new DOMParser();
     const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
-    const top: string | null| undefined = xmlDoc.querySelector('fetch')?.getAttribute('top');
+    const top: string | null | undefined = xmlDoc.querySelector('fetch')?.getAttribute('top');
 
     if (top) {
       return Number(top);

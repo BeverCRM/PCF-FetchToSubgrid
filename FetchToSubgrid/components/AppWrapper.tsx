@@ -24,12 +24,7 @@ export const AppWrapper: React.FC<IAppWrapperProps> = props => {
   const fetchToSubgridProps: IFetchToSubgridProps = parseRawInput(props);
 
   React.useEffect(() => {
-    if (fetchToSubgridProps.error) {
-      setError(fetchToSubgridProps.error);
-    }
-    else {
-      setError(undefined);
-    }
+    setError(fetchToSubgridProps.error);
   }, [props.fetchXmlOrJson]);
 
   return (
