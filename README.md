@@ -1,10 +1,10 @@
 # Fetch to Subgrid
 
-This control converts a FetchXml string into a subgrid.
+This control converts a _"Multiple Lines of Text"_ field into a subgrid.
 
 <br>
 
-![image](https://user-images.githubusercontent.com/60586462/233370479-48bf93e7-022a-4362-bb9f-99dda8452359.png)
+![image](https://user-images.githubusercontent.com/60586462/233376781-3ed5aff3-fd80-4b2e-bd37-7458e1355acd.png)
 
 Control has the following properties:
 
