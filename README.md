@@ -19,6 +19,8 @@ The _"Multiple Lines of Text"_ field value can contain either a FetchXml string 
 }
 ```
 
+<br>
+
 Control has the following properties:
 
 | Name | Type | Required | Description |
@@ -31,13 +33,6 @@ Control has the following properties:
 <br>
 
 ![image](https://user-images.githubusercontent.com/60586462/233362848-3acb9a0f-9478-4e54-8763-c84b98e93aa9.png)
-
-The **FetchXml Property** is the underlying *Multiple Lines of Text* field to which the control is bound.
-The value must be a valid FetchXml string or a valid JSON with the following properties:
-- newButtonVisibility (boolean | optional)
-- deleteButtonVisibility (boolean | optional)
-- pageSize (number | optional)
-- fetchXml (string | optional)
 
 <br>
 
