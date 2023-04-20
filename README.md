@@ -4,13 +4,13 @@ This control converts a FetchXml string into a subgrid.
 
 <br>
 
-![image](https://user-images.githubusercontent.com/60586462/233363262-596dde89-6b21-4c52-a73c-1aafb653f834.png)
+![image](https://user-images.githubusercontent.com/60586462/233367684-20b551dd-c4e0-40fa-b195-6aebd3718444.png)
 
 Control has the following properties:
 
 | Name | Type | Required | Description | Notes |
 | ------------- | ------------- | ------------- | ------------- | ------------- |
-| FetchXml Property | Sting | Required | The *Multiple Lines of Text* field to which the control is bound. | The value must be a valid FetchXml string or a valid JSON with the following properties: <br><br>* newButtonVisibility (boolean, optional) <br>* deleteButtonVisibility (boolean, optional) <br>* pageSize (number, optional) <br>* fetchXml (string, optional) |
+| FetchXml Property | String | Required | The *Multiple Lines of Text* field to which the control is bound. | The value must be a valid FetchXml string or a valid JSON with the following properties: <br><br>* newButtonVisibility (boolean, optional) <br>* deleteButtonVisibility (boolean, optional) <br>* pageSize (number, optional) <br>* fetchXml (string, optional) |
 | Default FetchXml | String | Required | The default FetchXml string to use when the *FetchXml Property* is blank. | The value must be a valid FetchXml string |
 | Default Page Size | Number | Required | The default number of lines per page. |  |
 | New Button Visibility | Boolean | Required | Enable the *New* button on the grid to create a new record. |  |
