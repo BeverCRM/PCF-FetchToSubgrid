@@ -21,14 +21,23 @@ The _"Multiple Lines of Text"_ field value can contain either a FetchXml string 
 
 <br>
 
+| Property | Description |
+| ------------- | ------------- |
+| fetchXml | FetchXml query, according to which the data will be shown in the sub-grid. |
+| pageSize | Number of sub-grid lines per page. |
+| newButtonVisibility | Show or hide _New_ button on the sub-grid. |
+| deleteButtonVisibility | Show or hide _Delete_ button on the sub-grid. |
+
+<br>
+
 Control has the following properties:
 
 | Name | Type | Required | Description |
 | ------------- | ------------- | ------------- | ------------- |
-| Default FetchXml | String | Required | The default FetchXml string to use when the *FetchXml Property* is blank. |
-| Default Page Size | Number | Required | The default number of lines per page. |
-| New Button Visibility | Boolean | Required | Enable the *New* button on the grid to create a new record. |
-| Delete Button Visibility | Boolean | Required | Enable the *Delete* button on the grid to delete the selected records. |
+| Default FetchXml | String | Required | The default FetchXml value will be used if the _"Multiple Lines of Text"_ field value doesn't contain the _"fetchXml"_ JSON property. |
+| Default Page Size | Number | Required | The default Page Size value will be used if the _"Multiple Lines of Text"_ field value doesn't contain the _"pageSize"_ JSON property. |
+| New Button Visibility | Boolean | Required | The default New Button Visibility will be used if the _"Multiple Lines of Text"_ field value doesn't contain the _"newButtonVisibility"_ JSON property. |
+| Delete Button Visibility | Boolean | Required | The default Delete Button Visibility will be used if the _"Multiple Lines of Text"_ field value doesn't contain the _"deleteButtonVisibility"_ JSON property. |
 
 <br>
 
@@ -41,7 +50,3 @@ FetchXml can contain:
 * Multiple link entities
 * Attributes of the fetch tag
 * etc.
-
-<br>
-
-> **Note** If the **FetchXml Property** is a JSON string and doesn't contain any of the four properties listed above, then the default values are used.
