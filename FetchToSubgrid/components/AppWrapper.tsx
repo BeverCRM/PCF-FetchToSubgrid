@@ -22,10 +22,14 @@ export const AppWrapper: React.FC<IAppWrapperProps> = props => {
   const [error, setError] = React.useState<Error | undefined>(undefined);
 
   const fetchToSubgridProps: IFetchToSubgridProps = parseRawInput(props);
-  if (fetchToSubgridProps.error) setError(error);
 
   React.useEffect(() => {
-    setError(undefined);
+    if (fetchToSubgridProps.error) {
+      setError(fetchToSubgridProps.error);
+    }
+    else {
+      setError(undefined);
+    }
   }, [props.fetchXmlOrJson]);
 
   return (
