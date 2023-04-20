@@ -14,5 +14,5 @@ jobs:
       # control-thumbnail-url: '' # default
       # control-primary-image-url: '' # default
       # control-youtube-video-url: '' # default
-      # control-tags: Bever-Controls, PCF, <control-title> # added by default
+      # control-tags: Field, Grid, FetchXml
       # create-new-release: true # default
