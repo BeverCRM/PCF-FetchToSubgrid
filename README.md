@@ -4,7 +4,7 @@ This control converts a _"Multiple Lines of Text"_ field into a subgrid.
 
 <br>
 
-![image](https://user-images.githubusercontent.com/60586462/233376781-3ed5aff3-fd80-4b2e-bd37-7458e1355acd.png)
+![image](https://user-images.githubusercontent.com/60586462/233377327-4e43c785-96fa-4845-8308-d523ce457f58.png)
 
 Control has the following properties:
 
