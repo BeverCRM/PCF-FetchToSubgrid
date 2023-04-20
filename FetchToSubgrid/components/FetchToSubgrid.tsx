@@ -53,9 +53,8 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
 
   React.useLayoutEffect(() => {
     if (allocatedWidth === -1) return;
-
     listInputsHashCode.current = hashCode(`${allocatedWidth}${fetchXml}`);
-  }, [allocatedWidth]);
+  }, [allocatedWidth, columns]);
 
   React.useEffect(() => setCurrentPage(1), [pageSize, fetchXml]);
 
@@ -79,10 +78,10 @@ export const FetchToSubgrid: React.FC<IFetchToSubgridProps> = props => {
     const fetchItems = async () => {
       isButtonActive = false;
       setIsLoading(true);
-      totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
       if (isDialogAccepted) return;
 
       try {
+        totalRecordsCount.current = await dataverseService.getRecordsCount(fetchXml ?? '');
         const newFetchXml = addOrderToFetch(fetchXml, sortingData);
 
         const data: IItemsData = {

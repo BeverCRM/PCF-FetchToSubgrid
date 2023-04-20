@@ -116,6 +116,8 @@ const createColumnsForEntity = (
   const columns: IColumn[] = [];
 
   attributesFieldNames.forEach((name, index) => {
+    if (!displayNameCollection) return;
+
     let displayName = name === `${entityName}id`
       ? 'Primary Key'
       : displayNameCollection[name].DisplayName;
@@ -167,7 +169,7 @@ export const getEntityData = (props: IItemProps, dataverseService: IDataverseSer
   } = props;
 
   if (attributeType === AttributeType.Number) {
-    const format: string = entityMetadata.Attributes._collection[fieldName].Format;
+    const format: string = entityMetadata?.Attributes?._collection[fieldName]?.Format;
     const field: string = dataverseService.getWholeNumberFieldName(
       format,
       entity,
@@ -324,7 +326,7 @@ export const getColumns = async (
     entityName,
     attributesFieldNames);
 
-  const displayNameCollection: Dictionary<EntityMetadata> = entityMetadata.Attributes._collection;
+  const displayNameCollection: Dictionary<EntityMetadata> = entityMetadata?.Attributes._collection;
 
   const linkEntityAttFieldNames: Dictionary<EntityAttribute[]> = getLinkEntitiesNamesFromFetchXml(
     fetchXml ?? '');

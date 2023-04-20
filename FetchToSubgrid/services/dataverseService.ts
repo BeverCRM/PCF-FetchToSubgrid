@@ -59,7 +59,7 @@ export class DataverseService implements IDataverseService {
 
   public async getEntityDisplayName(entityName: string): Promise<string> {
     const entityMetadata: EntityMetadata = await this._context.utils.getEntityMetadata(entityName);
-    return entityMetadata._displayName;
+    return entityMetadata?._displayName;
   }
 
   public async getTimeZoneDefinitions(): Promise<Object> {
@@ -105,6 +105,9 @@ export class DataverseService implements IDataverseService {
   }
 
   public async getRecordsCount(fetchXml: string): Promise<number> {
+    const top: number = this.getTopInFetchXml(fetchXml);
+    if (top) return top;
+
     let numberOfRecords = 0;
     let page = 0;
     let pagingCookie: string | null = null;
@@ -117,6 +120,7 @@ export class DataverseService implements IDataverseService {
       const xmlDoc: Document = parser.parseFromString(xml, 'text/xml');
       const fetch: Element = xmlDoc.getElementsByTagName('fetch')?.[0];
 
+      fetch?.removeAttribute('top');
       fetch?.removeAttribute('count');
       fetch?.removeAttribute('page');
 
@@ -188,7 +192,7 @@ export class DataverseService implements IDataverseService {
 
     const confirmOptions = { height: 200, width: 450 };
     const confirmStrings = {
-      text: `Do you want to delete this ${entityMetadata._displayName}?
+      text: `Do you want to delete this ${entityMetadata?._displayName}?
       You can't undo this action.`, title: 'Confirm Deletion',
     };
 
@@ -218,5 +222,17 @@ export class DataverseService implements IDataverseService {
 
   private getAllocatedWidth(): number {
     return this._context.mode.allocatedWidth;
+  }
+
+  private getTopInFetchXml(fetchXml: string): number {
+    const parser: DOMParser = new DOMParser();
+    const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
+
+    const top: string | null | undefined = xmlDoc.querySelector('fetch')?.getAttribute('top');
+
+    if (top) {
+      return Number(top);
+    }
+    return 0;
   }
 }
