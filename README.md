@@ -6,9 +6,9 @@ This control converts a _"Multiple Lines of Text"_ field into a subgrid.
 
 ![image](https://user-images.githubusercontent.com/60586462/233377327-4e43c785-96fa-4845-8308-d523ce457f58.png)
 
-The _"Multiple Lines of Text"_ field value can contain either a FetchXml string or a JSON string with the following format:
-
 <br>
+
+The _"Multiple Lines of Text"_ field value can contain either a FetchXml string or a JSON string with the following format:
 
 ```json
 {
