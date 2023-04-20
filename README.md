@@ -22,7 +22,7 @@ Control has the following properties:
 
 If the FetchXml Property is a JSON string and doesn't contain any of the four properties listed in the table above, then the default values are used.
 
-You can use almost the all possibilities of a FetchXml string:
+You can use almost all the feature of the FetchXml string:
 * FetchXML Aggregation
 * Multiple Link-Entities
 * The fetch tag attributes
