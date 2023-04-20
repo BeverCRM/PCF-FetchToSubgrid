@@ -20,7 +20,7 @@ Control has the following properties:
 
 ![image](https://user-images.githubusercontent.com/60586462/233362848-3acb9a0f-9478-4e54-8763-c84b98e93aa9.png)
 
-If the FetchXml Property is a JSON string and doesn't contain any of the four properties listed in the above table, than the default values are used.
+If the FetchXml Property is a JSON string and doesn't contain any of the four properties listed in the table above, then the default values are used.
 
 You can use almost the all possibilities of a FetchXml string:
 * FetchXML Aggregation
