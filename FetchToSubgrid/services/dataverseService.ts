@@ -105,7 +105,7 @@ export class DataverseService implements IDataverseService {
   }
 
   public async getRecordsCount(fetchXml: string): Promise<number> {
-    const top: number = this.hasTopInFetchXml(fetchXml);
+    const top: number = this.getTopInFetchXml(fetchXml);
     if (top) return top;
 
     let numberOfRecords = 0;
@@ -224,7 +224,7 @@ export class DataverseService implements IDataverseService {
     return this._context.mode.allocatedWidth;
   }
 
-  private hasTopInFetchXml(fetchXml: string): number {
+  private getTopInFetchXml(fetchXml: string): number {
     const parser: DOMParser = new DOMParser();
     const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
 
