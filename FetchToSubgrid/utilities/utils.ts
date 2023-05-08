@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { IColumn } from '@fluentui/react';
-import { genereateItems, getColumns, getItems, IItemProps } from './d365Utils';
+import { generateItems, getColumns, getItems, IItemProps } from './d365Utils';
 import { AttributeType } from '../@types/enums';
 import { getFetchXmlParserError, getOrderInFetchXml } from './fetchXmlUtils';
 import { LinkableItem } from '../components/LinkableItems';
@@ -223,7 +223,7 @@ export const getAttributeAliasName = (
   return attribute.attributeAlias;
 };
 
-export const genereateItemsForEntity = (
+export const generateItemsForEntity = (
   recordsData: IRecordsData, item: Entity, entity: Entity, dataverseService: IDataverseService) => {
 
   recordsData.attributesFieldNames.forEach((fieldName: any, index: number) => {
@@ -248,11 +248,11 @@ export const genereateItemsForEntity = (
       hasAliasValue,
     };
 
-    genereateItems(attributes, dataverseService);
+    generateItems(attributes, dataverseService);
   });
 };
 
-export const genereateItemsForLinkEntity = (
+export const generateItemsForLinkEntity = (
   recordsData: IRecordsData, item: Entity, entity: Entity, dataverseService: IDataverseService) => {
   recordsData.linkEntityNames.forEach((linkEntityName: string, i: number) => {
     recordsData.linkEntityAttributes[i].forEach((attr: any, index: number) => {
@@ -274,7 +274,7 @@ export const genereateItemsForLinkEntity = (
         hasAliasValue,
       };
 
-      genereateItems(attributes, dataverseService);
+      generateItems(attributes, dataverseService);
     });
   });
 };

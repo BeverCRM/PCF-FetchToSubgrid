@@ -4,8 +4,8 @@ import { IDataverseService } from '../services/dataverseService';
 import {
   checkIfAttributeRequiresFormattedValue,
   checkIfAttributeIsEntityReference,
-  genereateItemsForEntity,
-  genereateItemsForLinkEntity,
+  generateItemsForEntity,
+  generateItemsForLinkEntity,
 } from './utils';
 import {
   addPagingToFetchXml,
@@ -116,6 +116,8 @@ const createColumnsForEntity = (
   const columns: IColumn[] = [];
 
   attributesFieldNames.forEach((name, index) => {
+    if (!displayNameCollection) return;
+
     let displayName = name === `${entityName}id`
       ? 'Primary Key'
       : displayNameCollection[name].DisplayName;
@@ -167,7 +169,7 @@ export const getEntityData = (props: IItemProps, dataverseService: IDataverseSer
   } = props;
 
   if (attributeType === AttributeType.Number) {
-    const format: string = entityMetadata.Attributes._collection[fieldName].Format;
+    const format: string = entityMetadata?.Attributes?._collection[fieldName]?.Format;
     const field: string = dataverseService.getWholeNumberFieldName(
       format,
       entity,
@@ -201,7 +203,7 @@ export const getEntityData = (props: IItemProps, dataverseService: IDataverseSer
   return [entity[fieldName], false];
 };
 
-export const genereateItems = (props: IItemProps, dataverseService: IDataverseService): Entity => {
+export const generateItems = (props: IItemProps, dataverseService: IDataverseService): Entity => {
   const {
     item,
     isLinkEntity,
@@ -222,7 +224,9 @@ export const genereateItems = (props: IItemProps, dataverseService: IDataverseSe
       : getFetchXmlAttributesData(pagingFetchData, false);
 
     return item[entityAggregateAttrNames[index]] = {
-      displayName: entity[entityAggregateAttrNames[index]],
+      displayName: !hasAggregate
+        ? entity[entityAggregateAttrNames[index]]
+        : entity[`${entityAggregateAttrNames[index]}@OData.Community.Display.V1.FormattedValue`],
       isLinkable: false,
       entity,
       fieldName,
@@ -305,8 +309,8 @@ export const getItems = async (
   recordsData.records.entities.forEach(entity => {
     const item: Entity = isAggregate(fetchXml) ? {} : { id: entity[`${recordsData.entityName}id`] };
 
-    genereateItemsForEntity(recordsData, item, entity, dataverseService);
-    genereateItemsForLinkEntity(recordsData, item, entity, dataverseService);
+    generateItemsForEntity(recordsData, item, entity, dataverseService);
+    generateItemsForLinkEntity(recordsData, item, entity, dataverseService);
 
     items.push(item);
   });
@@ -324,7 +328,7 @@ export const getColumns = async (
     entityName,
     attributesFieldNames);
 
-  const displayNameCollection: Dictionary<EntityMetadata> = entityMetadata.Attributes._collection;
+  const displayNameCollection: Dictionary<EntityMetadata> = entityMetadata?.Attributes._collection;
 
   const linkEntityAttFieldNames: Dictionary<EntityAttribute[]> = getLinkEntitiesNamesFromFetchXml(
     fetchXml ?? '');
