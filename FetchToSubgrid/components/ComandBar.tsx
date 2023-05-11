@@ -31,10 +31,10 @@ export const CommandBar = ({
       displayName.current = await dataverseService.getEntityDisplayName(entityName);
     };
     fetchDisplayName();
-  }, []);
+  }, [entityName]);
 
-  const handleNewButtonClick = () => {
-    dataverseService.openRecordForm(entityName, '');
+  const handleNewButtonClick = async () => {
+    dataverseService.openNewRecord(entityName);
   };
 
   const handleDeleteButtonClick = async () => {
