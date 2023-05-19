@@ -90,18 +90,24 @@ export class DataverseService implements IDataverseService {
     const parentEntityName: string = contextPage.entityTypeName;
     const entityId: string = contextPage.entityId;
 
-    const relationshipEntities: RelationshipEntity[] =
-     await this.getRelationships(parentEntityName);
+    const relationshipEntities: RelationshipEntity[] = await this.getRelationships(
+      parentEntityName);
 
-    for (const relationshipEntity of relationshipEntities) {
-      if (relationshipEntity.ReferencingEntity === entityName) {
-        const lookup = { id: entityId, name: lookupName, entityType: parentEntityName };
-        const formParameters: any = { [relationshipEntity.ReferencingAttribute]: lookup };
+    const relationship: RelationshipEntity | undefined = relationshipEntities.find(
+      relationshipEntity => relationshipEntity.ReferencingEntity === entityName);
 
-        this._context.navigation.openForm({ entityName }, formParameters)
-          .then((success: any) => console.log(success))
-          .catch((error: any) => console.log(error));
-      }
+    if (relationship) {
+      const lookup: { id: string, name: string, entityType: string } =
+      { id: entityId, name: lookupName, entityType: parentEntityName };
+      const formParameters: { [key: string]: string } =
+       { [relationship.ReferencingAttribute]: JSON.stringify(lookup) };
+
+      this._context.navigation.openForm({ entityName }, formParameters)
+        .then((success: unknown) => console.log(success))
+        .catch((error: unknown) => console.log(error));
+    }
+    else {
+      this._context.navigation.openForm({ entityName });
     }
   }
 

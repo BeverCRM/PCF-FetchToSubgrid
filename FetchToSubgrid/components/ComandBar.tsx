@@ -33,9 +33,7 @@ export const CommandBar = ({
     fetchDisplayName();
   }, [entityName]);
 
-  const handleNewButtonClick = async () => {
-    dataverseService.openNewRecord(entityName);
-  };
+  const handleNewButtonClick = () => dataverseService.openNewRecord(entityName);
 
   const handleDeleteButtonClick = async () => {
     const deleteDialogStatus = await dataverseService.openRecordDeleteDialog(entityName);
