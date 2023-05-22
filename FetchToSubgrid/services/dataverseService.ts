@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 import { IInputs } from '../generated/ManifestTypes';
 import { WholeNumberType } from '../@types/enums';
 import { IAppWrapperProps } from '../components/AppWrapper';
@@ -23,11 +24,19 @@ export interface IDataverseService {
   openPrimaryEntityForm(entity: Entity, entityName: string): void;
   openErrorDialog(error: Error): Promise<void>;
   openRecordDeleteDialog(entityName: string): Promise<DialogResponse>;
+  getRelationships(parentEntityName: string): any;
+  openNewRecord(entityName: string): void;
   deleteSelectedRecords(
     selectedRecordIds: string[],
     entityName: string,
   ): Promise<void>;
 }
+
+type RelationshipEntity = {
+  ReferencingEntity: string;
+  ReferencingAttribute: string;
+  MetadataId: string;
+};
 
 export class DataverseService implements IDataverseService {
   private _context: ComponentFramework.Context<IInputs>;
@@ -71,6 +80,49 @@ export class DataverseService implements IDataverseService {
 
     const results = await response.json();
     return results;
+  }
+
+  public async openNewRecord(entityName: string): Promise<void> {
+    // @ts-ignore
+    const contextPage = this._context.page;
+    // @ts-ignore
+    const lookupName: string = this._context.mode.contextInfo.entityRecordName;
+    const parentEntityName: string = contextPage.entityTypeName;
+    const entityId: string = contextPage.entityId;
+
+    const relationshipEntities: RelationshipEntity[] = await this.getRelationships(
+      parentEntityName);
+
+    const relationship: RelationshipEntity | undefined = relationshipEntities.find(
+      relationshipEntity => relationshipEntity.ReferencingEntity === entityName);
+
+    if (relationship) {
+      const lookup: { id: string, name: string, entityType: string } =
+      { id: entityId, name: lookupName, entityType: parentEntityName };
+      const formParameters: { [key: string]: string } =
+       { [relationship.ReferencingAttribute]: JSON.stringify(lookup) };
+
+      this._context.navigation.openForm({ entityName }, formParameters)
+        .then((success: unknown) => console.log(success))
+        .catch((error: unknown) => console.log(error));
+    }
+    else {
+      this._context.navigation.openForm({ entityName });
+    }
+  }
+
+  public async getRelationships(parentEntityName: string): Promise<RelationshipEntity[]> {
+    // @ts-ignore
+    const contextPage = this._context.page;
+    const entityDefinitions = `/api/data/v9.2/EntityDefinitions(LogicalName='${parentEntityName}')`;
+    const relationships = `OneToManyRelationships($select=ReferencingEntity,ReferencingAttribute)`;
+    const logicalName = '&$select=LogicalName';
+
+    const response: Response = await fetch(
+      `${contextPage.getClientUrl()}${entityDefinitions}?$expand=${relationships}${logicalName}`);
+
+    const result = await response.json();
+    return result.OneToManyRelationships;
   }
 
   public getWholeNumberFieldName(
