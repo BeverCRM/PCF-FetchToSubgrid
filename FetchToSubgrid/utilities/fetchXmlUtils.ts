@@ -10,7 +10,7 @@ export const changeAliasNames = (fetchXml: string) => {
 
   attributeElements.forEach((attributeElement, index) => {
     const newAliasValue = `alias${index}`;
-    attributeElement.setAttribute('alias', newAliasValue);
+    attributeElement?.setAttribute('alias', newAliasValue);
   });
 
   return xmlDoc.documentElement.outerHTML;
@@ -35,8 +35,8 @@ export const addPagingToFetchXml = (
     recordsPerPage = Number(top) % pageSize;
   }
 
-  fetch.setAttribute('page', `${currentPage}`);
-  fetch.setAttribute('count', `${recordsPerPage}`);
+  fetch?.setAttribute('page', `${currentPage}`);
+  fetch?.setAttribute('count', `${recordsPerPage}`);
 
   const newFetchChangedAliases = changeAliasNames(new XMLSerializer().serializeToString(xmlDoc));
 
@@ -90,8 +90,8 @@ export const addOrderToFetch = (
   }
 
   const newOrder: HTMLElement = xmlDoc.createElement('order');
-  newOrder.setAttribute('attribute', `${sortingData.fieldName}`);
-  newOrder.setAttribute('descending', `${!sortingData.column?.isSortedDescending}`);
+  newOrder?.setAttribute('attribute', `${sortingData.fieldName}`);
+  newOrder?.setAttribute('descending', `${!sortingData.column?.isSortedDescending}`);
 
   if (sortingData.column?.className === 'linkEntity') {
     linkEntity?.appendChild(newOrder);
