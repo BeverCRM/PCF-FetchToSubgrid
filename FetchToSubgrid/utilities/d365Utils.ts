@@ -78,8 +78,8 @@ const createColumnsForLinkEntity = (
         changedAliasNames, attr, index, i, linkEntityName);
 
       const columnName: string = attr.attributeAlias ||
-        linkentityMetadata[i].Attributes._collection[attr.name].DisplayName;
-      const attributeType = linkentityMetadata[i].Attributes._collection[attr.name].AttributeType;
+        linkentityMetadata[i].Attributes._collection[attr.name]?.DisplayName;
+      const attributeType = linkentityMetadata[i].Attributes._collection[attr.name]?.AttributeType;
 
       const isMultiselectPickList = attributeType === AttributeType.MultiselectPickList;
       const sortingIsAllowed = isMultiselectPickList || hasAggregate || changedAliasNames[index];
@@ -120,9 +120,9 @@ const createColumnsForEntity = (
 
     let displayName = name === `${entityName}id`
       ? 'Primary Key'
-      : displayNameCollection[name].DisplayName;
+      : displayNameCollection[name]?.DisplayName;
 
-    const attributeType: number = displayNameCollection[name].AttributeType;
+    const attributeType: number = displayNameCollection[name]?.AttributeType;
     const hasAggregate: boolean = isAggregate(fetchXml ?? '');
     const aliasNames: string[] | null = getFetchXmlAttributesData(fetchXml, false);
     const isMultiselectPickList = attributeType === AttributeType.MultiselectPickList;

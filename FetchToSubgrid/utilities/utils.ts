@@ -172,7 +172,7 @@ export const hashCode = (str: string) => {
   for (let i = 0; i < str.length; i++) {
     const charCode = str.charCodeAt(i);
     hash = ((hash << 5) - hash) + charCode;
-    hash |= 0; // Convert to 32bit integer
+    hash |= 0;
   }
   return hash;
 };
@@ -229,7 +229,7 @@ export const generateItemsForEntity = (
   recordsData.attributesFieldNames.forEach((fieldName: any, index: number) => {
     const hasAliasValue = !!recordsData.entityAliases[index];
     const attributeType: number = recordsData.entityMetadata.Attributes.get(
-      fieldName).AttributeType;
+      fieldName)?.AttributeType;
 
     if (recordsData.entityAliases[index]) {
       fieldName = recordsData.entityAliases[index];
@@ -258,7 +258,7 @@ export const generateItemsForLinkEntity = (
     recordsData.linkEntityAttributes[i].forEach((attr: any, index: number) => {
       const hasAliasValue = !!attr.linkEntityAlias;
       const attributeType: number = recordsData.linkentityMetadata[i].Attributes.get(
-        attr.name).AttributeType;
+        attr.name)?.AttributeType;
       const fieldName = getAttributeAliasName(attr, i, linkEntityName);
 
       const attributes: IItemProps = {

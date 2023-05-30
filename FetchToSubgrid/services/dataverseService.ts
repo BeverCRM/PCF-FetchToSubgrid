@@ -102,9 +102,7 @@ export class DataverseService implements IDataverseService {
       const formParameters: { [key: string]: string } =
        { [relationship.ReferencingAttribute]: JSON.stringify(lookup) };
 
-      this._context.navigation.openForm({ entityName }, formParameters)
-        .then((success: unknown) => console.log(success))
-        .catch((error: unknown) => console.log(error));
+      this._context.navigation.openForm({ entityName }, formParameters);
     }
     else {
       this._context.navigation.openForm({ entityName });
@@ -176,7 +174,7 @@ export class DataverseService implements IDataverseService {
       fetch?.removeAttribute('count');
       fetch?.removeAttribute('page');
 
-      fetch.setAttribute('page', `${page}`);
+      fetch?.setAttribute('page', `${page}`);
 
       const serializer = new XMLSerializer();
       return serializer.serializeToString(xmlDoc);
