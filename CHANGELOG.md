@@ -1,4 +1,4 @@
-## [v1.0.1](https://github.com/BeverCRM/PCF-FetchToSubgrid/releases/tag/v1.0.1) (2023-05-29)
+## [v1.0.1](https://github.com/BeverCRM/PCF-FetchToSubgrid/releases/tag/v1.0.1) (2023-05-31)
 
 ### Missing Features
 * Added parent lookup when creating a new record (if it's possible).
