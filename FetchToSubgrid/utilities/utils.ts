@@ -181,7 +181,7 @@ export const getFormattingFieldValue = (fieldValue: number): string => {
   let unit: string;
 
   if (fieldValue < 60) {
-    return 'minute';
+    unit = 'minute';
   }
   else if (fieldValue < 1440) {
     fieldValue = Math.round(fieldValue / 60 * 100) / 100;
@@ -262,6 +262,7 @@ export const generateItemsForLinkEntity = (
       const fieldName = getAttributeAliasName(attr, i, linkEntityName);
 
       const attributes: IItemProps = {
+        attr,
         timeZoneDefinitions: recordsData.timeZoneDefinitions,
         item,
         isLinkEntity: true,

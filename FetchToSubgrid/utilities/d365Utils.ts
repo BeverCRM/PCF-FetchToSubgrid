@@ -26,6 +26,7 @@ import {
 } from '../@types/types';
 
 export interface IItemProps {
+  attr?: EntityAttribute;
   timeZoneDefinitions: any;
   item: Entity;
   isLinkEntity: boolean;
@@ -159,6 +160,7 @@ const createColumnsForEntity = (
 
 export const getEntityData = (props: IItemProps, dataverseService: IDataverseService) => {
   const {
+    attr,
     timeZoneDefinitions,
     isLinkEntity,
     entityMetadata,
@@ -169,7 +171,11 @@ export const getEntityData = (props: IItemProps, dataverseService: IDataverseSer
   } = props;
 
   if (attributeType === AttributeType.Number) {
-    const format: string = entityMetadata?.Attributes?._collection[fieldName]?.Format;
+
+    const format: string = attr
+      ? entityMetadata?.Attributes?._collection[attr.name]?.Format
+      : entityMetadata?.Attributes?._collection[fieldName]?.Format;
+
     const field: string = dataverseService.getWholeNumberFieldName(
       format,
       entity,
@@ -342,7 +348,7 @@ export const getColumns = async (
   const linkentityMetadata: EntityMetadata[] = await Promise.all(promises);
 
   let columnWidth = (allocatedWidth - 70) /
-    (attributesFieldNames.length + linkEntityNames.length) - 20;
+    (attributesFieldNames.length + linkEntityAttributes.flat().length) - 20;
 
   if (columnWidth < 80) columnWidth = 80;
 

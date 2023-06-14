@@ -2,9 +2,12 @@
 import { IInputs } from '../generated/ManifestTypes';
 import { WholeNumberType } from '../@types/enums';
 import { IAppWrapperProps } from '../components/AppWrapper';
-import { changeAliasNames, getEntityNameFromFetchXml } from '../utilities/fetchXmlUtils';
 import { getFormattingFieldValue } from '../utilities/utils';
 import { Entity, EntityMetadata, RetrieveRecords, DialogResponse } from '../@types/types';
+import {
+  changeAliasNames,
+  getEntityNameFromFetchXml,
+  addAttributeIdInFetch } from '../utilities/fetchXmlUtils';
 
 export interface IDataverseService {
   getProps(): IAppWrapperProps;
@@ -203,7 +206,9 @@ export class DataverseService implements IDataverseService {
 
   public async getCurrentPageRecords(fetchXml: string | null): Promise<RetrieveRecords> {
     const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
-    const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(fetchXml ?? '')}`;
+    const updatedFetchXml: string = addAttributeIdInFetch(fetchXml ?? '', entityName);
+    const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(updatedFetchXml ?? '')}`;
+
     return await this._context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
   }
 
