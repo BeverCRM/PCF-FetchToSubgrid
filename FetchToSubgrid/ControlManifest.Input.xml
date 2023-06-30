@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="BeverControls" constructor="FetchToSubgrid" version="1.0.1" display-name-key="BeverControls.FetchToSubgrid" description-key="This control converts a FetchXml string into a subgrid." control-type="virtual" >
+  <control namespace="BeverControls" constructor="FetchToSubgrid" version="1.0.2" display-name-key="BeverControls.FetchToSubgrid" description-key="This control converts a FetchXml string into a subgrid." control-type="virtual" >
     <external-service-usage enabled="false" />
     
     <property name="fetchXmlProperty" display-name-key="FetchXml Property" description-key="FetchXml or JSON string" of-type="Multiple" usage="bound" required="true" />
