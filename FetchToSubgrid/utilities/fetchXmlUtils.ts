@@ -166,26 +166,24 @@ export const addAttributeIdInFetch = (fetchXml: string, entityName: string): str
   const fetchElement: Element | null = xmlDoc.querySelector('fetch');
   const distinctAttribute: string | null | undefined = fetchElement?.getAttribute('distinct');
 
-  if (distinctAttribute === 'true') {
-    const entityElement: Element | null = xmlDoc.querySelector(`entity[name="${entityName}"]`);
+  if (distinctAttribute !== 'true') return fetchXml;
 
-    if (entityElement) {
-      const entityIdAttribute = `${entityName}id`;
+  const entityElement: Element | null = xmlDoc.querySelector(`entity[name="${entityName}"]`);
 
-      const existingAttribute: Element | null = entityElement.querySelector(
-        `attribute[name="${entityIdAttribute}"]`);
+  if (entityElement) {
+    const entityIdAttribute = `${entityName}id`;
 
-      if (!existingAttribute) {
-        const newAttributeElement: Element = xmlDoc.createElement('attribute');
-        newAttributeElement.setAttribute('name', entityIdAttribute);
-        entityElement.appendChild(newAttributeElement);
-      }
+    const existingAttribute: Element | null = entityElement.querySelector(
+      `attribute[name="${entityIdAttribute}"]`);
+
+    if (!existingAttribute) {
+      const newAttributeElement: Element = xmlDoc.createElement('attribute');
+      newAttributeElement.setAttribute('name', entityIdAttribute);
+      entityElement.appendChild(newAttributeElement);
     }
-    const newFetchXml: string = new XMLSerializer().serializeToString(xmlDoc);
-    return newFetchXml;
   }
-
-  return fetchXml;
+  const newFetchXml: string = new XMLSerializer().serializeToString(xmlDoc);
+  return newFetchXml;
 };
 
 export const getLinkEntityAggregateAliasNames = (fetchXml: string, i: number): string[] => {

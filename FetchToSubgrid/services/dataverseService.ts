@@ -207,9 +207,9 @@ export class DataverseService implements IDataverseService {
   public async getCurrentPageRecords(fetchXml: string | null): Promise<RetrieveRecords> {
     const entityName: string = getEntityNameFromFetchXml(fetchXml ?? '');
     const updatedFetchXml: string = addAttributeIdInFetch(fetchXml ?? '', entityName);
-    const encodeFetchXml: string = `?fetchXml=${encodeURIComponent(updatedFetchXml ?? '')}`;
+    const encodedFetchXml: string = `?fetchXml=${encodeURIComponent(updatedFetchXml ?? '')}`;
 
-    return await this._context.webAPI.retrieveMultipleRecords(entityName, encodeFetchXml);
+    return await this._context.webAPI.retrieveMultipleRecords(entityName, encodedFetchXml);
   }
 
   public openRecordForm(entityName: string, entityId: string): void {
