@@ -159,6 +159,33 @@ export const getFetchXmlAttributesData = (
   return attributesFieldNames;
 };
 
+export const addAttributeIdInFetch = (fetchXml: string, entityName: string): string => {
+  const parser: DOMParser = new DOMParser();
+  const xmlDoc: Document = parser.parseFromString(fetchXml ?? '', 'text/xml');
+
+  const fetchElement: Element | null = xmlDoc.querySelector('fetch');
+  const distinctAttribute: string | null | undefined = fetchElement?.getAttribute('distinct');
+
+  if (distinctAttribute !== 'true') return fetchXml;
+
+  const entityElement: Element | null = xmlDoc.querySelector(`entity[name="${entityName}"]`);
+
+  if (entityElement) {
+    const entityIdAttribute = `${entityName}id`;
+
+    const existingAttribute: Element | null = entityElement.querySelector(
+      `attribute[name="${entityIdAttribute}"]`);
+
+    if (!existingAttribute) {
+      const newAttributeElement: Element = xmlDoc.createElement('attribute');
+      newAttributeElement.setAttribute('name', entityIdAttribute);
+      entityElement.appendChild(newAttributeElement);
+    }
+  }
+  const newFetchXml: string = new XMLSerializer().serializeToString(xmlDoc);
+  return newFetchXml;
+};
+
 export const getLinkEntityAggregateAliasNames = (fetchXml: string, i: number): string[] => {
   const parser: DOMParser = new DOMParser();
   const xmlDoc: Document = parser.parseFromString(fetchXml, 'text/xml');
